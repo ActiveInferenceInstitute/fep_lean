@@ -1,0 +1,230 @@
+"""No-mocks tests for Hermes error paths: preflight + fallback_models chain.
+
+Uses ``pytest-httpserver`` to run a real local HTTP server speaking the
+OpenAI-compatible ``/chat/completions`` contract.  The ``HermesExplainer``
+makes real HTTP calls against ``http://127.0.0.1:<port>/`` — no mocks, no
+network dependencies.
+
+Covers:
+    * ``HermesExplainer.preflight()`` returning False and disabling the
+      config on HTTP 403 (OpenRouter "Key limit exceeded" scenario).
+    * ``HermesExplainer.preflight()`` returning True on HTTP 200.
+    * ``_build_model_chain`` preferring ``HermesConfig.fallback_models``
+      over the built-in ``_FREE_MODEL_CHAIN`` and actually using the
+      fallback when the primary model returns 429.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from pathlib import Path
+
+import pytest
+from pytest_httpserver import HTTPServer
+
+from catalogue.topics import FEPTopicCatalogue
+from llm.hermes import (
+    HermesConfig,
+    HermesExplainer,
+    _FREE_MODEL_CHAIN,
+)
+
+PROJ = Path(__file__).resolve().parent.parent
+TOPICS = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
+FIRST_TOPIC = TOPICS.topics[0]
+
+
+def _openrouter_like_url(httpserver: HTTPServer) -> str:
+    """httpserver base that _build_model_chain treats as OpenRouter."""
+    return f"http://openrouter.ai.127.0.0.1.nip.io:{httpserver.port}/api/v1"
+
+
+def _local_url(httpserver: HTTPServer) -> str:
+    """Plain local URL (no openrouter.ai in host => single-model chain)."""
+    return httpserver.url_for("/").rstrip("/")
+
+
+# ── preflight ────────────────────────────────────────────────────────────────
+
+
+def test_preflight_allows_run_on_200(httpserver: HTTPServer) -> None:
+    """200 response => preflight returns True, cfg.enabled stays True."""
+    httpserver.expect_request("/chat/completions", method="POST").respond_with_json(
+        {
+            "choices": [{"message": {"content": "pong"}}],
+            "usage": {"total_tokens": 1},
+        }
+    )
+    cfg = HermesConfig(
+        model="test/model",
+        base_url=_local_url(httpserver),
+        api_key="sk-test-123",
+        enabled=True,
+    )
+    exp = HermesExplainer(cfg)
+    assert exp.preflight() is True
+    assert cfg.enabled is True
+
+
+def test_preflight_disables_hermes_on_403(
+    httpserver: HTTPServer, caplog: pytest.LogCaptureFixture
+) -> None:
+    """403 => preflight returns False, cfg.enabled flipped, actionable log."""
+    httpserver.expect_request("/chat/completions", method="POST").respond_with_data(
+        json.dumps({"error": {"message": "Key limit exceeded (total limit)", "code": 403}}),
+        status=403,
+        content_type="application/json",
+    )
+    cfg = HermesConfig(
+        model="test/model",
+        base_url=_local_url(httpserver),
+        api_key="sk-test-403",
+        enabled=True,
+    )
+    exp = HermesExplainer(cfg)
+    with caplog.at_level(logging.ERROR, logger="llm.hermes"):
+        ok = exp.preflight()
+    assert ok is False
+    assert cfg.enabled is False
+    joined = "\n".join(r.message for r in caplog.records)
+    assert "openrouter.ai/settings/keys" in joined
+    assert "HERMES_API_BASE" in joined
+    assert "ANTHROPIC_API_KEY" in joined
+
+
+def test_preflight_noop_when_disabled() -> None:
+    """Already-disabled config must short-circuit (no HTTP call needed)."""
+    cfg = HermesConfig(enabled=False, api_key="whatever")
+    assert HermesExplainer(cfg).preflight() is True
+
+
+def test_preflight_noop_when_keyless() -> None:
+    """No API key => nothing to probe, return True."""
+    cfg = HermesConfig(enabled=True, api_key="")
+    assert HermesExplainer(cfg).preflight() is True
+
+
+def test_preflight_tolerates_5xx(httpserver: HTTPServer) -> None:
+    """5xx is not credential-fatal: return True and let per-topic retry handle it."""
+    httpserver.expect_request("/chat/completions", method="POST").respond_with_data(
+        "upstream error", status=503, content_type="text/plain"
+    )
+    cfg = HermesConfig(
+        model="test/model",
+        base_url=_local_url(httpserver),
+        api_key="sk-test-5xx",
+        enabled=True,
+    )
+    exp = HermesExplainer(cfg)
+    assert exp.preflight() is True
+    assert cfg.enabled is True
+
+
+# ── fallback_models ──────────────────────────────────────────────────────────
+
+
+def test_build_model_chain_prefers_user_fallbacks() -> None:
+    """When fallback_models is non-empty, the built-in chain is ignored."""
+    cfg = HermesConfig(
+        model="primary/model",
+        base_url="https://openrouter.ai/api/v1",
+        api_key="sk-or-test",
+        fallback_models=["user/fb-a", "user/fb-b"],
+    )
+    chain = HermesExplainer(cfg)._build_model_chain()
+    assert chain[0] == "primary/model"
+    assert chain[1:] == ["user/fb-a", "user/fb-b"]
+    assert not any(m in chain for m in _FREE_MODEL_CHAIN if m != "primary/model")
+
+
+def test_build_model_chain_defaults_to_free_chain_when_unset() -> None:
+    """Empty fallback_models => built-in _FREE_MODEL_CHAIN is appended."""
+    cfg = HermesConfig(
+        model="primary/model",
+        base_url="https://openrouter.ai/api/v1",
+        api_key="sk-or-test",
+        fallback_models=[],
+    )
+    chain = HermesExplainer(cfg)._build_model_chain()
+    assert chain[0] == "primary/model"
+    for m in _FREE_MODEL_CHAIN:
+        if m != "primary/model":
+            assert m in chain
+
+
+def test_build_model_chain_single_for_anthropic() -> None:
+    """Anthropic-direct endpoint ignores fallback chain."""
+    cfg = HermesConfig(
+        model="claude-3-5-sonnet-20240620",
+        base_url="https://api.anthropic.com/v1",
+        api_key="sk-ant-test",
+        fallback_models=["should/be-ignored"],
+    )
+    chain = HermesExplainer(cfg)._build_model_chain()
+    assert chain == ["claude-3-5-sonnet-20240620"]
+
+
+def test_fallback_models_used_when_primary_returns_429(
+    httpserver: HTTPServer,
+) -> None:
+    """Primary model returns 429 (exhausted), fallback model returns 200.
+
+    Uses a local httpserver pretending to be OpenRouter (the base_url string
+    contains 'openrouter.ai' so that ``_build_model_chain`` activates the
+    fallback chain).  Two ordered handlers match POST /api/v1/chat/completions:
+    first with model=primary/model → 429, second with model=user/fb-a → 200.
+    """
+
+    def _match_model(want: str):
+        def _matcher(request) -> bool:
+            try:
+                body = json.loads(request.get_data(as_text=True) or "{}")
+            except json.JSONDecodeError:
+                return False
+            return body.get("model") == want
+
+        return _matcher
+
+    httpserver.expect_ordered_request(
+        "/api/v1/chat/completions", method="POST"
+    ).respond_with_data(
+        json.dumps({"error": {"message": "Rate limit", "code": 429}}),
+        status=429,
+        content_type="application/json",
+    )
+    httpserver.expect_ordered_request(
+        "/api/v1/chat/completions", method="POST"
+    ).respond_with_json(
+        {
+            "choices": [
+                {
+                    "message": {
+                        "content": "Explanation.\n\n```lean\ntheorem t : True := trivial\n```",
+                    }
+                }
+            ],
+            "usage": {"total_tokens": 42},
+            "model": "user/fb-a",
+        }
+    )
+
+    cfg = HermesConfig(
+        model="primary/model",
+        base_url=_openrouter_like_url(httpserver),
+        api_key="sk-or-test",
+        fallback_models=["user/fb-a"],
+        timeout_s=5,
+    )
+    exp = HermesExplainer(cfg)
+    # Patch the 429 retry count to 0 so we advance to the fallback model quickly.
+    import os as _os
+
+    _os.environ["HERMES_429_MAX_RETRIES"] = "0"
+    try:
+        result = exp.explain_topic(FIRST_TOPIC)
+    finally:
+        _os.environ.pop("HERMES_429_MAX_RETRIES", None)
+    assert result.success is True, result.error
+    assert result.model_used == "user/fb-a"
+    assert "theorem t" in (result.refined_lean_sketch or "")

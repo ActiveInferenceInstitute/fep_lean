@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# fep_lean specific
+index.md
+output/
+reports/
+lean/build/
+lean/.lake/
+lean/FepSketches/
+manuscript/manuscript_vars.yaml
+manuscript/09z_unified_formalism_catalogue.md
+# Legacy names (older pipeline); safe to remove locally
+manuscript/09z_appendix_b_lean_catalogue.md
+manuscript/09zc_appendix_c_lean_equations.md
+
+# Test-scratch belt-and-braces — tests MUST use tmp_path; these entries
+# prevent accidental leaks into the repo (see tests/test_gauss_runner_prefetch.py).
+gauss_pf2/
+gauss_prefetch/
+gauss_grace/

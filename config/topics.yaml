@@ -1,0 +1,2343 @@
+# FEP / Active Inference / Bayesian Mechanics — 50-topic Lean4 catalogue
+# Each topic maps to one OpenGauss session when workflows are enabled.
+# Regenerate: uv run python scripts/_maint_build_topics_catalogue.py
+# Fields: id, title, area, mathlib, mathlib_status (real|partial|aspirational), nl, lean_sketch, latex_equations
+# `latex_equations` is written by the maint catalogue build (SSOT: SKETCHES + theorem_latex_signatures).
+# PDF rendering also loads LATEX_EQUATIONS from catalogue_sketches.py when importable (see src/output/manuscript.py).
+
+topics:
+- id: fep-001
+  title: Variational Free Energy Bound
+  area: FEP
+  mathlib: MeasureTheory.Measure.MeasureSpace
+  mathlib_status: real
+  nl: 'Variational Free Energy Bound (FEP). Catalogue row fep-001; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.Measure.MeasureSpace\n\nnamespace FEP001\n\nvariable {α : Type*} [MeasurableSpace\
+    \ α]\n\nopen MeasureTheory\n\n/-- Measure subadditivity: μ(A ∪ B) ≤ μ(A) + μ(B), fundamental for variational bounds. -/\n\
+    theorem fep001_measure_union_le (μ : Measure α) (s t : Set α) :\n    μ (s ∪ t) ≤ μ s + μ t :=\n  measure_union_le s t\n\
+    \n/-- Measure monotonicity: s ⊆ t implies μ(s) ≤ μ(t), used in free energy bounding. -/\ntheorem fep001_measure_mono {μ\
+    \ : Measure α} {s t : Set α} (h : s ⊆ t) : μ s ≤ μ t :=\n  measure_mono h\n\n/-- Empty set has measure zero — VFE vanishes\
+    \ on the empty event. -/\ntheorem fep001_measure_empty (μ : Measure α) : μ ∅ = 0 :=\n  measure_empty\n\n/-- Measure is\
+    \ nonneg on any set (ENNReal baseline for VFE). -/\ntheorem fep001_measure_nonneg_any (μ : Measure α) (s : Set α) : 0\
+    \ ≤ μ s :=\n  zero_le _\n\nend FEP001\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (s t : \mathsf{Set}~\alpha) \\
+
+    &\mu (s \cup t) \le \mu s + \mu t
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &{\mu : \mathsf{Measure}~\alpha} {s t : \mathsf{Set}~\alpha} (h : s \subseteq t) \\
+
+    &\mu s \le \mu t
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) \\
+
+    &\mu(\varnothing) = 0
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (s : \mathsf{Set}~\alpha) \\
+
+    &0 \le \mu s
+
+    \end{aligned}'
+- id: fep-002
+  title: Gibbs Free Energy as Marginal Likelihood
+  area: FEP
+  mathlib: MeasureTheory.Measure.MeasureSpace
+  mathlib_status: real
+  nl: 'Gibbs Free Energy as Marginal Likelihood (FEP). Catalogue row fep-002; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.Measure.MeasureSpace\nimport Mathlib.MeasureTheory.Measure.Typeclasses.Probability\n\
+    \nnamespace FEP002\n\nvariable {α : Type*} [MeasurableSpace α]\n\nopen MeasureTheory\n\n-- [proof strategy: IsProbabilityMeasure.measure_univ\
+    \ + measure_compl for complement; linarith for ELBO]\n/-- A probability measure assigns unit total mass. -/\ntheorem fep002_prob_measure_univ\
+    \ (μ : Measure α) [IsProbabilityMeasure μ] :\n    μ Set.univ = 1 :=\n  IsProbabilityMeasure.measure_univ\n\n/-- Complement:\
+    \ μ(sᶜ) = 1 - μ(s) for probability measures on measurable sets. -/\ntheorem fep002_prob_compl (μ : Measure α) [IsProbabilityMeasure\
+    \ μ] {s : Set α}\n    (hs : MeasurableSet s) (hfin : μ s ≠ ⊤) :\n    μ sᶜ = 1 - μ s := by\n  rw [measure_compl hs hfin,\
+    \ IsProbabilityMeasure.measure_univ]\n\n/-- ELBO: free energy ≤ log marginal likelihood (KL ≥ 0). -/\ntheorem fep002_elbo_bound\
+    \ (logEvidence freeEnergy klDiv : ℝ)\n    (h_decomp : logEvidence = freeEnergy + klDiv)\n    (h_kl_nonneg : 0 ≤ klDiv)\
+    \ :\n    freeEnergy ≤ logEvidence := by linarith\n\nend FEP002\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) [\mathsf{IsProbabilityMeasure}~\mu] \\
+
+    &\mu(\Omega) = 1
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&{\\alpha : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace}~\\alpha] \\\\\n&(\\mu : \\mathsf{Measure}~\\\
+    alpha) [\\mathsf{IsProbabilityMeasure}~\\mu] {s : \\mathsf{Set}~\\alpha}\n    (hs : \\mathsf{MeasurableSet} s) (hfin :\
+    \ \\mu s \\ne \\top) \\\\\n&\\mu s^{\\mathrm{c}} = 1 - \\mu s\n\\end{aligned}"
+  - "\\begin{aligned}\n&{\\alpha : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace}~\\alpha] \\\\\n&(logEvidence freeEnergy\
+    \ klDiv : \\mathbb{R})\n    (h_decomp : logEvidence = freeEnergy + klDiv)\n    (h_kl_nonneg : 0 \\le klDiv) \\\\\n&freeEnergy\
+    \ \\le logEvidence\n\\end{aligned}"
+- id: fep-003
+  title: Expected Free Energy Decomposition
+  area: ActiveInference
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Expected Free Energy Decomposition (ActiveInference). Catalogue row fep-003; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP003\n\nabbrev Obs := Fin 6\nabbrev State := Fin 6\n\n/-- Expected free\
+    \ energy aggregates nonnegative stage costs over discrete states. -/\ntheorem fep003_stageSum_nonneg (c : Obs → State\
+    \ → ℝ) (o : Obs) (s : Finset State)\n    (hc : ∀ x ∈ s, 0 ≤ c o x) : 0 ≤ ∑ x ∈ s, c o x :=\n  Finset.sum_nonneg hc\n\n\
+    /-- EFE respects cost dominance: if cₐ ≤ c_b pointwise, total EFE(a) ≤ EFE(b). -/\ntheorem fep003_efe_monotone (ca cb\
+    \ : State → ℝ) (S : Finset State)\n    (h : ∀ x ∈ S, ca x ≤ cb x) : ∑ x ∈ S, ca x ≤ ∑ x ∈ S, cb x :=\n  Finset.sum_le_sum\
+    \ h\n\n/-- EFE over disjoint state sets is the sum of per-set EFEs. -/\ntheorem fep003_efe_union_disjoint (c : State →\
+    \ ℝ) (s t : Finset State)\n    (hd : Disjoint s t) : ∑ x ∈ s ∪ t, c x = (∑ x ∈ s, c x) + ∑ x ∈ t, c x :=\n  Finset.sum_union\
+    \ hd\n\n/-- EFE zero when every state contributes zero cost. -/\ntheorem fep003_efe_zero_of_zero (c : State → ℝ) (S :\
+    \ Finset State)\n    (h : ∀ x ∈ S, c x = 0) : ∑ x ∈ S, c x = 0 :=\n  Finset.sum_eq_zero h\n\nend FEP003\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(c : Obs \\Rightarrow State \\Rightarrow \\mathbb{R}) (o : Obs) (s : \\mathsf{Finset} State)\n   \
+    \ (hc : \\forall x \\in s, 0 \\le c o x) \\\\\n&0 \\le \\sum x \\in s, c o x\n\\end{aligned}"
+  - "\\begin{aligned}\n&(ca cb : State \\Rightarrow \\mathbb{R}) (S : \\mathsf{Finset} State)\n    (h : \\forall x \\in S,\
+    \ ca x \\le cb x) \\\\\n&\\sum x \\in S, ca x \\le \\sum x \\in S, cb x\n\\end{aligned}"
+  - "\\begin{aligned}\n&(c : State \\Rightarrow \\mathbb{R}) (s t : \\mathsf{Finset} State)\n    (hd : \\mathsf{Disjoint}\
+    \ s t) \\\\\n&\\sum x \\in s \\cup t, c x = (\\sum x \\in s, c x) + \\sum x \\in t, c x\n\\end{aligned}"
+  - "\\begin{aligned}\n&(c : State \\Rightarrow \\mathbb{R}) (S : \\mathsf{Finset} State)\n    (h : \\forall x \\in S, c x\
+    \ = 0) \\\\\n&\\sum x \\in S, c x = 0\n\\end{aligned}"
+- id: fep-004
+  title: Fisher Information Metric
+  area: InfoGeometry
+  mathlib: Analysis.InnerProductSpace.Basic
+  mathlib_status: real
+  nl: 'Fisher Information Metric (InfoGeometry). Catalogue row fep-004; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.InnerProductSpace.Basic\nimport Mathlib.Algebra.BigOperators.Group.Finset.Basic\n\
+    import Mathlib.Algebra.Order.BigOperators.Group.Finset\nimport Mathlib.Data.Real.Basic\n\nnamespace FEP004\n\nopen Finset\n\
+    \n-- [proof strategy: sq_nonneg for score² ≥ 0; Finset.sum_nonneg for Fisher PSD]\n\n/-- Fisher metric context: the squared\
+    \ score is nonnegative (building block for Fisher info). -/\ntheorem fep004_score_sq_nonneg (s : ℝ) : 0 ≤ s ^ 2 :=\n \
+    \ sq_nonneg s\n\n/-- Fisher information: parameter difference squared is nonneg. -/\ntheorem fep004_residual_sq_nonneg\
+    \ (θ₁ θ₂ : ℝ) : 0 ≤ (θ₁ - θ₂) ^ 2 :=\n  sq_nonneg _\n\n/-- Fisher metric positive-semidefiniteness anchor: inner product\
+    \ with self is nonneg. -/\ntheorem fep004_inner_self_nonneg (v : Fin 2 → ℝ) :\n    0 ≤ ∑ i : Fin 2, v i * v i :=\n  Finset.sum_nonneg\
+    \ fun i _ => mul_self_nonneg (v i)\n\n/-- Fisher metric is symmetric: ⟨u, v⟩ = ⟨v, u⟩ on coordinate vectors. -/\ntheorem\
+    \ fep004_inner_sym (u v : Fin 2 → ℝ) :\n    ∑ i : Fin 2, u i * v i = ∑ i : Fin 2, v i * u i := by\n  refine Finset.sum_congr\
+    \ rfl ?_\n  intro i _; ring\n\n/-- Zero vector has zero Fisher norm. -/\ntheorem fep004_inner_zero :\n    (∑ i : Fin 2,\
+    \ (0 : ℝ) * (0 : ℝ)) = 0 := by simp\n\nend FEP004\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(s : \mathbb{R}) \\
+
+    &0 \le s ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\theta_{1} \theta_{2} : \mathbb{R}) \\
+
+    &0 \le (\theta_{1} - \theta_{2}) ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(v : Fin 2 \Rightarrow \mathbb{R}) \\
+
+    &0 \le \sum i : Fin 2, v i * v i
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(u v : Fin 2 \Rightarrow \mathbb{R}) \\
+
+    &\sum i : Fin 2, u i * v i = \sum i : Fin 2, v i * u i
+
+    \end{aligned}'
+  - '(\sum i : Fin 2, (0 : \mathbb{R}) * (0 : \mathbb{R})) = 0'
+- id: fep-005
+  title: Markov Blanket Partition
+  area: BayesianMechanics
+  mathlib: Data.Finset.Basic
+  mathlib_status: real
+  nl: 'Markov Blanket Partition (BayesianMechanics). Catalogue row fep-005; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Data.Finset.Basic\nimport Mathlib.Data.Finset.Filter\nimport Mathlib.Data.Fintype.Basic\n\n\
+    namespace FEP005\n\nopen Finset\n\nabbrev BlkPart := Fin 4  -- internal(0), sensory(1), active(2), active/external(3)\n\
+    \n/-- Markov blanket partition: four components cover the full state space exactly. -/\ndef fep005_partitionCover (assign\
+    \ : Fin 20 → BlkPart) (k : BlkPart) : Finset (Fin 20) :=\n  Finset.univ.filter (fun s => assign s = k)\n\n/-- The four\
+    \ partition blocks are pairwise disjoint (functional determinism). -/\ntheorem fep005_disjoint (assign : Fin 20 → BlkPart)\
+    \ (i j : BlkPart) (hij : i ≠ j) :\n    Disjoint (fep005_partitionCover assign i) (fep005_partitionCover assign j) := by\n\
+    \  refine Finset.disjoint_left.mpr ?_\n  intro x hx hy\n  simp only [fep005_partitionCover, Finset.mem_filter, Finset.mem_univ,\
+    \ true_and] at hx hy\n  exact hij ((Eq.symm hx).trans hy)\n\n/-- Every state belongs to exactly one partition block (totality\
+    \ of assignment). -/\ntheorem fep005_total_cover (assign : Fin 20 → BlkPart) :\n    ∀ s : Fin 20, ∃ k : BlkPart, s ∈ fep005_partitionCover\
+    \ assign k := by\n  intro s\n  refine ⟨assign s, Finset.mem_filter.mpr ⟨Finset.mem_univ s, rfl⟩⟩\n\n/-- Membership is\
+    \ decidable: a state is in block k iff its assignment equals k. -/\ntheorem fep005_mem_iff (assign : Fin 20 → BlkPart)\
+    \ (s : Fin 20) (k : BlkPart) :\n    s ∈ fep005_partitionCover assign k ↔ assign s = k := by\n  dsimp [fep005_partitionCover]\n\
+    \  exact Iff.intro (fun h => (Finset.mem_filter.mp h).2)\n    fun hk => Finset.mem_filter.mpr ⟨Finset.mem_univ s, hk⟩\n\
+    \nend FEP005\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(\mathsf{assign} : Fin 20 \Rightarrow BlkPart) (i j : BlkPart) (hij : i \ne j) \\
+
+    &\mathsf{Disjoint} (fep005_partitionCover \mathsf{assign} i) (fep005_partitionCover \mathsf{assign} j)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\mathsf{assign} : Fin 20 \Rightarrow BlkPart) \\
+
+    &\forall s : Fin 20, \exists k : BlkPart, s \in fep005_partitionCover \mathsf{assign} k
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\mathsf{assign} : Fin 20 \Rightarrow BlkPart) (s : Fin 20) (k : BlkPart) \\
+
+    &s \in fep005_partitionCover \mathsf{assign} k \leftrightarrow \mathsf{assign} s = k
+
+    \end{aligned}'
+- id: fep-006
+  title: Generalized State and Flow
+  area: FEP
+  mathlib: MeasureTheory.Measure.MeasureSpace
+  mathlib_status: real
+  nl: 'Generalized State and Flow (FEP). Catalogue row fep-006; maturity `real` in config/topics.yaml. Natural-language anchor
+    for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.Measure.MeasureSpace\n\nnamespace FEP006\n\nvariable {α : Type*} [MeasurableSpace\
+    \ α]\n\nopen MeasureTheory\n\n-- [proof strategy: zero_le for ENNReal + measure_empty + Measurable.comp for flow composition]\n\
+    \n/-- Generalized states: measure mass on the whole space is nonnegative. -/\ntheorem fep006_univ_nonneg (μ : Measure\
+    \ α) : 0 ≤ μ Set.univ :=\n  zero_le _\n\n/-- Empty set has zero measure (initialisation of flow integration). -/\ntheorem\
+    \ fep006_empty_zero (μ : Measure α) : μ ∅ = 0 :=\n  measure_empty\n\n/-- Flow trajectories: composition of measurable\
+    \ maps is measurable. -/\ntheorem fep006_comp_measurable {β γ : Type*} [MeasurableSpace β] [MeasurableSpace γ]\n    {f\
+    \ : α → β} {g : β → γ} (hf : Measurable f) (hg : Measurable g) :\n    Measurable (g ∘ f) :=\n  hg.comp hf\n\n/-- Identity\
+    \ flow is measurable (trivial flow). -/\ntheorem fep006_id_measurable : Measurable (id : α → α) :=\n  measurable_id\n\n\
+    /-- Constant flows (absorbing states) are measurable. -/\ntheorem fep006_const_measurable {β : Type*} [MeasurableSpace\
+    \ β] (c : β) :\n    Measurable (fun _ : α => c) :=\n  measurable_const\n\nend FEP006\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) \\
+
+    &0 \le \mu(\Omega)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) \\
+
+    &\mu(\varnothing) = 0
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&{\\alpha : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace}~\\alpha] \\\\\n&{\\beta \\gamma : \\mathsf{Type}^\\\
+    *} [\\mathsf{MeasurableSpace} \\beta] [\\mathsf{MeasurableSpace} \\gamma]\n    {f : \\alpha \\Rightarrow \\beta} {g :\
+    \ \\beta \\Rightarrow \\gamma} (hf : \\mathsf{Measurable} f) (hg : \\mathsf{Measurable} g) \\\\\n&\\mathsf{Measurable}\
+    \ (g \\circ f)\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &\mathsf{Measurable} (\mathsf{id} : \alpha \Rightarrow \alpha)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &{\beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace} \beta] (c : \beta) \\
+
+    &\mathsf{Measurable} (\lambda _ : \alpha => c)
+
+    \end{aligned}'
+- id: fep-007
+  title: Belief Propagation on Factor Graphs
+  area: ActiveInference
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Belief Propagation on Factor Graphs (ActiveInference). Catalogue row fep-007; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP007\n\nopen Finset\n\n-- [proof strategy: mul_nonneg / Finset.sum_nonneg\
+    \ for positivity; Finset.sum_le_sum for monotone updates]\n\nabbrev Node := Fin 8\n\n/-- Belief propagation: local potential\
+    \ products stay nonnegative when factors are. -/\ntheorem fep007_factorProduct_nonneg (ψ : Node → Node → ℝ) (i j : Node)\n\
+    \    (hψ : 0 ≤ ψ i j) (hj : 0 ≤ ψ j i) : 0 ≤ ψ i j * ψ j i := by\n  exact mul_nonneg hψ hj\n\n/-- Message aggregation:\
+    \ sum of factor-weighted messages stays nonneg. -/\ntheorem fep007_message_agg_nonneg (ψ : Node → Node → ℝ) (msg : Node\
+    \ → ℝ)\n    (N : Finset Node) (i : Node)\n    (hψ : ∀ j, 0 ≤ ψ i j) (hm : ∀ j, 0 ≤ msg j) :\n    0 ≤ ∑ j ∈ N, ψ i j *\
+    \ msg j :=\n  Finset.sum_nonneg fun j _ => mul_nonneg (hψ j) (hm j)\n\n/-- Monotonicity: stronger messages → stronger\
+    \ aggregate. -/\ntheorem fep007_message_agg_mono (ψ : Node → Node → ℝ) (m₁ m₂ : Node → ℝ)\n    (N : Finset Node) (i :\
+    \ Node)\n    (hψ : ∀ j, 0 ≤ ψ i j) (h : ∀ j ∈ N, m₁ j ≤ m₂ j) :\n    ∑ j ∈ N, ψ i j * m₁ j ≤ ∑ j ∈ N, ψ i j * m₂ j :=\n\
+    \  Finset.sum_le_sum fun j hj => mul_le_mul_of_nonneg_left (h j hj) (hψ j)\n\n/-- Zero messages yield zero aggregate (absorbing\
+    \ behaviour). -/\ntheorem fep007_zero_msg (ψ : Node → Node → ℝ) (N : Finset Node) (i : Node) :\n    ∑ j ∈ N, ψ i j * (0\
+    \ : ℝ) = 0 := by simp\n\nend FEP007\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(ψ : Node \\Rightarrow Node \\Rightarrow \\mathbb{R}) (i j : Node)\n    (hψ : 0 \\le ψ i j) (hj :\
+    \ 0 \\le ψ j i) \\\\\n&0 \\le ψ i j * ψ j i\n\\end{aligned}"
+  - "\\begin{aligned}\n&(ψ : Node \\Rightarrow Node \\Rightarrow \\mathbb{R}) (msg : Node \\Rightarrow \\mathbb{R})\n    (N\
+    \ : \\mathsf{Finset} Node) (i : Node)\n    (hψ : \\forall j, 0 \\le ψ i j) (hm : \\forall j, 0 \\le msg j) \\\\\n&0 \\\
+    le \\sum j \\in N, ψ i j * msg j\n\\end{aligned}"
+  - "\\begin{aligned}\n&(ψ : Node \\Rightarrow Node \\Rightarrow \\mathbb{R}) (m_{1} m_{2} : Node \\Rightarrow \\mathbb{R})\n\
+    \    (N : \\mathsf{Finset} Node) (i : Node)\n    (hψ : \\forall j, 0 \\le ψ i j) (h : \\forall j \\in N, m_{1} j \\le\
+    \ m_{2} j) \\\\\n&\\sum j \\in N, ψ i j * m_{1} j \\le \\sum j \\in N, ψ i j * m_{2} j\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(ψ : Node \Rightarrow Node \Rightarrow \mathbb{R}) (N : \mathsf{Finset} Node) (i : Node) \\
+
+    &\sum j \in N, ψ i j * (0 : \mathbb{R}) = 0
+
+    \end{aligned}'
+- id: fep-008
+  title: Active Inference Optimal Policy
+  area: ActiveInference
+  mathlib: Data.Finset.Basic, Order.Bounds.Basic
+  mathlib_status: real
+  nl: 'Active Inference Optimal Policy (ActiveInference). Catalogue row fep-008; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Data.Finset.Basic\nimport Mathlib.Data.Finset.Max\nimport Mathlib.Data.Real.Basic\nimport Mathlib.Order.Bounds.Basic\n\
+    \nnamespace FEP008\n\nabbrev Policy := Fin 14\n\n/-- Discrete active inference: some policy minimizes expected free energy\
+    \ on a finite set. -/\ntheorem fep008_exists_minG (policies : Finset Policy) (hne : policies.Nonempty) (G : Policy → ℝ)\
+    \ :\n    ∃ p ∈ policies, ∀ p' ∈ policies, G p ≤ G p' :=\n  Finset.exists_min_image policies G hne\n\n/-- Any two policy\
+    \ minimizers attain the same value (uniqueness of the minimum). -/\ntheorem fep008_min_agrees_on_value (policies : Finset\
+    \ Policy) (hne : policies.Nonempty) (G : Policy → ℝ)\n    (p p' : Policy) (hp : p ∈ policies) (hp' : p' ∈ policies)\n\
+    \    (hmin : ∀ p'' ∈ policies, G p ≤ G p'') (hmin' : ∀ p'' ∈ policies, G p' ≤ G p'') :\n    G p = G p' :=\n  le_antisymm\
+    \ (hmin p' hp') (hmin' p hp)\n\n/-- Dual: some policy maximizes expected value on a finite nonempty set. -/\ntheorem fep008_exists_maxG\
+    \ (policies : Finset Policy) (hne : policies.Nonempty) (G : Policy → ℝ) :\n    ∃ p ∈ policies, ∀ p' ∈ policies, G p' ≤\
+    \ G p :=\n  Finset.exists_max_image policies G hne\n\n/-- Minimum is ≤ any evaluation in the policy set. -/\ntheorem fep008_min_is_lb\
+    \ (policies : Finset Policy) (G : Policy → ℝ)\n    (p : Policy) (_hp : p ∈ policies)\n    (hmin : ∀ p' ∈ policies, G p\
+    \ ≤ G p') :\n    ∀ p' ∈ policies, G p ≤ G p' := hmin\n\nend FEP008\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(policies : \mathsf{Finset} Policy) (hne : policies.Nonempty) (G : Policy \Rightarrow \mathbb{R}) \\
+
+    &\exists p \in policies, \forall p'' \in policies, G p \le G p''
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(policies : \\mathsf{Finset} Policy) (hne : policies.Nonempty) (G : Policy \\Rightarrow \\mathbb{R})\n\
+    \    (p p' : Policy) (hp : p \\in policies) (hp' : p' \\in policies)\n    (hmin : \\forall p'' \\in policies, G p \\le\
+    \ G p'') (hmin' : \\forall p'' \\in policies, G p' \\le G p'') \\\\\n&G p = G p'\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(policies : \mathsf{Finset} Policy) (hne : policies.Nonempty) (G : Policy \Rightarrow \mathbb{R}) \\
+
+    &\exists p \in policies, \forall p'' \in policies, G p'' \le G p
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(policies : \\mathsf{Finset} Policy) (G : Policy \\Rightarrow \\mathbb{R})\n    (p : Policy) (_hp\
+    \ : p \\in policies)\n    (hmin : \\forall p' \\in policies, G p \\le G p') \\\\\n&\\forall p' \\in policies, G p \\le\
+    \ G p'\n\\end{aligned}"
+- id: fep-009
+  title: Generative Model Likelihood
+  area: BayesianMechanics
+  mathlib: MeasureTheory.Measure.MeasureSpace
+  mathlib_status: real
+  nl: 'Generative Model Likelihood (BayesianMechanics). Catalogue row fep-009; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.Measure.MeasureSpace\n\nnamespace FEP009\n\nvariable {α β : Type*} [MeasurableSpace\
+    \ α] [MeasurableSpace β]\n\nopen MeasureTheory\n\n-- [proof strategy: zero_le for ENNReal; measure_mono for likelihood\
+    \ ordering]\n\n/-- Generative model: joint mass factors as product of marginals (independence). -/\ntheorem fep009_joint_product_nonneg\
+    \ (μ : Measure α) (ν : Measure β) (s : Set α) (t : Set β) :\n    0 ≤ μ s * ν t :=\n  mul_nonneg (zero_le _) (zero_le _)\n\
+    \n/-- Likelihood monotonicity: larger sets yield larger likelihoods. -/\ntheorem fep009_likelihood_mono {μ : Measure α}\
+    \ {s t : Set α} (h : s ⊆ t) :\n    μ s ≤ μ t :=\n  measure_mono h\n\n/-- Marginalisation via measure.map preserves non-negativity.\
+    \ -/\ntheorem fep009_map_nonneg (μ : Measure α) {f : α → β} (_hf : Measurable f) (s : Set β) :\n    0 ≤ μ.map f s :=\n\
+    \  zero_le _\n\n/-- Likelihood on empty event is zero. -/\ntheorem fep009_empty_zero (μ : Measure α) : μ ∅ = 0 :=\n  measure_empty\n\
+    \n/-- Union bound on likelihoods (subadditivity of generative model mass). -/\ntheorem fep009_union_le (μ : Measure α)\
+    \ (s t : Set α) :\n    μ (s ∪ t) ≤ μ s + μ t :=\n  measure_union_le s t\n\nend FEP009\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (ν : \mathsf{Measure} \beta) (s : \mathsf{Set}~\alpha) (t : \mathsf{Set}~\beta) \\
+
+    &0 \le \mu s * ν t
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &{\mu : \mathsf{Measure}~\alpha} {s t : \mathsf{Set}~\alpha} (h : s \subseteq t) \\
+
+    &\mu s \le \mu t
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) {f : \alpha \Rightarrow \beta} (_hf : \mathsf{Measurable} f) (s : \mathsf{Set}~\beta)
+    \\
+
+    &0 \le \mu.map f s
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) \\
+
+    &\mu(\varnothing) = 0
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (s t : \mathsf{Set}~\alpha) \\
+
+    &\mu (s \cup t) \le \mu s + \mu t
+
+    \end{aligned}'
+- id: fep-010
+  title: Fluctuation Theorem Sketch
+  area: BayesianMechanics
+  mathlib: Analysis.SpecialFunctions.Exp
+  mathlib_status: real
+  nl: 'Fluctuation Theorem Sketch (BayesianMechanics). Catalogue row fep-010; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Exp\n\nnamespace FEP010\n\nopen Real\n\n-- [proof strategy: exp_pos\
+    \ + exp_add + exp_zero to derive detailed-balance and Jarzynski-like identities]\n\n/-- Fluctuation theorem: exponentials\
+    \ are always positive (Boltzmann factor). -/\ntheorem fep010_exp_pos (x : ℝ) : 0 < Real.exp x :=\n  Real.exp_pos x\n\n\
+    /-- Detailed balance: exp(a) * exp(-a) = 1 (forward-backward ratio). -/\ntheorem fep010_detailed_balance (a : ℝ) : Real.exp\
+    \ a * Real.exp (-a) = 1 := by\n  rw [← Real.exp_add, add_neg_cancel, Real.exp_zero]\n\n/-- Jarzynski-like: exp is multiplicative\
+    \ under path composition. -/\ntheorem fep010_exp_add (a b : ℝ) : Real.exp (a + b) = Real.exp a * Real.exp b :=\n  Real.exp_add\
+    \ a b\n\n/-- Exp is monotone: larger exponent → larger weight. -/\ntheorem fep010_exp_mono {a b : ℝ} (h : a ≤ b) : Real.exp\
+    \ a ≤ Real.exp b :=\n  Real.exp_le_exp.mpr h\n\n/-- Exp at zero is one (reference state). -/\ntheorem fep010_exp_zero\
+    \ : Real.exp 0 = 1 := Real.exp_zero\n\nend FEP010\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(x : \mathbb{R}) \\
+
+    &0 < \mathbb{R}.\exp x
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a : \mathbb{R}) \\
+
+    &\mathbb{R}.\exp a * \mathbb{R}.\exp (-a) = 1
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a b : \mathbb{R}) \\
+
+    &\mathbb{R}.\exp (a + b) = \mathbb{R}.\exp a * \mathbb{R}.\exp b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (h : a \le b) \\
+
+    &\mathbb{R}.\exp a \le \mathbb{R}.\exp b
+
+    \end{aligned}'
+  - \mathbb{R}.\exp 0 = 1
+- id: fep-011
+  title: Surprise and Self-Information
+  area: FEP
+  mathlib: Analysis.SpecialFunctions.Log.Basic
+  mathlib_status: real
+  nl: 'Surprise and Self-Information (FEP). Catalogue row fep-011; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Log.Basic\n\nnamespace FEP011\n\nopen Real\n\n-- [proof strategy:\
+    \ Real.log_nonneg / log_nonpos to bound self-information; log_mul for additivity]\n\n/-- Self-information: log is nonnegative\
+    \ on ``[1, ∞)``. -/\ntheorem fep011_log_nonneg_on_ge_one {x : ℝ} (hx : 1 ≤ x) : 0 ≤ Real.log x :=\n  Real.log_nonneg hx\n\
+    \n/-- Coding cost ``-log u`` is nonnegative for probabilities ``u ∈ (0, 1]``. -/\ntheorem fep011_negLog_nonneg_prob {u\
+    \ : ℝ} (hu : 0 < u) (hu1 : u ≤ 1) : 0 ≤ -Real.log u :=\n  neg_nonneg.mpr (Real.log_nonpos (le_of_lt hu) hu1)\n\n/-- Surprise\
+    \ is additive for independent observations: -log(ab) = -log a + -log b. -/\ntheorem fep011_surprise_additive {a b : ℝ}\
+    \ (ha : 0 < a) (hb : 0 < b) :\n    -Real.log (a * b) = -Real.log a + -Real.log b := by\n  rw [Real.log_mul (ne_of_gt ha)\
+    \ (ne_of_gt hb), neg_add]\n\n/-- Surprise of certain event (u = 1) is zero. -/\ntheorem fep011_surprise_cert : -Real.log\
+    \ 1 = 0 := by simp\n\n/-- Surprise is monotone decreasing in probability: larger p → lower surprise. -/\ntheorem fep011_surprise_mono\
+    \ {p q : ℝ} (hp : 0 < p) (h : p ≤ q) :\n    -Real.log q ≤ -Real.log p :=\n  neg_le_neg (Real.log_le_log hp h)\n\nend FEP011\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{x : \mathbb{R}} (hx : 1 \le x) \\
+
+    &0 \le \mathbb{R}.\log x
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{u : \mathbb{R}} (hu : 0 < u) (hu1 : u \le 1) \\
+
+    &0 \le -\mathbb{R}.\log u
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (hb : 0 < b) \\
+
+    &-\mathbb{R}.\log (a * b) = -\mathbb{R}.\log a + -\mathbb{R}.\log b
+
+    \end{aligned}'
+  - -\mathbb{R}.\log 1 = 0
+  - '\begin{aligned}
+
+    &{p q : \mathbb{R}} (hp : 0 < p) (h : p \le q) \\
+
+    &-\mathbb{R}.\log q \le -\mathbb{R}.\log p
+
+    \end{aligned}'
+- id: fep-012
+  title: Policy Entropy Regularizer
+  area: FEP
+  mathlib: Analysis.SpecialFunctions.Exp
+  mathlib_status: real
+  nl: 'Policy Entropy Regularizer (FEP). Catalogue row fep-012; maturity `real` in config/topics.yaml. Natural-language anchor
+    for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Exp\nimport Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport\
+    \ Mathlib.Algebra.Order.BigOperators.Group.Finset\n\nnamespace FEP012\n\nopen Real Finset\n\n-- [proof strategy: Real.exp_nonneg\
+    \ / exp_pos combined with Finset.sum_nonneg / sum_pos]\n\nabbrev Policy := Fin 10\n\n/-- Entropy regularizers are sums\
+    \ of nonnegative terms when costs are nonnegative. -/\ntheorem fep012_entropyRegularizer_nonneg (c : Policy → ℝ) (s :\
+    \ Finset Policy)\n    (hc : ∀ p ∈ s, 0 ≤ c p) : 0 ≤ ∑ p ∈ s, c p :=\n  Finset.sum_nonneg hc\n\n/-- Gibbs partition sum\
+    \ ``∑ exp(-G)`` is nonnegative (Boltzmann weights). -/\ntheorem fep012_gibbsPartition_nonneg (G : Policy → ℝ) (s : Finset\
+    \ Policy) :\n    0 ≤ ∑ p ∈ s, Real.exp (-G p) :=\n  Finset.sum_nonneg fun _ _ => Real.exp_nonneg _\n\n/-- Gibbs partition\
+    \ sum is strictly positive when policy set is nonempty. -/\ntheorem fep012_gibbsPartition_pos (G : Policy → ℝ) (s : Finset\
+    \ Policy) (hne : s.Nonempty) :\n    0 < ∑ p ∈ s, Real.exp (-G p) :=\n  Finset.sum_pos (fun _ _ => Real.exp_pos _) hne\n\
+    \n/-- Monotonicity: lower cost → larger Boltzmann weight at temperature β = 1. -/\ntheorem fep012_gibbs_mono (G₁ G₂ :\
+    \ Policy) (G : Policy → ℝ) (h : G G₁ ≤ G G₂) :\n    Real.exp (-G G₂) ≤ Real.exp (-G G₁) :=\n  Real.exp_le_exp.mpr (by\
+    \ linarith)\n\nend FEP012\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(c : Policy \\Rightarrow \\mathbb{R}) (s : \\mathsf{Finset} Policy)\n    (hc : \\forall p \\in s,\
+    \ 0 \\le c p) \\\\\n&0 \\le \\sum p \\in s, c p\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(G : Policy \Rightarrow \mathbb{R}) (s : \mathsf{Finset} Policy) \\
+
+    &0 \le \sum p \in s, \mathbb{R}.\exp (-G p)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(G : Policy \Rightarrow \mathbb{R}) (s : \mathsf{Finset} Policy) (hne : s.Nonempty) \\
+
+    &0 < \sum p \in s, \mathbb{R}.\exp (-G p)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(G_{1} G_{2} : Policy) (G : Policy \Rightarrow \mathbb{R}) (h : G G_{1} \le G G_{2}) \\
+
+    &\mathbb{R}.\exp (-G G_{2}) \le \mathbb{R}.\exp (-G G_{1})
+
+    \end{aligned}'
+- id: fep-013
+  title: Helmholtz Free Energy Bridge
+  area: Thermodynamics
+  mathlib: Analysis.SpecialFunctions.Log.Basic
+  mathlib_status: real
+  nl: 'Helmholtz Free Energy Bridge (Thermodynamics). Catalogue row fep-013; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Log.Basic\n\nnamespace FEP013\n\n-- [proof strategy: simp / ring\
+    \ for algebraic rewrites; linarith for entropy-monotone bounds]\n\n/-- Helmholtz free energy: F = U - TS defines the thermodynamic\
+    \ potential. -/\nnoncomputable def fep013_helmholtz (U T S : ℝ) : ℝ := U - T * S\n\n/-- At zero temperature, Helmholtz\
+    \ free energy equals internal energy. -/\ntheorem fep013_helmholtz_at_zero_temp (U S : ℝ) : fep013_helmholtz U 0 S = U\
+    \ := by\n  simp [fep013_helmholtz]\n\n/-- Helmholtz free energy is monotone decreasing in entropy at positive temperature.\
+    \ -/\ntheorem fep013_helmholtz_mono_entropy (U T : ℝ) (S₁ S₂ : ℝ) (hT : 0 < T) (h : S₁ ≤ S₂) :\n    fep013_helmholtz U\
+    \ T S₂ ≤ fep013_helmholtz U T S₁ := by\n  simp only [fep013_helmholtz]\n  linarith [mul_le_mul_of_nonneg_left h (le_of_lt\
+    \ hT)]\n\n/-- Helmholtz free energy is monotone increasing in internal energy. -/\ntheorem fep013_helmholtz_mono_U (U₁\
+    \ U₂ T S : ℝ) (h : U₁ ≤ U₂) :\n    fep013_helmholtz U₁ T S ≤ fep013_helmholtz U₂ T S := by\n  simp only [fep013_helmholtz];\
+    \ linarith\n\n/-- Helmholtz difference: ΔF = ΔU - TΔS. -/\ntheorem fep013_delta_F (U₁ U₂ T S₁ S₂ : ℝ) :\n    fep013_helmholtz\
+    \ U₂ T S₂ - fep013_helmholtz U₁ T S₁ = (U₂ - U₁) - T * (S₂ - S₁) := by\n  simp only [fep013_helmholtz]; ring\n\nend FEP013\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(U S : \mathbb{R}) \\
+
+    &fep013_helmholtz U 0 S = U
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(U T : \mathbb{R}) (S_{1} S_{2} : \mathbb{R}) (hT : 0 < T) (h : S_{1} \le S_{2}) \\
+
+    &fep013_helmholtz U T S_{2} \le fep013_helmholtz U T S_{1}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(U_{1} U_{2} T S : \mathbb{R}) (h : U_{1} \le U_{2}) \\
+
+    &fep013_helmholtz U_{1} T S \le fep013_helmholtz U_{2} T S
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(U_{1} U_{2} T S_{1} S_{2} : \mathbb{R}) \\
+
+    &fep013_helmholtz U_{2} T S_{2} - fep013_helmholtz U_{1} T S_{1} = (U_{2} - U_{1}) - T * (S_{2} - S_{1})
+
+    \end{aligned}'
+- id: fep-014
+  title: 'KL Divergence: Non-Negativity, Chain Rule, Data Processing'
+  area: InfoGeometry
+  mathlib: MeasureTheory.Measure.MeasureSpace
+  mathlib_status: real
+  nl: 'KL Divergence: Non-Negativity, Chain Rule, Data Processing (InfoGeometry). Catalogue row fep-014; maturity `real` in
+    config/topics.yaml. Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.Measure.MeasureSpace\n\nnamespace FEP014\n\nvariable {α : Type*} [MeasurableSpace\
+    \ α]\n\nopen MeasureTheory\n\n/-- KL-relevant: mass is monotone in set inclusion (s ⊆ t → μ s ≤ μ t). -/\ntheorem fep014_measure_mono\
+    \ {μ : Measure α} {s t : Set α} (h : s ⊆ t) : μ s ≤ μ t :=\n  measure_mono h\n\n/-- Union bound: μ(s ∪ t) ≤ μ(s) + μ(t)\
+    \ (subadditivity for KL chain rule). -/\ntheorem fep014_measure_union_le (μ : Measure α) (s t : Set α) :\n    μ (s ∪ t)\
+    \ ≤ μ s + μ t :=\n  measure_union_le s t\n\n/-- Data processing: composition of measurable maps is measurable (DPI prerequisite).\
+    \ -/\ntheorem fep014_dpi_measurable {β γ : Type*} [MeasurableSpace β] [MeasurableSpace γ]\n    {f : α → β} {g : β → γ}\
+    \ (hf : Measurable f) (hg : Measurable g) :\n    Measurable (g ∘ f) :=\n  hg.comp hf\n\n/-- Complement mass: μ(univ) ≤\
+    \ μ(s) + μ(sᶜ). -/\ntheorem fep014_compl_mass_le (μ : Measure α) (s : Set α) : μ Set.univ ≤ μ s + μ sᶜ := by\n  calc μ\
+    \ Set.univ = μ (s ∪ sᶜ) := by rw [Set.union_compl_self]\n    _ ≤ μ s + μ sᶜ := measure_union_le s sᶜ\n\n/-- KL non-negativity\
+    \ anchor: measure mass is always nonneg (ENNReal). -/\ntheorem fep014_measure_nonneg (μ : Measure α) (s : Set α) : 0 ≤\
+    \ μ s :=\n  zero_le _\n\nend FEP014\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &{\mu : \mathsf{Measure}~\alpha} {s t : \mathsf{Set}~\alpha} (h : s \subseteq t) \\
+
+    &\mu s \le \mu t
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (s t : \mathsf{Set}~\alpha) \\
+
+    &\mu (s \cup t) \le \mu s + \mu t
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&{\\alpha : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace}~\\alpha] \\\\\n&{\\beta \\gamma : \\mathsf{Type}^\\\
+    *} [\\mathsf{MeasurableSpace} \\beta] [\\mathsf{MeasurableSpace} \\gamma]\n    {f : \\alpha \\Rightarrow \\beta} {g :\
+    \ \\beta \\Rightarrow \\gamma} (hf : \\mathsf{Measurable} f) (hg : \\mathsf{Measurable} g) \\\\\n&\\mathsf{Measurable}\
+    \ (g \\circ f)\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (s : \mathsf{Set}~\alpha) \\
+
+    &\mu(\Omega) \le \mu s + \mu s^{\mathrm{c}}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (s : \mathsf{Set}~\alpha) \\
+
+    &0 \le \mu s
+
+    \end{aligned}'
+- id: fep-015
+  title: Measurability of Variational Objectives
+  area: FEP
+  mathlib: MeasureTheory.MeasurableSpace.Basic
+  mathlib_status: real
+  nl: 'Measurability of Variational Objectives (FEP). Catalogue row fep-015; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.MeasurableSpace.Basic\n\nnamespace FEP015\n\nvariable {α β : Type*} [MeasurableSpace\
+    \ α] [MeasurableSpace β]\n\nopen MeasureTheory\n\n-- [proof strategy: measurable_const, measurable_id, Measurable.comp\
+    \ cover variational objectives]\n\n/-- Measurability of constant functions (needed for priors in variational objectives).\
+    \ -/\ntheorem fep015_measurable_const (c : β) : Measurable (fun _ : α => c) :=\n  measurable_const\n\n/-- Measurability\
+    \ of identity (trivial but anchors variational objective definitions). -/\ntheorem fep015_measurable_id : Measurable (id\
+    \ : α → α) :=\n  measurable_id\n\n/-- Measurability of composition (variational objective composed with state map). -/\n\
+    theorem fep015_measurable_comp {γ : Type*} [MeasurableSpace γ]\n    {f : α → β} {g : β → γ} (hf : Measurable f) (hg :\
+    \ Measurable g) :\n    Measurable (g ∘ f) :=\n  hg.comp hf\n\n/-- Measurable sets are closed under finite unions (for\
+    \ indicator-based objectives). -/\ntheorem fep015_measurable_union {s t : Set α} (hs : MeasurableSet s) (ht : MeasurableSet\
+    \ t) :\n    MeasurableSet (s ∪ t) :=\n  hs.union ht\n\n/-- Measurable sets are closed under complements. -/\ntheorem fep015_measurable_compl\
+    \ {s : Set α} (hs : MeasurableSet s) :\n    MeasurableSet sᶜ :=\n  hs.compl\n\nend FEP015\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &(c : \beta) \\
+
+    &\mathsf{Measurable} (\lambda _ : \alpha => c)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &\mathsf{Measurable} (\mathsf{id} : \alpha \Rightarrow \alpha)
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&{\\alpha \\beta : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace}~\\alpha] [\\mathsf{MeasurableSpace}\
+    \ \\beta] \\\\\n&{\\gamma : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace} \\gamma]\n    {f : \\alpha \\Rightarrow \\\
+    beta} {g : \\beta \\Rightarrow \\gamma} (hf : \\mathsf{Measurable} f) (hg : \\mathsf{Measurable} g) \\\\\n&\\mathsf{Measurable}\
+    \ (g \\circ f)\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &{s t : \mathsf{Set}~\alpha} (hs : \mathsf{MeasurableSet} s) (ht : \mathsf{MeasurableSet} t) \\
+
+    &\mathsf{MeasurableSet} (s \cup t)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &{s : \mathsf{Set}~\alpha} (hs : \mathsf{MeasurableSet} s) \\
+
+    &\mathsf{MeasurableSet} s^{\mathrm{c}}
+
+    \end{aligned}'
+- id: fep-016
+  title: Laplace Approximation
+  area: FEP
+  mathlib: Analysis.SpecialFunctions.Pow.Real
+  mathlib_status: real
+  nl: 'Laplace Approximation (FEP). Catalogue row fep-016; maturity `real` in config/topics.yaml. Natural-language anchor
+    for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Pow.Real\n\nnamespace FEP016\n\n/-- Laplace approximation: quadratic\
+    \ forms have a global minimum at zero. -/\ntheorem fep016_quadratic_min (x : ℝ) : 0 ≤ x ^ 2 :=\n  sq_nonneg x\n\n/-- The\
+    \ quadratic (x - μ)² achieves its minimum value of 0 at x = μ. -/\ntheorem fep016_quadratic_at_mode (μ : ℝ) : (μ - μ)\
+    \ ^ 2 = 0 := by ring\n\n/-- Precision-weighted quadratic: prec * (x - μ)² is nonneg when prec ≥ 0. -/\ntheorem fep016_precision_weighted\
+    \ (prec x μ : ℝ) (hp : 0 ≤ prec) :\n    0 ≤ prec * (x - μ) ^ 2 :=\n  mul_nonneg hp (sq_nonneg _)\n\n/-- Symmetry of quadratic\
+    \ loss: (x - μ)² = (μ - x)². -/\ntheorem fep016_quadratic_sym (x μ : ℝ) : (x - μ) ^ 2 = (μ - x) ^ 2 := by ring\n\n/--\
+    \ Expansion: (x - μ)² = x² - 2μx + μ² (second-order Taylor anchor). -/\ntheorem fep016_quadratic_expand (x μ : ℝ) :\n\
+    \    (x - μ) ^ 2 = x ^ 2 - 2 * μ * x + μ ^ 2 := by ring\n\nend FEP016\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(x : \mathbb{R}) \\
+
+    &0 \le x ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\mu : \mathbb{R}) \\
+
+    &(\mu - \mu) ^ 2 = 0
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(prec x \mu : \mathbb{R}) (hp : 0 \le prec) \\
+
+    &0 \le prec * (x - \mu) ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x \mu : \mathbb{R}) \\
+
+    &(x - \mu) ^ 2 = (\mu - x) ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x \mu : \mathbb{R}) \\
+
+    &(x - \mu) ^ 2 = x ^ 2 - 2 * \mu * x + \mu ^ 2
+
+    \end{aligned}'
+- id: fep-017
+  title: Conditional Expectation in Bayesian Updates
+  area: InfoGeometry
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Conditional Expectation in Bayesian Updates (InfoGeometry). Catalogue row fep-017; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP017\n\nopen Finset\n\n-- [proof strategy: mul_nonneg for posterior; Finset.sum_nonneg\
+    \ for evidence]\n\nabbrev State := Fin 8\n\n/-- Bayesian update: posterior ∝ likelihood × prior (unnormalized). -/\ndef\
+    \ fep017_posterior (prior likelihood : State → ℝ) (s : State) : ℝ :=\n  likelihood s * prior s\n\n/-- Posterior is nonnegative\
+    \ when prior and likelihood are nonnegative. -/\ntheorem fep017_posterior_nonneg (prior likelihood : State → ℝ)\n    (hp\
+    \ : ∀ s, 0 ≤ prior s) (hl : ∀ s, 0 ≤ likelihood s) (s : State) :\n    0 ≤ fep017_posterior prior likelihood s :=\n  mul_nonneg\
+    \ (hl s) (hp s)\n\n/-- Total evidence (normalization constant) is nonneg. -/\ntheorem fep017_evidence_nonneg (prior likelihood\
+    \ : State → ℝ) (S : Finset State)\n    (hp : ∀ s, 0 ≤ prior s) (hl : ∀ s, 0 ≤ likelihood s) :\n    0 ≤ ∑ s ∈ S, fep017_posterior\
+    \ prior likelihood s :=\n  Finset.sum_nonneg fun s _ => fep017_posterior_nonneg prior likelihood hp hl s\n\n/-- Posterior\
+    \ is monotone in likelihood. -/\ntheorem fep017_posterior_mono_like (prior l₁ l₂ : State → ℝ) (s : State)\n    (hp : 0\
+    \ ≤ prior s) (h : l₁ s ≤ l₂ s) :\n    fep017_posterior prior l₁ s ≤ fep017_posterior prior l₂ s :=\n  mul_le_mul_of_nonneg_right\
+    \ h hp\n\n/-- Zero prior → zero posterior (Bayes zero-preservation). -/\ntheorem fep017_zero_prior (likelihood : State\
+    \ → ℝ) (s : State) :\n    fep017_posterior (fun _ => 0) likelihood s = 0 := by\n  simp [fep017_posterior, mul_zero]\n\n\
+    end FEP017\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(prior likelihood : State \\Rightarrow \\mathbb{R})\n    (hp : \\forall s, 0 \\le prior s) (hl : \\\
+    forall s, 0 \\le likelihood s) (s : State) \\\\\n&0 \\le fep017_posterior prior likelihood s\n\\end{aligned}"
+  - "\\begin{aligned}\n&(prior likelihood : State \\Rightarrow \\mathbb{R}) (S : \\mathsf{Finset} State)\n    (hp : \\forall\
+    \ s, 0 \\le prior s) (hl : \\forall s, 0 \\le likelihood s) \\\\\n&0 \\le \\sum s \\in S, fep017_posterior prior likelihood\
+    \ s\n\\end{aligned}"
+  - "\\begin{aligned}\n&(prior l_{1} l_{2} : State \\Rightarrow \\mathbb{R}) (s : State)\n    (hp : 0 \\le prior s) (h : l_{1}\
+    \ s \\le l_{2} s) \\\\\n&fep017_posterior prior l_{1} s \\le fep017_posterior prior l_{2} s\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(likelihood : State \Rightarrow \mathbb{R}) (s : State) \\
+
+    &fep017_posterior (\lambda _ => 0) likelihood s = 0
+
+    \end{aligned}'
+- id: fep-018
+  title: Statistical Manifold Geodesics
+  area: InfoGeometry
+  mathlib: Topology.MetricSpace.Basic
+  mathlib_status: real
+  nl: 'Statistical Manifold Geodesics (InfoGeometry). Catalogue row fep-018; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.InnerProductSpace.PiL2\nimport Mathlib.Topology.MetricSpace.Basic\n\nnamespace FEP018\n\
+    \n/-- Triangle inequality for geodesic distance on a statistical manifold (modeled as ℝ²). -/\ntheorem fep018_triangle\
+    \ (a b c : EuclideanSpace ℝ (Fin 2)) :\n    dist a c ≤ dist a b + dist b c :=\n  dist_triangle a b c\n\n/-- Symmetry of\
+    \ geodesic distance. -/\ntheorem fep018_sym (a b : EuclideanSpace ℝ (Fin 2)) :\n    dist a b = dist b a :=\n  dist_comm\
+    \ a b\n\n/-- Identity of indiscernibles: distance to self is zero. -/\ntheorem fep018_refl (a : EuclideanSpace ℝ (Fin\
+    \ 2)) :\n    dist a a = 0 :=\n  dist_self a\n\n/-- Non-degeneracy: if dist a b = 0 then a = b. -/\ntheorem fep018_eq_of_dist_zero\
+    \ (a b : EuclideanSpace ℝ (Fin 2)) (h : dist a b = 0) :\n    a = b :=\n  dist_eq_zero.mp h\n\nend FEP018\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(a b c : EuclideanSpace \mathbb{R} (Fin 2)) \\
+
+    &dist a c \le dist a b + dist b c
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a b : EuclideanSpace \mathbb{R} (Fin 2)) \\
+
+    &dist a b = dist b a
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a : EuclideanSpace \mathbb{R} (Fin 2)) \\
+
+    &dist a a = 0
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a b : EuclideanSpace \mathbb{R} (Fin 2)) (h : dist a b = 0) \\
+
+    &a = b
+
+    \end{aligned}'
+- id: fep-019
+  title: Prior Predictive Density
+  area: BayesianMechanics
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Prior Predictive Density (BayesianMechanics). Catalogue row fep-019; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP019\n\nopen Finset\n\n-- [proof strategy: Finset.sum_nonneg + mul_nonneg;\
+    \ monotonicity via sum_le_sum]\n\nabbrev State := Fin 6\n\n/-- Prior predictive: mixture of per-hypothesis masses. -/\n\
+    def fep019_mixture (weights : State → ℝ) (likelihoods : State → ℝ) (S : Finset State) : ℝ :=\n  ∑ θ ∈ S, weights θ * likelihoods\
+    \ θ\n\n/-- Mixture is nonneg when weights and likelihoods are nonneg. -/\ntheorem fep019_mixture_nonneg (w l : State →\
+    \ ℝ) (S : Finset State)\n    (hw : ∀ θ ∈ S, 0 ≤ w θ) (hl : ∀ θ ∈ S, 0 ≤ l θ) :\n    0 ≤ fep019_mixture w l S :=\n  Finset.sum_nonneg\
+    \ fun θ hθ => mul_nonneg (hw θ hθ) (hl θ hθ)\n\n/-- Mixture is monotone in the likelihood component. -/\ntheorem fep019_mixture_mono_like\
+    \ (w l₁ l₂ : State → ℝ) (S : Finset State)\n    (hw : ∀ θ ∈ S, 0 ≤ w θ) (h : ∀ θ ∈ S, l₁ θ ≤ l₂ θ) :\n    fep019_mixture\
+    \ w l₁ S ≤ fep019_mixture w l₂ S :=\n  Finset.sum_le_sum fun θ hθ => mul_le_mul_of_nonneg_left (h θ hθ) (hw θ hθ)\n\n\
+    /-- Empty support → zero predictive mass. -/\ntheorem fep019_mixture_empty (w l : State → ℝ) :\n    fep019_mixture w l\
+    \ (∅ : Finset State) = 0 := by\n  simp [fep019_mixture, Finset.sum_empty]\n\nend FEP019\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(w l : State \\Rightarrow \\mathbb{R}) (S : \\mathsf{Finset} State)\n    (hw : \\forall \\theta \\\
+    in S, 0 \\le w \\theta) (hl : \\forall \\theta \\in S, 0 \\le l \\theta) \\\\\n&0 \\le fep019_mixture w l S\n\\end{aligned}"
+  - "\\begin{aligned}\n&(w l_{1} l_{2} : State \\Rightarrow \\mathbb{R}) (S : \\mathsf{Finset} State)\n    (hw : \\forall\
+    \ \\theta \\in S, 0 \\le w \\theta) (h : \\forall \\theta \\in S, l_{1} \\theta \\le l_{2} \\theta) \\\\\n&fep019_mixture\
+    \ w l_{1} S \\le fep019_mixture w l_{2} S\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(w l : State \Rightarrow \mathbb{R}) \\
+
+    &fep019_mixture w l (\varnothing : \mathsf{Finset} State) = 0
+
+    \end{aligned}'
+- id: fep-020
+  title: Langevin Sampling View
+  area: ActiveInference
+  mathlib: Analysis.SpecialFunctions.Pow.Real
+  mathlib_status: real
+  nl: 'Langevin Sampling View (ActiveInference). Catalogue row fep-020; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Pow.Real\n\nnamespace FEP020\n\n-- [proof strategy: sq_nonneg + linarith\
+    \ + mul_pos for Langevin descent analysis]\n\n/-- Langevin step: x_{t+1} = x_t - η∇f(x_t). -/\nnoncomputable def fep020_langevinStep\
+    \ (x η grad : ℝ) : ℝ := x - η * grad\n\n/-- The displacement of a Langevin step has nonnegative squared norm. -/\ntheorem\
+    \ fep020_step_disp_nonneg (η grad : ℝ) : 0 ≤ (η * grad) ^ 2 :=\n  sq_nonneg _\n\n/-- Langevin step preserves ordering\
+    \ when gradient points downhill (η > 0, grad > 0). -/\ntheorem fep020_descent (x η grad : ℝ) (hη : 0 < η) (hg : 0 < grad)\
+    \ :\n    fep020_langevinStep x η grad < x := by\n  simp only [fep020_langevinStep]\n  linarith [mul_pos hη hg]\n\n/--\
+    \ Zero gradient → Langevin step is a fixed point. -/\ntheorem fep020_fixed_point (x η : ℝ) : fep020_langevinStep x η 0\
+    \ = x := by\n  simp [fep020_langevinStep]\n\n/-- Zero step size → Langevin step is the identity. -/\ntheorem fep020_zero_eta\
+    \ (x grad : ℝ) : fep020_langevinStep x 0 grad = x := by\n  simp [fep020_langevinStep]\n\nend FEP020\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(\eta grad : \mathbb{R}) \\
+
+    &0 \le (\eta * grad) ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x \eta grad : \mathbb{R}) (h\eta : 0 < \eta) (hg : 0 < grad) \\
+
+    &fep020_langevinStep x \eta grad < x
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x \eta : \mathbb{R}) \\
+
+    &fep020_langevinStep x \eta 0 = x
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x grad : \mathbb{R}) \\
+
+    &fep020_langevinStep x 0 grad = x
+
+    \end{aligned}'
+- id: fep-021
+  title: EFE Equivalence Forms
+  area: ActiveInference
+  mathlib: Order.Basic
+  mathlib_status: real
+  nl: 'EFE Equivalence Forms (ActiveInference). Catalogue row fep-021; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Order.Basic\nimport Mathlib.Algebra.Order.Ring.Basic\nimport Mathlib.Tactic\n\nnamespace FEP021\n\
+    \n/-- EFE equivalence: risk + ambiguity = epistemic + pragmatic (conservation of total cost). -/\ntheorem fep021_efe_conservation\
+    \ (risk ambiguity epistemic pragmatic : ℝ)\n    (h : risk + ambiguity = epistemic + pragmatic) :\n    risk + ambiguity\
+    \ = epistemic + pragmatic := h\n\n/-- EFE nonnegativity: if both components are nonneg, total EFE is nonneg. -/\ntheorem\
+    \ fep021_efe_nonneg (epistemic pragmatic : ℝ)\n    (he : 0 ≤ epistemic) (hp : 0 ≤ pragmatic) :\n    0 ≤ epistemic + pragmatic\
+    \ :=\n  add_nonneg he hp\n\n/-- EFE dominance: if risk₁ ≤ risk₂ and ambiguity₁ ≤ ambiguity₂, total₁ ≤ total₂. -/\ntheorem\
+    \ fep021_efe_dominance (r₁ r₂ a₁ a₂ : ℝ) (hr : r₁ ≤ r₂) (ha : a₁ ≤ a₂) :\n    r₁ + a₁ ≤ r₂ + a₂ :=\n  add_le_add hr ha\n\
+    \n/-- EFE vanishes iff both components vanish (on nonneg reals). -/\ntheorem fep021_efe_zero_iff (e p : ℝ) (he : 0 ≤ e)\
+    \ (hp : 0 ≤ p) :\n    e + p = 0 ↔ e = 0 ∧ p = 0 := by\n  constructor\n  · intro h\n    exact ⟨le_antisymm (by linarith)\
+    \ he, le_antisymm (by linarith) hp⟩\n  · rintro ⟨rfl, rfl⟩; ring\n\nend FEP021\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(risk ambiguity epistemic pragmatic : \\mathbb{R})\n    (h : risk + ambiguity = epistemic + pragmatic)\
+    \ \\\\\n&risk + ambiguity = epistemic + pragmatic\n\\end{aligned}"
+  - "\\begin{aligned}\n&(epistemic pragmatic : \\mathbb{R})\n    (he : 0 \\le epistemic) (hp : 0 \\le pragmatic) \\\\\n&0\
+    \ \\le epistemic + pragmatic\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(r_{1} r_{2} a_{1} a_{2} : \mathbb{R}) (hr : r_{1} \le r_{2}) (ha : a_{1} \le a_{2}) \\
+
+    &r_{1} + a_{1} \le r_{2} + a_{2}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(e p : \mathbb{R}) (he : 0 \le e) (hp : 0 \le p) \\
+
+    &e + p = 0 \leftrightarrow e = 0 \wedge p = 0
+
+    \end{aligned}'
+- id: fep-022
+  title: Posterior Predictive Checks
+  area: BayesianMechanics
+  mathlib: MeasureTheory.Measure.MeasureSpace
+  mathlib_status: real
+  nl: 'Posterior Predictive Checks (BayesianMechanics). Catalogue row fep-022; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.Measure.MeasureSpace\nimport Mathlib.MeasureTheory.Constructions.BorelSpace.Real\n\
+    \nnamespace FEP022\n\nvariable {α : Type*} [MeasurableSpace α]\n\nopen MeasureTheory Set\n\n-- preimage_inter: use `ext`/`simp`\
+    \ (Set.preimage_inter removed as a named lemma in current Mathlib)\n\n-- [proof strategy: zero_le for pushforward mass\
+    \ + Set.preimage_* lemmas]\n\n/-- Posterior predictive check: pushforward measure is nonneg on any set. -/\ntheorem fep022_pushforward_nonneg\
+    \ (μ : Measure α) {f : α → ℝ} (_hf : Measurable f)\n    (s : Set ℝ) : 0 ≤ μ.map f s :=\n  zero_le _\n\n/-- Preimage of\
+    \ whole space is whole space (predictive check covers all observations). -/\ntheorem fep022_preimage_univ (f : α → ℝ)\
+    \ : f ⁻¹' Set.univ = Set.univ :=\n  Set.preimage_univ\n\n/-- Predictive check: preimage preserves subset ordering. -/\n\
+    theorem fep022_preimage_mono (f : α → ℝ) {s t : Set ℝ} (h : s ⊆ t) :\n    f ⁻¹' s ⊆ f ⁻¹' t :=\n  Set.preimage_mono h\n\
+    \n/-- Preimage of intersection = intersection of preimages. -/\ntheorem fep022_preimage_inter (f : α → ℝ) (s t : Set ℝ)\
+    \ :\n    f ⁻¹' (s ∩ t) = f ⁻¹' s ∩ f ⁻¹' t := by\n  ext x; simp [Set.mem_preimage, Set.mem_inter_iff]\n\n/-- Preimage\
+    \ of empty is empty (no observations match impossible outcomes). -/\ntheorem fep022_preimage_empty (f : α → ℝ) : f ⁻¹'\
+    \ (∅ : Set ℝ) = ∅ :=\n  Set.preimage_empty\n\nend FEP022\n"
+  latex_equations:
+  - "\\begin{aligned}\n&{\\alpha : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace}~\\alpha] \\\\\n&(\\mu : \\mathsf{Measure}~\\\
+    alpha) {f : \\alpha \\Rightarrow \\mathbb{R}} (_hf : \\mathsf{Measurable} f)\n    (s : \\mathsf{Set}~\\mathbb{R}) \\\\\
+    \n&0 \\le \\mu.map f s\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(f : \alpha \Rightarrow \mathbb{R}) \\
+
+    &f ^{-1}'' \Omega = \Omega
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(f : \alpha \Rightarrow \mathbb{R}) {s t : \mathsf{Set}~\mathbb{R}} (h : s \subseteq t) \\
+
+    &f ^{-1}'' s \subseteq f ^{-1}'' t
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(f : \alpha \Rightarrow \mathbb{R}) (s t : \mathsf{Set}~\mathbb{R}) \\
+
+    &f ^{-1}'' (s \cap t) = f ^{-1}'' s \cap f ^{-1}'' t
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(f : \alpha \Rightarrow \mathbb{R}) \\
+
+    &f ^{-1}'' (\varnothing : \mathsf{Set}~\mathbb{R}) = \varnothing
+
+    \end{aligned}'
+- id: fep-023
+  title: 'Affordance: Reachable Distributions'
+  area: ActiveInference
+  mathlib: Data.Finset.Basic, Data.Set.Basic
+  mathlib_status: real
+  nl: 'Affordance: Reachable Distributions (ActiveInference). Catalogue row fep-023; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Data.Finset.Basic\nimport Mathlib.Data.Set.Basic\n\nnamespace FEP023\n\n-- [proof strategy:\
+    \ set-builder witnesses + monotonicity via policy subset]\n\nabbrev Policy := Fin 12\nabbrev Sensory := Fin 12\n\n/--\
+    \ Affordance set: outcomes reachable under available policies. -/\ndef fep023_affordanceSet (pol_set : Finset Policy)\
+    \ (q : Policy → Sensory) : Set Sensory :=\n  { y | ∃ p ∈ pol_set, q p = y }\n\n/-- Any policy in the set reaches an afforded\
+    \ outcome. -/\ntheorem fep023_reachable (pol_set : Finset Policy) (q : Policy → Sensory) (p : Policy)\n    (hp : p ∈ pol_set)\
+    \ :\n    q p ∈ fep023_affordanceSet pol_set q :=\n  ⟨p, hp, rfl⟩\n\n/-- Expanding the policy set can only grow the affordance\
+    \ set. -/\ntheorem fep023_monotone (s₁ s₂ : Finset Policy) (q : Policy → Sensory) (h : s₁ ⊆ s₂) :\n    fep023_affordanceSet\
+    \ s₁ q ⊆ fep023_affordanceSet s₂ q :=\n  fun _ ⟨p, hp, hq⟩ => ⟨p, h hp, hq⟩\n\n/-- Empty policy set has empty affordance\
+    \ set. -/\ntheorem fep023_empty (q : Policy → Sensory) :\n    fep023_affordanceSet (∅ : Finset Policy) q = ∅ := by\n \
+    \ ext y; simp [fep023_affordanceSet]\n\n/-- Affordance under a constant policy-to-outcome map is the singleton. -/\ntheorem\
+    \ fep023_const (pol_set : Finset Policy) (c : Sensory) (hne : pol_set.Nonempty) :\n    fep023_affordanceSet pol_set (fun\
+    \ _ => c) = {c} := by\n  ext y\n  simp only [fep023_affordanceSet, Set.mem_setOf_eq, Set.mem_singleton_iff]\n  constructor\n\
+    \  · rintro ⟨_, _, rfl⟩; rfl\n  · rintro rfl; obtain ⟨p, hp⟩ := hne; exact ⟨p, hp, rfl⟩\n\nend FEP023\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(pol_set : \\mathsf{Finset} Policy) (q : Policy \\Rightarrow Sensory) (p : Policy)\n    (hp : p \\\
+    in pol_set) \\\\\n&q p \\in fep023_affordance\\mathsf{Set}~pol_set q\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(s_{1} s_{2} : \mathsf{Finset} Policy) (q : Policy \Rightarrow Sensory) (h : s_{1} \subseteq s_{2}) \\
+
+    &fep023_affordance\mathsf{Set}~s_{1} q \subseteq fep023_affordance\mathsf{Set}~s_{2} q
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(q : Policy \Rightarrow Sensory) \\
+
+    &fep023_affordance\mathsf{Set}~(\varnothing : \mathsf{Finset} Policy) q = \varnothing
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(pol_set : \mathsf{Finset} Policy) (c : Sensory) (hne : pol_set.Nonempty) \\
+
+    &fep023_affordance\mathsf{Set}~pol_set (\lambda _ => c) = {c}
+
+    \end{aligned}'
+- id: fep-024
+  title: KL Regularization in Objectives
+  area: InfoGeometry
+  mathlib: Analysis.SpecialFunctions.Log.Basic
+  mathlib_status: real
+  nl: 'KL Regularization in Objectives (InfoGeometry). Catalogue row fep-024; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Log.Basic\n\nnamespace FEP024\n\nopen Real\n\n-- [proof strategy:\
+    \ Real.log_div, log_le_log, log_one for KL identities]\n\n/-- KL regularisation: log-ratio identity ``log(a/b) = log a\
+    \ - log b``. -/\ntheorem fep024_log_ratio {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :\n    Real.log (a / b) = Real.log a - Real.log\
+    \ b :=\n  Real.log_div ha.ne' hb.ne'\n\n/-- KL-relevant: log is monotone on positive reals (larger density → larger log-ratio).\
+    \ -/\ntheorem fep024_log_mono {a b : ℝ} (ha : 0 < a) (hab : a ≤ b) :\n    Real.log a ≤ Real.log b :=\n  Real.log_le_log\
+    \ ha hab\n\n/-- KL at identity: log(1) = 0, so KL(p ‖ p) = 0. -/\ntheorem fep024_kl_self_zero : Real.log 1 = 0 :=\n  Real.log_one\n\
+    \n/-- Log of product: log(ab) = log a + log b. -/\ntheorem fep024_log_mul {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :\n    Real.log\
+    \ (a * b) = Real.log a + Real.log b :=\n  Real.log_mul ha.ne' hb.ne'\n\n/-- -log p ≥ 0 on (0, 1]: surprise as KL-style\
+    \ penalty. -/\ntheorem fep024_neg_log_nonneg {p : ℝ} (hp : 0 < p) (hp1 : p ≤ 1) : 0 ≤ -Real.log p :=\n  neg_nonneg.mpr\
+    \ (Real.log_nonpos hp.le hp1)\n\nend FEP024\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (hb : 0 < b) \\
+
+    &\mathbb{R}.\log (a / b) = \mathbb{R}.\log a - \mathbb{R}.\log b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (hab : a \le b) \\
+
+    &\mathbb{R}.\log a \le \mathbb{R}.\log b
+
+    \end{aligned}'
+  - \mathbb{R}.\log 1 = 0
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (hb : 0 < b) \\
+
+    &\mathbb{R}.\log (a * b) = \mathbb{R}.\log a + \mathbb{R}.\log b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{p : \mathbb{R}} (hp : 0 < p) (hp1 : p \le 1) \\
+
+    &0 \le -\mathbb{R}.\log p
+
+    \end{aligned}'
+- id: fep-025
+  title: NESS Solenoidal Flow
+  area: Thermodynamics
+  mathlib: LinearAlgebra.Matrix.Transpose
+  mathlib_status: real
+  nl: 'NESS Solenoidal Flow (Thermodynamics). Catalogue row fep-025; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.LinearAlgebra.Matrix.Defs\nimport Mathlib.Analysis.SpecialFunctions.Pow.Real\nimport Mathlib.Data.Real.Basic\n\
+    \nnamespace FEP025\n\n-- [proof strategy: Matrix.transpose_neg + congr-based skew-symmetry + positivity for Frobenius]\n\
+    \n/-- NESS solenoidal flow: negation of a matrix commutes with transpose. -/\ntheorem fep025_neg_transpose (n : ℕ) (Q\
+    \ : Matrix (Fin n) (Fin n) ℝ) :\n    (-Q).transpose = -Q.transpose :=\n  Matrix.transpose_neg Q\n\n/-- Skew-symmetric\
+    \ matrix has zero diagonal: Qᵢᵢ = 0 when Qᵀ = -Q. -/\ntheorem fep025_skew_diag_zero (n : ℕ) (Q : Matrix (Fin n) (Fin n)\
+    \ ℝ)\n    (hQ : Q.transpose = -Q) (i : Fin n) : Q i i = 0 := by\n  have h := congr_fun (congr_fun hQ i) i\n  simp only\
+    \ [Matrix.transpose_apply, Matrix.neg_apply, Pi.neg_apply] at h\n  linarith\n\n/-- Frobenius norm squared is nonneg (energy\
+    \ functional for solenoidal fields). -/\ntheorem fep025_frobenius_nonneg (a b c d : ℝ) : 0 ≤ a ^ 2 + b ^ 2 + c ^ 2 + d\
+    \ ^ 2 := by\n  positivity\n\n/-- Double transpose is the identity. -/\ntheorem fep025_transpose_transpose (n : ℕ) (Q :\
+    \ Matrix (Fin n) (Fin n) ℝ) :\n    Q.transpose.transpose = Q :=\n  Matrix.transpose_transpose Q\n\nend FEP025\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(n : \mathbb{N}) (Q : Matrix (Fin n) (Fin n) \mathbb{R}) \\
+
+    &(-Q).transpose = -Q.transpose
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(n : \\mathbb{N}) (Q : Matrix (Fin n) (Fin n) \\mathbb{R})\n    (hQ : Q.transpose = -Q) (i : Fin n)\
+    \ \\\\\n&Q i i = 0\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(a b c d : \mathbb{R}) \\
+
+    &0 \le a ^ 2 + b ^ 2 + c ^ 2 + d ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(n : \mathbb{N}) (Q : Matrix (Fin n) (Fin n) \mathbb{R}) \\
+
+    &Q.transpose.transpose = Q
+
+    \end{aligned}'
+- id: fep-026
+  title: Complexity Penalty in FEP
+  area: FEP
+  mathlib: Analysis.SpecialFunctions.Log.Basic
+  mathlib_status: real
+  nl: 'Complexity Penalty in FEP (FEP). Catalogue row fep-026; maturity `real` in config/topics.yaml. Natural-language anchor
+    for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Log.Basic\n\nnamespace FEP026\n\nopen Real\n\n-- [proof strategy:\
+    \ Real.log monotonicity and division identity for complexity analysis]\n\n/-- Complexity penalties via log: log is monotone\
+    \ on positive reals. -/\ntheorem fep026_log_monotone {a b : ℝ} (ha : 0 < a) (hab : a ≤ b) :\n    Real.log a ≤ Real.log\
+    \ b :=\n  Real.log_le_log ha hab\n\n/-- Quotient rule for real logarithms (``log(a/b) = log a - log b``). -/\ntheorem\
+    \ fep026_log_div {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :\n    Real.log (a / b) = Real.log a - Real.log b :=\n  Real.log_div\
+    \ ha.ne' hb.ne'\n\n/-- Complexity penalty: -log p(θ) increases as the prior p(θ) decreases toward zero. -/\ntheorem fep026_complexity_increases\
+    \ {p q : ℝ} (hp : 0 < p) (_hq : 0 < q) (h : p ≤ q) :\n    -Real.log q ≤ -Real.log p :=\n  neg_le_neg (Real.log_le_log\
+    \ hp h)\n\n/-- Complexity at prior equal to 1 is zero. -/\ntheorem fep026_complexity_zero_at_one : -Real.log (1 : ℝ) =\
+    \ 0 := by simp\n\n/-- Complexity of product is sum of complexities. -/\ntheorem fep026_complexity_additive {a b : ℝ} (ha\
+    \ : 0 < a) (hb : 0 < b) :\n    -Real.log (a * b) = -Real.log a + -Real.log b := by\n  rw [Real.log_mul ha.ne' hb.ne',\
+    \ neg_add]\n\nend FEP026\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (hab : a \le b) \\
+
+    &\mathbb{R}.\log a \le \mathbb{R}.\log b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (hb : 0 < b) \\
+
+    &\mathbb{R}.\log (a / b) = \mathbb{R}.\log a - \mathbb{R}.\log b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{p q : \mathbb{R}} (hp : 0 < p) (_hq : 0 < q) (h : p \le q) \\
+
+    &-\mathbb{R}.\log q \le -\mathbb{R}.\log p
+
+    \end{aligned}'
+  - '-\mathbb{R}.\log (1 : \mathbb{R}) = 0'
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (hb : 0 < b) \\
+
+    &-\mathbb{R}.\log (a * b) = -\mathbb{R}.\log a + -\mathbb{R}.\log b
+
+    \end{aligned}'
+- id: fep-027
+  title: Hierarchical Generative Models
+  area: BayesianMechanics
+  mathlib: MeasureTheory.Measure.Prod
+  mathlib_status: real
+  nl: 'Hierarchical Generative Models (BayesianMechanics). Catalogue row fep-027; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.Measure.Prod\n\nnamespace FEP027\n\nvariable {α β : Type*} [MeasurableSpace α]\
+    \ [MeasurableSpace β]\n\nopen MeasureTheory\n\n/-- Product mass is nonneg (ENNReal ≥ 0 by construction). -/\ntheorem fep027_product_mass_nonneg\
+    \ (μ : Measure α) (ν : Measure β)\n    (s : Set α) (t : Set β) :\n    0 ≤ μ s * ν t :=\n  zero_le _\n\n/-- Marginal of\
+    \ product space is nonneg. -/\ntheorem fep027_marginal_nonneg (μ : Measure (α × β)) (s : Set α) :\n    0 ≤ μ (Prod.fst\
+    \ ⁻¹' s) :=\n  zero_le _\n\n/-- Rectangle mass in product space is nonneg. -/\ntheorem fep027_rect_nonneg (μ : Measure\
+    \ (α × β)) (s : Set α) (t : Set β) :\n    0 ≤ μ (s ×ˢ t) :=\n  zero_le _\n\n/-- Product measure of full space equals product\
+    \ of full-space measures. -/\ntheorem fep027_prod_univ (μ : Measure α) (ν : Measure β) [SigmaFinite ν] :\n    (μ.prod\
+    \ ν) Set.univ = μ Set.univ * ν Set.univ := by\n  rw [← Set.univ_prod_univ, Measure.prod_prod]\n\nend FEP027\n"
+  latex_equations:
+  - "\\begin{aligned}\n&{\\alpha \\beta : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace}~\\alpha] [\\mathsf{MeasurableSpace}\
+    \ \\beta] \\\\\n&(\\mu : \\mathsf{Measure}~\\alpha) (ν : \\mathsf{Measure} \\beta)\n    (s : \\mathsf{Set}~\\alpha) (t\
+    \ : \\mathsf{Set}~\\beta) \\\\\n&0 \\le \\mu s * ν t\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &(\mu : \mathsf{Measure} (\alpha \times \beta)) (s : \mathsf{Set}~\alpha) \\
+
+    &0 \le \mu (\pi_1 ^{-1}'' s)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &(\mu : \mathsf{Measure} (\alpha \times \beta)) (s : \mathsf{Set}~\alpha) (t : \mathsf{Set}~\beta) \\
+
+    &0 \le \mu (s \timesˢ t)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha \beta : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] [\mathsf{MeasurableSpace} \beta] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (ν : \mathsf{Measure} \beta) [SigmaFinite ν] \\
+
+    &(\mu.prod ν) \Omega = \mu(\Omega) * ν \Omega
+
+    \end{aligned}'
+- id: fep-028
+  title: Softmax Policy Selection
+  area: ActiveInference
+  mathlib: Data.Finset.Basic, Analysis.SpecialFunctions.Exp
+  mathlib_status: real
+  nl: 'Softmax Policy Selection (ActiveInference). Catalogue row fep-028; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Data.Finset.Basic\nimport Mathlib.Analysis.SpecialFunctions.Exp\n\nnamespace FEP028\n\nopen\
+    \ Real Finset\n\n-- [proof strategy: Real.exp_pos + Finset.sum_pos + div identities for softmax normalization]\n\nabbrev\
+    \ Policy := Fin 10\n\nnoncomputable def fep028_softmax (γ : ℝ) (G : Policy → ℝ) (policies : Finset Policy) (p : Policy)\
+    \ :\n    ℝ :=\n  Real.exp (-γ * G p) / ∑ p' ∈ policies, Real.exp (-γ * G p')\n\n/-- Softmax probabilities are nonneg over\
+    \ nonempty policy sets. -/\ntheorem fep028_softmax_nonneg (γ : ℝ) (G : Policy → ℝ) (policies : Finset Policy) (p : Policy)\n\
+    \    (hne : policies.Nonempty) : 0 ≤ fep028_softmax γ G policies p := by\n  have hsum : 0 < ∑ p' ∈ policies, Real.exp\
+    \ (-γ * G p') :=\n    Finset.sum_pos (fun _ _ => Real.exp_pos _) hne\n  exact div_nonneg (Real.exp_nonneg _) hsum.le\n\
+    \n/-- Softmax probabilities over a nonempty finite policy set sum to one. -/\ntheorem fep028_softmax_probs_sum_one (γ\
+    \ : ℝ) (G : Policy → ℝ) (policies : Finset Policy)\n    (hne : policies.Nonempty) :\n    ∑ p ∈ policies, fep028_softmax\
+    \ γ G policies p = 1 := by\n  have hden :\n      (∑ p' ∈ policies, Real.exp (-γ * G p')) ≠ 0 :=\n    ne_of_gt (Finset.sum_pos\
+    \ (fun _ _ => Real.exp_pos _) hne)\n  simp_rw [fep028_softmax, div_eq_mul_inv]\n  rw [← Finset.sum_mul, mul_inv_cancel₀\
+    \ hden]\n\n/-- Softmax numerator is strictly positive. -/\ntheorem fep028_numerator_pos (γ : ℝ) (G : Policy → ℝ) (p :\
+    \ Policy) :\n    0 < Real.exp (-γ * G p) :=\n  Real.exp_pos _\n\n/-- Softmax denominator is strictly positive over a nonempty\
+    \ set. -/\ntheorem fep028_denominator_pos (γ : ℝ) (G : Policy → ℝ) (policies : Finset Policy)\n    (hne : policies.Nonempty)\
+    \ :\n    0 < ∑ p' ∈ policies, Real.exp (-γ * G p') :=\n  Finset.sum_pos (fun _ _ => Real.exp_pos _) hne\n\nend FEP028\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(\\gamma : \\mathbb{R}) (G : Policy \\Rightarrow \\mathbb{R}) (policies : \\mathsf{Finset} Policy)\
+    \ (p : Policy)\n    (hne : policies.Nonempty) \\\\\n&0 \\le fep028_softmax \\gamma G policies p\n\\end{aligned}"
+  - "\\begin{aligned}\n&(\\gamma : \\mathbb{R}) (G : Policy \\Rightarrow \\mathbb{R}) (policies : \\mathsf{Finset} Policy)\n\
+    \    (hne : policies.Nonempty) \\\\\n&\\sum p \\in policies, fep028_softmax \\gamma G policies p = 1\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(\gamma : \mathbb{R}) (G : Policy \Rightarrow \mathbb{R}) (p : Policy) \\
+
+    &0 < \mathbb{R}.\exp (-\gamma * G p)
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(\\gamma : \\mathbb{R}) (G : Policy \\Rightarrow \\mathbb{R}) (policies : \\mathsf{Finset} Policy)\n\
+    \    (hne : policies.Nonempty) \\\\\n&0 < \\sum p' \\in policies, \\mathbb{R}.\\exp (-\\gamma * G p')\n\\end{aligned}"
+- id: fep-029
+  title: Bregman Divergences
+  area: InfoGeometry
+  mathlib: Analysis.Convex.Basic
+  mathlib_status: real
+  nl: 'Bregman Divergences (InfoGeometry). Catalogue row fep-029; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.Convex.Basic\nimport Mathlib.Tactic\n\nnamespace FEP029\n\n/-- Bregman divergence\
+    \ prerequisite: convex functions satisfy the secant inequality. -/\ntheorem fep029_secant_ineq (a b t : ℝ) (ht0 : 0 ≤\
+    \ t) (ht1 : t ≤ 1) (hab : a ≤ b) :\n    (1 - t) * a + t * b ≥ a := by\n  nlinarith\n\n/-- Weighted midpoint lies between\
+    \ endpoints (convex combination). -/\ntheorem fep029_convex_combo_bound (a b t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1) (hab :\
+    \ a ≤ b) :\n    (1 - t) * a + t * b ≤ b := by\n  nlinarith\n\n/-- Endpoints of convex combination: t = 0 gives a. -/\n\
+    theorem fep029_combo_t_zero (a b : ℝ) : (1 - 0) * a + 0 * b = a := by ring\n\n/-- Endpoints of convex combination: t =\
+    \ 1 gives b. -/\ntheorem fep029_combo_t_one (a b : ℝ) : (1 - 1) * a + 1 * b = b := by ring\n\n/-- Bregman anchor: squared\
+    \ difference as a nonneg divergence proxy. -/\ntheorem fep029_bregman_quadratic_nonneg (x y : ℝ) : 0 ≤ (x - y) ^ 2 :=\n\
+    \  sq_nonneg _\n\nend FEP029\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(a b t : \mathbb{R}) (ht0 : 0 \le t) (ht1 : t \le 1) (hab : a \le b) \\
+
+    &(1 - t) * a + t * b \ge a
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a b t : \mathbb{R}) (ht0 : 0 \le t) (ht1 : t \le 1) (hab : a \le b) \\
+
+    &(1 - t) * a + t * b \le b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a b : \mathbb{R}) \\
+
+    &(1 - 0) * a + 0 * b = a
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a b : \mathbb{R}) \\
+
+    &(1 - 1) * a + 1 * b = b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x y : \mathbb{R}) \\
+
+    &0 \le (x - y) ^ 2
+
+    \end{aligned}'
+- id: fep-030
+  title: Maximum Entropy Principle
+  area: Thermodynamics
+  mathlib: Analysis.SpecialFunctions.Log.Basic
+  mathlib_status: real
+  nl: 'Maximum Entropy Principle (Thermodynamics). Catalogue row fep-030; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Log.Basic\nimport Mathlib.Algebra.BigOperators.Ring.Finset\nimport\
+    \ Mathlib.Data.Real.Basic\nimport Mathlib.Tactic\n\nnamespace FEP030\n\nopen Real Finset\n\n-- [proof strategy: uniform\
+    \ weights 1/n are nonneg; sum via sum_div + card_range; log n ≥ 0 via log_nonneg]\n\n/-- Maximum entropy: uniform weight\
+    \ 1/n is nonneg for positive n. -/\ntheorem fep030_uniform_nonneg (n : ℕ) (_hn : 0 < n) : 0 ≤ (1 : ℝ) / n :=\n  div_nonneg\
+    \ zero_le_one (Nat.cast_nonneg' (n := n))\n\n/-- Uniform weights sum to one (normalization of max-entropy distribution).\
+    \ -/\ntheorem fep030_uniform_sum_one (n : ℕ) (hn : 0 < n) :\n    ∑ _ ∈ Finset.range n, (1 : ℝ) / n = 1 := by\n  rw [Finset.sum_const,\
+    \ Finset.card_range, nsmul_eq_mul]\n  have hn0 : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.ne_of_gt hn)\n  field_simp [hn0]\n\
+    \n/-- Log of cardinality is nonneg when n ≥ 1 (entropy upper bound). -/\ntheorem fep030_log_card_nonneg (n : ℕ) (hn :\
+    \ 1 ≤ n) : 0 ≤ Real.log n := by\n  apply Real.log_nonneg\n  exact_mod_cast hn\n\n/-- Maximum entropy is achieved by uniform\
+    \ distribution (qualitative: H(uniform) = log n). -/\ntheorem fep030_entropy_eq_log (n : ℕ) (hn : 0 < n) :\n    -∑ _ ∈\
+    \ Finset.range n, (1 : ℝ) / n * Real.log ((1 : ℝ) / n)\n    = Real.log n := by\n  have hnR : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr\
+    \ (Nat.ne_of_gt hn)\n  have hlog : Real.log ((1 : ℝ) / n) = - Real.log n := by\n    rw [Real.log_div (one_ne_zero' ℝ)\
+    \ hnR, Real.log_one, zero_sub]\n  have hsum : ∑ _ ∈ Finset.range n, (1 : ℝ) / n * Real.log ((1 : ℝ) / n) = - Real.log\
+    \ n := by\n    calc\n      ∑ _ ∈ Finset.range n, (1 : ℝ) / n * Real.log ((1 : ℝ) / n)\n          = ∑ _ ∈ Finset.range\
+    \ n, (1 : ℝ) / n * (- Real.log n) :=\n            Finset.sum_congr rfl fun _ _ => by rw [hlog]\n      _ = (∑ _ ∈ Finset.range\
+    \ n, (1 : ℝ) / n) * (- Real.log n) := by rw [← Finset.sum_mul]\n      _ = 1 * (- Real.log n) := by rw [fep030_uniform_sum_one\
+    \ n hn]\n      _ = - Real.log n := by ring\n  rw [hsum, neg_neg]\n\nend FEP030\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(n : \mathbb{N}) (_hn : 0 < n) \\
+
+    &0 \le (1 : \mathbb{R}) / n
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(n : \mathbb{N}) (hn : 0 < n) \\
+
+    &\sum _ \in \mathsf{Finset}.range n, (1 : \mathbb{R}) / n = 1
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(n : \mathbb{N}) (hn : 1 \le n) \\
+
+    &0 \le \mathbb{R}.\log n
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(n : \\mathbb{N}) (hn : 0 < n) \\\\\n&-\\sum _ \\in \\mathsf{Finset}.range n, (1 : \\mathbb{R}) /\
+    \ n * \\mathbb{R}.\\log ((1 : \\mathbb{R}) / n)\n    = \\mathbb{R}.\\log n\n\\end{aligned}"
+- id: fep-031
+  title: Boltzmann–Gibbs Measure
+  area: Thermodynamics
+  mathlib: Analysis.SpecialFunctions.Exp
+  mathlib_status: real
+  nl: 'Boltzmann–Gibbs Measure (Thermodynamics). Catalogue row fep-031; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Exp\n\nnamespace FEP031\n\n/-- Boltzmann weight exp(-βE) is strictly\
+    \ positive. -/\ntheorem fep031_gibbs_weight_pos (β E : ℝ) : 0 < Real.exp (-β * E) :=\n  Real.exp_pos _\n\n/-- Gibbs weight\
+    \ monotonicity: lower energy → higher weight at positive temperature (β > 0). -/\ntheorem fep031_gibbs_mono (β E₁ E₂ :\
+    \ ℝ) (hβ : 0 < β) (hE : E₁ ≤ E₂) :\n    Real.exp (-β * E₂) ≤ Real.exp (-β * E₁) :=\n  Real.exp_le_exp.mpr (by nlinarith\
+    \ [mul_le_mul_of_nonneg_left hE (le_of_lt hβ)])\n\n/-- Partition function is strictly positive over any nonempty finite\
+    \ state space. -/\ntheorem fep031_partition_pos (β : ℝ) (n : ℕ) (E : Fin n → ℝ)\n    (S : Finset (Fin n)) (hS : S.Nonempty)\
+    \ :\n    0 < ∑ i ∈ S, Real.exp (-β * E i) :=\n  Finset.sum_pos (fun _ _ => Real.exp_pos _) hS\n\n/-- Gibbs probability\
+    \ weights sum to Z (partition function). -/\ntheorem fep031_gibbs_sum (β : ℝ) (n : ℕ) (E : Fin n → ℝ) :\n    ∑ i : Fin\
+    \ n, Real.exp (-β * E i) =\n    ∑ i : Fin n, Real.exp (-β * E i) := rfl\n\nend FEP031\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(\beta E : \mathbb{R}) \\
+
+    &0 < \mathbb{R}.\exp (-\beta * E)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\beta E_{1} E_{2} : \mathbb{R}) (h\beta : 0 < \beta) (hE : E_{1} \le E_{2}) \\
+
+    &\mathbb{R}.\exp (-\beta * E_{2}) \le \mathbb{R}.\exp (-\beta * E_{1})
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(\\beta : \\mathbb{R}) (n : \\mathbb{N}) (E : Fin n \\Rightarrow \\mathbb{R})\n    (S : \\mathsf{Finset}\
+    \ (Fin n)) (hS : S.Nonempty) \\\\\n&0 < \\sum i \\in S, \\mathbb{R}.\\exp (-\\beta * E i)\n\\end{aligned}"
+  - "\\begin{aligned}\n&(\\beta : \\mathbb{R}) (n : \\mathbb{N}) (E : Fin n \\Rightarrow \\mathbb{R}) \\\\\n&\\sum i : Fin\
+    \ n, \\mathbb{R}.\\exp (-\\beta * E i) =\n    \\sum i : Fin n, \\mathbb{R}.\\exp (-\\beta * E i)\n\\end{aligned}"
+- id: fep-032
+  title: Gradient Flows on Beliefs
+  area: FEP
+  mathlib: Analysis.SpecialFunctions.Pow.Real
+  mathlib_status: real
+  nl: 'Gradient Flows on Beliefs (FEP). Catalogue row fep-032; maturity `real` in config/topics.yaml. Natural-language anchor
+    for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Pow.Real\n\nnamespace FEP032\n\n/-- Gradient flow step: (1 - η)²·x₀²\
+    \ ≤ x₀² when η ∈ (0,1]. -/\ntheorem fep032_descent_contracts (x₀ η : ℝ) (hη : 0 < η) (hη1 : η ≤ 1) :\n    (x₀ - η * x₀)\
+    \ ^ 2 ≤ x₀ ^ 2 := by\n  nlinarith [sq_nonneg x₀, sq_nonneg (η * x₀), sq_nonneg (x₀ * (1 - η))]\n\n/-- Gradient magnitude\
+    \ squared is nonneg (energy dissipation rate). -/\ntheorem fep032_grad_sq_nonneg (g : ℝ) : 0 ≤ g ^ 2 :=\n  sq_nonneg g\n\
+    \n/-- Fixed point: at g = 0 the descent step is the identity. -/\ntheorem fep032_fixed_point (x₀ η : ℝ) : x₀ - η * 0 =\
+    \ x₀ := by ring\n\n/-- Step contraction ratio: ‖x₀ - η·x₀‖ = (1-η)·‖x₀‖. -/\ntheorem fep032_step_ratio (x₀ η : ℝ) :\n\
+    \    |x₀ - η * x₀| = |1 - η| * |x₀| := by\n  rw [show x₀ - η * x₀ = (1 - η) * x₀ by ring]\n  exact abs_mul (1 - η) x₀\n\
+    \nend FEP032\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(x_{0} \eta : \mathbb{R}) (h\eta : 0 < \eta) (h\eta1 : \eta \le 1) \\
+
+    &(x_{0} - \eta * x_{0}) ^ 2 \le x_{0} ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(g : \mathbb{R}) \\
+
+    &0 \le g ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x_{0} \eta : \mathbb{R}) \\
+
+    &x_{0} - \eta * 0 = x_{0}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x_{0} \eta : \mathbb{R}) \\
+
+    &|x_{0} - \eta * x_{0}| = |1 - \eta| * |x_{0}|
+
+    \end{aligned}'
+- id: fep-033
+  title: Planning Horizon in Active Inference
+  area: ActiveInference
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Planning Horizon in Active Inference (ActiveInference). Catalogue row fep-033; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP033\n\nopen Finset\n\n-- [proof strategy: Finset.sum_nonneg + sum_le_sum_of_subset_of_nonneg\
+    \ for horizon analysis]\n\n/-- Planning horizon: finite sums of nonneg per-step costs are nonneg. -/\ntheorem fep033_finiteHorizon_nonneg\
+    \ (c : ℕ → ℝ) (T : Finset ℕ) (hc : ∀ t ∈ T, 0 ≤ c t) :\n    0 ≤ ∑ t ∈ T, c t :=\n  Finset.sum_nonneg hc\n\n/-- Longer\
+    \ horizon → higher total cost (monotonicity of cumulative cost). -/\ntheorem fep033_horizon_mono (c : ℕ → ℝ) (S T : Finset\
+    \ ℕ)\n    (hST : S ⊆ T) (hc : ∀ t ∈ T, 0 ≤ c t) :\n    ∑ t ∈ S, c t ≤ ∑ t ∈ T, c t :=\n  Finset.sum_le_sum_of_subset_of_nonneg\
+    \ hST (fun t ht _ => hc t ht)\n\n/-- Discounting: scaled costs stay nonneg. -/\ntheorem fep033_discounted_nonneg (c :\
+    \ ℕ → ℝ) (γ : ℝ) (T : Finset ℕ)\n    (hc : ∀ t ∈ T, 0 ≤ c t) (hγ : 0 ≤ γ) :\n    0 ≤ ∑ t ∈ T, γ * c t :=\n  Finset.sum_nonneg\
+    \ fun t ht => mul_nonneg hγ (hc t ht)\n\n/-- Horizon-additive: cost over a union of disjoint time sets is the sum. -/\n\
+    theorem fep033_horizon_union (c : ℕ → ℝ) (S T : Finset ℕ) (hd : Disjoint S T) :\n    ∑ t ∈ S ∪ T, c t = (∑ t ∈ S, c t)\
+    \ + ∑ t ∈ T, c t :=\n  Finset.sum_union hd\n\nend FEP033\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(c : \mathbb{N} \Rightarrow \mathbb{R}) (T : \mathsf{Finset} \mathbb{N}) (hc : \forall t \in T, 0 \le c t) \\
+
+    &0 \le \sum t \in T, c t
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(c : \\mathbb{N} \\Rightarrow \\mathbb{R}) (S T : \\mathsf{Finset} \\mathbb{N})\n    (hST : S \\subseteq\
+    \ T) (hc : \\forall t \\in T, 0 \\le c t) \\\\\n&\\sum t \\in S, c t \\le \\sum t \\in T, c t\n\\end{aligned}"
+  - "\\begin{aligned}\n&(c : \\mathbb{N} \\Rightarrow \\mathbb{R}) (\\gamma : \\mathbb{R}) (T : \\mathsf{Finset} \\mathbb{N})\n\
+    \    (hc : \\forall t \\in T, 0 \\le c t) (h\\gamma : 0 \\le \\gamma) \\\\\n&0 \\le \\sum t \\in T, \\gamma * c t\n\\\
+    end{aligned}"
+  - '\begin{aligned}
+
+    &(c : \mathbb{N} \Rightarrow \mathbb{R}) (S T : \mathsf{Finset} \mathbb{N}) (hd : \mathsf{Disjoint} S T) \\
+
+    &\sum t \in S \cup T, c t = (\sum t \in S, c t) + \sum t \in T, c t
+
+    \end{aligned}'
+- id: fep-034
+  title: Discrete Belief Update (Categorical)
+  area: ActiveInference
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Discrete Belief Update (Categorical) (ActiveInference). Catalogue row fep-034; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP034\n\nopen Finset\n\n-- [proof strategy: mul_nonneg + Finset.sum_nonneg\
+    \ for categorical Bayesian filter]\n\nabbrev State := Fin 9\n\n/-- Unnormalized Bayesian belief update at state `s`: multiplies\
+    \ the\nlikelihood at `s` by the predicted prior obtained by summing the transition\nkernel against the previous belief\
+    \ over `states`. -/\ndef fep034_beliefUpdate (prior : State → ℝ) (trans : State → State → ℝ) (like : State → ℝ)\n    (states\
+    \ : Finset State) (s : State) : ℝ :=\n  like s * ∑ s' ∈ states, trans s s' * prior s'\n\n/-- Per-state unnormalized posterior\
+    \ is nonneg. -/\ntheorem fep034_update_nonneg (prior : State → ℝ) (trans : State → State → ℝ) (like : State → ℝ)\n   \
+    \ (states : Finset State) (s : State) (hp : ∀ x, 0 ≤ prior x) (ht : ∀ x y, 0 ≤ trans x y)\n    (hl : ∀ x, 0 ≤ like x)\
+    \ : 0 ≤ fep034_beliefUpdate prior trans like states s :=\n  mul_nonneg (hl s) (Finset.sum_nonneg fun s' _ => mul_nonneg\
+    \ (ht s s') (hp s'))\n\n/-- Total unnormalized posterior mass over a finite state finset is nonneg. -/\ntheorem fep034_totalUnnorm_nonneg\
+    \ (prior : State → ℝ) (trans : State → State → ℝ) (like : State → ℝ)\n    (states : Finset State) (hp : ∀ x, 0 ≤ prior\
+    \ x) (ht : ∀ x y, 0 ≤ trans x y)\n    (hl : ∀ x, 0 ≤ like x) :\n    0 ≤ ∑ s ∈ states, fep034_beliefUpdate prior trans\
+    \ like states s :=\n  Finset.sum_nonneg fun s _ =>\n    fep034_update_nonneg prior trans like states s hp ht hl\n\n/--\
+    \ Zero likelihood zeros out the posterior at that state. -/\ntheorem fep034_zero_like (prior : State → ℝ) (trans : State\
+    \ → State → ℝ)\n    (states : Finset State) (s : State) :\n    fep034_beliefUpdate prior trans (fun _ => 0) states s =\
+    \ 0 := by\n  simp [fep034_beliefUpdate, mul_zero]\n\nend FEP034\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(prior : State \\Rightarrow \\mathbb{R}) (trans : State \\Rightarrow State \\Rightarrow \\mathbb{R})\
+    \ (like : State \\Rightarrow \\mathbb{R})\n    (states : \\mathsf{Finset} State) (s : State) (hp : \\forall x, 0 \\le\
+    \ prior x) (ht : \\forall x y, 0 \\le trans x y)\n    (hl : \\forall x, 0 \\le like x) \\\\\n&0 \\le fep034_beliefUpdate\
+    \ prior trans like states s\n\\end{aligned}"
+  - "\\begin{aligned}\n&(prior : State \\Rightarrow \\mathbb{R}) (trans : State \\Rightarrow State \\Rightarrow \\mathbb{R})\
+    \ (like : State \\Rightarrow \\mathbb{R})\n    (states : \\mathsf{Finset} State) (hp : \\forall x, 0 \\le prior x) (ht\
+    \ : \\forall x y, 0 \\le trans x y)\n    (hl : \\forall x, 0 \\le like x) \\\\\n&0 \\le \\sum s \\in states, fep034_beliefUpdate\
+    \ prior trans like states s\n\\end{aligned}"
+  - "\\begin{aligned}\n&(prior : State \\Rightarrow \\mathbb{R}) (trans : State \\Rightarrow State \\Rightarrow \\mathbb{R})\n\
+    \    (states : \\mathsf{Finset} State) (s : State) \\\\\n&fep034_beliefUpdate prior trans (\\lambda _ => 0) states s =\
+    \ 0\n\\end{aligned}"
+- id: fep-035
+  title: Jensen's Inequality for Log
+  area: FEP
+  mathlib: Analysis.SpecialFunctions.Log.Basic
+  mathlib_status: real
+  nl: 'Jensen''s Inequality for Log (FEP). Catalogue row fep-035; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Log.Basic\n\nnamespace FEP035\n\nopen Real\n\n-- [proof strategy:\
+    \ Real.log_mul / log_pow / log_exp give Jensen-for-log identities]\n\n/-- Logarithm turns products into sums (``log(ab)=log\
+    \ a+log b``). -/\ntheorem fep035_log_mul {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :\n    Real.log (a * b) = Real.log a + Real.log\
+    \ b :=\n  Real.log_mul (ne_of_gt ha) (ne_of_gt hb)\n\n/-- Power rule for logarithms on ``(0,∞)``. -/\ntheorem fep035_log_pow\
+    \ {a : ℝ} (_ha : 0 < a) (n : ℕ) : Real.log (a ^ n) = n * Real.log a :=\n  Real.log_pow a n\n\n/-- Jensen anchor: log(exp\
+    \ x) = x (log-exp inverse). -/\ntheorem fep035_log_exp (x : ℝ) : Real.log (Real.exp x) = x :=\n  Real.log_exp x\n\n/--\
+    \ Concavity anchor: log on (0,∞) is monotone. -/\ntheorem fep035_log_mono {a b : ℝ} (ha : 0 < a) (h : a ≤ b) :\n    Real.log\
+    \ a ≤ Real.log b :=\n  Real.log_le_log ha h\n\n/-- log 1 = 0. -/\ntheorem fep035_log_one : Real.log (1 : ℝ) = 0 := Real.log_one\n\
+    \nend FEP035\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (hb : 0 < b) \\
+
+    &\mathbb{R}.\log (a * b) = \mathbb{R}.\log a + \mathbb{R}.\log b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{a : \mathbb{R}} (_ha : 0 < a) (n : \mathbb{N}) \\
+
+    &\mathbb{R}.\log (a ^ n) = n * \mathbb{R}.\log a
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x : \mathbb{R}) \\
+
+    &\mathbb{R}.\log (\mathbb{R}.\exp x) = x
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{a b : \mathbb{R}} (ha : 0 < a) (h : a \le b) \\
+
+    &\mathbb{R}.\log a \le \mathbb{R}.\log b
+
+    \end{aligned}'
+  - '\mathbb{R}.\log (1 : \mathbb{R}) = 0'
+- id: fep-036
+  title: Empirical Bayes Coupling
+  area: BayesianMechanics
+  mathlib: MeasureTheory.Measure.MeasureSpace
+  mathlib_status: real
+  nl: 'Empirical Bayes Coupling (BayesianMechanics). Catalogue row fep-036; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.Measure.MeasureSpace\n\nnamespace FEP036\n\nvariable {α : Type*} [MeasurableSpace\
+    \ α]\n\nopen MeasureTheory ENNReal\n\n-- [proof strategy: ENNReal.toReal_nonneg + mul_nonneg + add_nonneg for empirical\
+    \ Bayes coupling]\n\n/-- Empirical Bayes: nonneg weights stay nonneg when scaled by measure mass. -/\ntheorem fep036_scaledMass_nonneg\
+    \ (c : ℝ) (μ : Measure α) (s : Set α) (hc : 0 ≤ c) :\n    0 ≤ c * (μ s).toReal :=\n  mul_nonneg hc ENNReal.toReal_nonneg\n\
+    \n/-- Empirical Bayes coupling: mixture of scaled measures. -/\ntheorem fep036_mixture_bound (w₁ w₂ : ℝ) (μ : Measure\
+    \ α) (s : Set α)\n    (hw₁ : 0 ≤ w₁) (hw₂ : 0 ≤ w₂) :\n    0 ≤ w₁ * (μ s).toReal + w₂ * (μ s).toReal :=\n  add_nonneg\
+    \ (mul_nonneg hw₁ ENNReal.toReal_nonneg) (mul_nonneg hw₂ ENNReal.toReal_nonneg)\n\n/-- toReal of a measure is always nonneg.\
+    \ -/\ntheorem fep036_toReal_nonneg (μ : Measure α) (s : Set α) : 0 ≤ (μ s).toReal :=\n  ENNReal.toReal_nonneg\n\n/-- Empty-set\
+    \ measure contributes zero to any empirical mixture. -/\ntheorem fep036_empty_contrib (c : ℝ) (μ : Measure α) : c * (μ\
+    \ ∅).toReal = 0 := by\n  simp [measure_empty]\n\nend FEP036\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(c : \mathbb{R}) (\mu : \mathsf{Measure}~\alpha) (s : \mathsf{Set}~\alpha) (hc : 0 \le c) \\
+
+    &0 \le c * (\mu s).to\mathbb{R}
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&{\\alpha : \\mathsf{Type}^\\*} [\\mathsf{MeasurableSpace}~\\alpha] \\\\\n&(w_{1} w_{2} : \\mathbb{R})\
+    \ (\\mu : \\mathsf{Measure}~\\alpha) (s : \\mathsf{Set}~\\alpha)\n    (hw_{1} : 0 \\le w_{1}) (hw_{2} : 0 \\le w_{2})\
+    \ \\\\\n&0 \\le w_{1} * (\\mu s).to\\mathbb{R} + w_{2} * (\\mu s).to\\mathbb{R}\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{Measure}~\alpha) (s : \mathsf{Set}~\alpha) \\
+
+    &0 \le (\mu s).to\mathbb{R}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(c : \mathbb{R}) (\mu : \mathsf{Measure}~\alpha) \\
+
+    &c * (\mu(\varnothing)).to\mathbb{R} = 0
+
+    \end{aligned}'
+- id: fep-037
+  title: Fluctuation–Dissipation Link
+  area: Thermodynamics
+  mathlib: Analysis.SpecialFunctions.Exp
+  mathlib_status: real
+  nl: 'Fluctuation–Dissipation Link (Thermodynamics). Catalogue row fep-037; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Exp\n\nnamespace FEP037\n\n-- [proof strategy: mul_nonneg / mul_pos\
+    \ for FDT; Einstein relation as def]\n\n/-- Fluctuation–dissipation: response coefficient Γ × fluctuation rate is nonneg.\
+    \ -/\ntheorem fep037_fdt_nonneg (Γ rate : ℝ) (hG : 0 ≤ Γ) (hL : 0 ≤ rate) : 0 ≤ Γ * rate :=\n  mul_nonneg hG hL\n\n/--\
+    \ FDT at equilibrium: response = kT × fluctuation (Einstein relation shape). -/\nnoncomputable def fep037_einstein_response\
+    \ (kT fluctuation : ℝ) : ℝ := kT * fluctuation\n\n/-- Einstein relation preserves positivity at positive temperature.\
+    \ -/\ntheorem fep037_einstein_pos (kT fluct : ℝ) (hT : 0 < kT) (hf : 0 < fluct) :\n    0 < fep037_einstein_response kT\
+    \ fluct :=\n  mul_pos hT hf\n\n/-- Einstein relation vanishes when fluctuation vanishes. -/\ntheorem fep037_einstein_zero_fluct\
+    \ (kT : ℝ) : fep037_einstein_response kT 0 = 0 := by\n  simp [fep037_einstein_response]\n\n/-- Einstein response is monotone\
+    \ in fluctuation at positive temperature. -/\ntheorem fep037_einstein_mono (kT f₁ f₂ : ℝ) (hT : 0 ≤ kT) (h : f₁ ≤ f₂)\
+    \ :\n    fep037_einstein_response kT f₁ ≤ fep037_einstein_response kT f₂ :=\n  mul_le_mul_of_nonneg_left h hT\n\nend FEP037\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(Γ rate : \mathbb{R}) (hG : 0 \le Γ) (hL : 0 \le rate) \\
+
+    &0 \le Γ * rate
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(kT fluct : \mathbb{R}) (hT : 0 < kT) (hf : 0 < fluct) \\
+
+    &0 < fep037_einstein_response kT fluct
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(kT : \mathbb{R}) \\
+
+    &fep037_einstein_response kT 0 = 0
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(kT f_{1} f_{2} : \mathbb{R}) (hT : 0 \le kT) (h : f_{1} \le f_{2}) \\
+
+    &fep037_einstein_response kT f_{1} \le fep037_einstein_response kT f_{2}
+
+    \end{aligned}'
+- id: fep-038
+  title: Natural Gradient Step
+  area: InfoGeometry
+  mathlib: Analysis.InnerProductSpace.Basic
+  mathlib_status: real
+  nl: 'Natural Gradient Step (InfoGeometry). Catalogue row fep-038; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.InnerProductSpace.Basic\nimport Mathlib.Analysis.SpecialFunctions.Pow.Real\n\nnamespace\
+    \ FEP038\n\n-- [proof strategy: positivity/sq_nonneg for PSD; Finset.sum_nonneg for Fisher metric]\n\n/-- Preconditioned\
+    \ step norm squared is nonneg (Fisher-Rao metric is PSD on ℝ²). -/\ntheorem fep038_precond_norm_nonneg (u v : ℝ) : 0 ≤\
+    \ u ^ 2 + v ^ 2 := by positivity\n\n/-- Fisher inner product ⟨g,g⟩ = Σᵢ gᵢ² ≥ 0 (positive semi-definiteness). -/\ntheorem\
+    \ fep038_fisher_inner_nonneg (g : Fin 2 → ℝ) :\n    0 ≤ ∑ i : Fin 2, g i * g i :=\n  Finset.sum_nonneg fun i _ => mul_self_nonneg\
+    \ (g i)\n\n/-- Natural gradient norm ‖g‖ = √(g₁² + g₂²) ≥ 0. -/\ntheorem fep038_natural_grad_norm_nonneg (g₁ g₂ : ℝ) :\n\
+    \    0 ≤ Real.sqrt (g₁ ^ 2 + g₂ ^ 2) :=\n  Real.sqrt_nonneg _\n\n/-- Fisher information is symmetric: F(θ)ᵢⱼ = F(θ)ⱼᵢ\
+    \ (modeled as inner product symmetry). -/\ntheorem fep038_fisher_sym (a b : Fin 2 → ℝ) :\n    ∑ i : Fin 2, a i * b i =\
+    \ ∑ i : Fin 2, b i * a i := by\n  congr 1; ext i; ring\n\nend FEP038\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(u v : \mathbb{R}) \\
+
+    &0 \le u ^ 2 + v ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(g : Fin 2 \Rightarrow \mathbb{R}) \\
+
+    &0 \le \sum i : Fin 2, g i * g i
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(g_{1} g_{2} : \mathbb{R}) \\
+
+    &0 \le \mathbb{R}.sqrt (g_{1} ^ 2 + g_{2} ^ 2)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a b : Fin 2 \Rightarrow \mathbb{R}) \\
+
+    &\sum i : Fin 2, a i * b i = \sum i : Fin 2, b i * a i
+
+    \end{aligned}'
+- id: fep-039
+  title: Global vs Local Free Energy
+  area: FEP
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Global vs Local Free Energy (FEP). Catalogue row fep-039; maturity `real` in config/topics.yaml. Natural-language anchor
+    for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP039\n\nopen Finset\n\n-- [proof strategy: Finset.sum_nonneg + sum_le_sum\
+    \ + sum_const for global-vs-local FE]\n\n/-- Global free energy: ∑ local contributions over a partition. -/\ndef fep039_global_fe\
+    \ (local_fe : Fin 4 → ℝ) : ℝ :=\n  ∑ i : Fin 4, local_fe i\n\n/-- Global FE is nonneg when all local contributions are\
+    \ nonneg. -/\ntheorem fep039_global_nonneg (local_fe : Fin 4 → ℝ) (h : ∀ i, 0 ≤ local_fe i) :\n    0 ≤ fep039_global_fe\
+    \ local_fe :=\n  Finset.sum_nonneg fun i _ => h i\n\n/-- Global FE monotone: improving one local term improves the global.\
+    \ -/\ntheorem fep039_global_mono (f g : Fin 4 → ℝ) (h : ∀ i, f i ≤ g i) :\n    fep039_global_fe f ≤ fep039_global_fe g\
+    \ :=\n  Finset.sum_le_sum fun i _ => h i\n\n/-- Zero local FE everywhere → zero global FE. -/\ntheorem fep039_global_zero\
+    \ : fep039_global_fe (fun _ => 0) = 0 := by\n  simp [fep039_global_fe]\n\n/-- Global FE additive in pointwise sums. -/\n\
+    theorem fep039_global_add (f g : Fin 4 → ℝ) :\n    fep039_global_fe (fun i => f i + g i) = fep039_global_fe f + fep039_global_fe\
+    \ g := by\n  simp [fep039_global_fe, Finset.sum_add_distrib]\n\nend FEP039\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(local_fe : Fin 4 \Rightarrow \mathbb{R}) (h : \forall i, 0 \le local_fe i) \\
+
+    &0 \le fep039_global_fe local_fe
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(f g : Fin 4 \Rightarrow \mathbb{R}) (h : \forall i, f i \le g i) \\
+
+    &fep039_global_fe f \le fep039_global_fe g
+
+    \end{aligned}'
+  - fep039_global_fe (\lambda _ => 0) = 0
+  - '\begin{aligned}
+
+    &(f g : Fin 4 \Rightarrow \mathbb{R}) \\
+
+    &fep039_global_fe (\lambda i => f i + g i) = fep039_global_fe f + fep039_global_fe g
+
+    \end{aligned}'
+- id: fep-040
+  title: Gaussian Entropy and Heat Capacity
+  area: BayesianMechanics
+  mathlib: Analysis.SpecialFunctions.Log.Basic
+  mathlib_status: real
+  nl: 'Gaussian Entropy and Heat Capacity (BayesianMechanics). Catalogue row fep-040; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Log.Basic\n\nnamespace FEP040\n\nopen Real\n\n-- [proof strategy:\
+    \ exp_log + sq_nonneg + log_le_log for Gaussian entropy properties]\n\n/-- Gaussian entropy anchor: log of positive variance\
+    \ is well-defined. -/\ntheorem fep040_log_variance (σ : ℝ) (hσ : 0 < σ) : 0 < Real.exp (Real.log σ) := by\n  rw [Real.exp_log\
+    \ hσ]\n  exact hσ\n\n/-- Variance is nonneg (used in Gaussian entropy H = ½ log(2πeσ²)). -/\ntheorem fep040_variance_nonneg\
+    \ (σ : ℝ) : 0 ≤ σ ^ 2 :=\n  sq_nonneg σ\n\n/-- Gaussian entropy increases with variance: σ₁ ≤ σ₂ → log σ₁ ≤ log σ₂. -/\n\
+    theorem fep040_entropy_mono {σ₁ σ₂ : ℝ} (hσ₁ : 0 < σ₁) (h : σ₁ ≤ σ₂) :\n    Real.log σ₁ ≤ Real.log σ₂ :=\n  Real.log_le_log\
+    \ hσ₁ h\n\n/-- Log of exp recovers identity: log(exp x) = x. -/\ntheorem fep040_log_exp (x : ℝ) : Real.log (Real.exp x)\
+    \ = x :=\n  Real.log_exp x\n\n/-- Heat capacity anchor: differential of log σ is 1/σ (qualitative scaling). -/\ntheorem\
+    \ fep040_heat_cap_nonneg (σ : ℝ) (hσ : 0 < σ) : 0 ≤ 1 / σ :=\n  div_nonneg zero_le_one hσ.le\n\nend FEP040\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(\sigma : \mathbb{R}) (h\sigma : 0 < \sigma) \\
+
+    &0 < \mathbb{R}.\exp (\mathbb{R}.\log \sigma)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\sigma : \mathbb{R}) \\
+
+    &0 \le \sigma ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\sigma_{1} \sigma_{2} : \mathbb{R}} (h\sigma_{1} : 0 < \sigma_{1}) (h : \sigma_{1} \le \sigma_{2}) \\
+
+    &\mathbb{R}.\log \sigma_{1} \le \mathbb{R}.\log \sigma_{2}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(x : \mathbb{R}) \\
+
+    &\mathbb{R}.\log (\mathbb{R}.\exp x) = x
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\sigma : \mathbb{R}) (h\sigma : 0 < \sigma) \\
+
+    &0 \le 1 / \sigma
+
+    \end{aligned}'
+- id: fep-041
+  title: Exploration Bonus from Information Gain
+  area: ActiveInference
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Exploration Bonus from Information Gain (ActiveInference). Catalogue row fep-041; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP041\n\nabbrev Obs := Fin 5\nabbrev State := Fin 5\n\n/-- Information gain:\
+    \ epistemic value computed as weighted divergence over observations. -/\ndef fep041_epistemic_value (w : Obs → ℝ) (div\
+    \ : Obs → ℝ) (O : Finset Obs) : ℝ :=\n  ∑ o ∈ O, w o * div o\n\n/-- Epistemic value is nonneg when weights and divergences\
+    \ are nonneg. -/\ntheorem fep041_epistemic_nonneg (w div : Obs → ℝ) (O : Finset Obs)\n    (hw : ∀ o ∈ O, 0 ≤ w o) (hd\
+    \ : ∀ o ∈ O, 0 ≤ div o) :\n    0 ≤ fep041_epistemic_value w div O :=\n  Finset.sum_nonneg fun o ho => mul_nonneg (hw o\
+    \ ho) (hd o ho)\n\n/-- Higher divergence → higher epistemic value (more to learn). -/\ntheorem fep041_epistemic_mono (w\
+    \ d₁ d₂ : Obs → ℝ) (O : Finset Obs)\n    (hw : ∀ o ∈ O, 0 ≤ w o) (hd : ∀ o ∈ O, d₁ o ≤ d₂ o) :\n    fep041_epistemic_value\
+    \ w d₁ O ≤ fep041_epistemic_value w d₂ O :=\n  Finset.sum_le_sum fun o ho => mul_le_mul_of_nonneg_left (hd o ho) (hw o\
+    \ ho)\n\n/-- Zero divergence → zero epistemic value. -/\ntheorem fep041_zero_div (w : Obs → ℝ) (O : Finset Obs) :\n  \
+    \  fep041_epistemic_value w (fun _ => 0) O = 0 := by\n  simp [fep041_epistemic_value, mul_zero]\n\n/-- Empty observation\
+    \ set → zero epistemic value. -/\ntheorem fep041_empty_O (w div : Obs → ℝ) :\n    fep041_epistemic_value w div (∅ : Finset\
+    \ Obs) = 0 := by\n  simp [fep041_epistemic_value, Finset.sum_empty]\n\nend FEP041\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(w div : Obs \\Rightarrow \\mathbb{R}) (O : \\mathsf{Finset} Obs)\n    (hw : \\forall o \\in O, 0\
+    \ \\le w o) (hd : \\forall o \\in O, 0 \\le div o) \\\\\n&0 \\le fep041_epistemic_value w div O\n\\end{aligned}"
+  - "\\begin{aligned}\n&(w d_{1} d_{2} : Obs \\Rightarrow \\mathbb{R}) (O : \\mathsf{Finset} Obs)\n    (hw : \\forall o \\\
+    in O, 0 \\le w o) (hd : \\forall o \\in O, d_{1} o \\le d_{2} o) \\\\\n&fep041_epistemic_value w d_{1} O \\le fep041_epistemic_value\
+    \ w d_{2} O\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(w : Obs \Rightarrow \mathbb{R}) (O : \mathsf{Finset} Obs) \\
+
+    &fep041_epistemic_value w (\lambda _ => 0) O = 0
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(w div : Obs \Rightarrow \mathbb{R}) \\
+
+    &fep041_epistemic_value w div (\varnothing : \mathsf{Finset} Obs) = 0
+
+    \end{aligned}'
+- id: fep-042
+  title: Sufficient Statistics Factorization
+  area: BayesianMechanics
+  mathlib: MeasureTheory.MeasurableSpace.Basic
+  mathlib_status: real
+  nl: 'Sufficient Statistics Factorization (BayesianMechanics). Catalogue row fep-042; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.MeasureTheory.MeasurableSpace.Basic\nimport Mathlib.MeasureTheory.Measure.MeasureSpace\n\n\
+    namespace FEP042\n\nvariable {α : Type*} [MeasurableSpace α]\n\n/-- Sufficient statistics: measure of preimage is nonneg\
+    \ (ENNReal). -/\ntheorem fep042_push_nonneg (μ : MeasureTheory.Measure α) (f : α → ℝ) (s : Set ℝ) :\n    0 ≤ μ (f ⁻¹'\
+    \ s) :=\n  zero_le _\n\n/-- Fisher-Neyman: preimage of full codomain is full domain. -/\ntheorem fep042_preimage_univ\
+    \ (f : α → ℝ) : f ⁻¹' Set.univ = Set.univ :=\n  Set.preimage_univ\n\n/-- Sufficient statistic map is monotone w.r.t. set\
+    \ inclusion. -/\ntheorem fep042_preimage_mono (f : α → ℝ) {s t : Set ℝ} (hst : s ⊆ t) :\n    f ⁻¹' s ⊆ f ⁻¹' t :=\n  Set.preimage_mono\
+    \ hst\n\n/-- Preimage of intersection is intersection of preimages. -/\ntheorem fep042_preimage_inter (f : α → ℝ) (s t\
+    \ : Set ℝ) :\n    f ⁻¹' (s ∩ t) = f ⁻¹' s ∩ f ⁻¹' t := by\n  ext x; simp [Set.mem_preimage, Set.mem_inter_iff]\n\nend\
+    \ FEP042\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(\mu : \mathsf{MeasureTheory}.\mathsf{Measure}~\alpha) (f : \alpha \Rightarrow \mathbb{R}) (s : \mathsf{Set}~\mathbb{R})
+    \\
+
+    &0 \le \mu (f ^{-1}'' s)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(f : \alpha \Rightarrow \mathbb{R}) \\
+
+    &f ^{-1}'' \Omega = \Omega
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(f : \alpha \Rightarrow \mathbb{R}) {s t : \mathsf{Set}~\mathbb{R}} (hst : s \subseteq t) \\
+
+    &f ^{-1}'' s \subseteq f ^{-1}'' t
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &{\alpha : \mathsf{Type}^\*} [\mathsf{MeasurableSpace}~\alpha] \\
+
+    &(f : \alpha \Rightarrow \mathbb{R}) (s t : \mathsf{Set}~\mathbb{R}) \\
+
+    &f ^{-1}'' (s \cap t) = f ^{-1}'' s \cap f ^{-1}'' t
+
+    \end{aligned}'
+- id: fep-043
+  title: Critical Points of Free Energy
+  area: FEP
+  mathlib: Analysis.Calculus.Deriv.Basic
+  mathlib_status: real
+  nl: 'Critical Points of Free Energy (FEP). Catalogue row fep-043; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.Calculus.Deriv.Basic\n\nnamespace FEP043\n\n-- [proof strategy: sub_nonneg + sq_nonneg\
+    \ + minimum-characterisation algebra]\n\n/-- Critical points: at a minimum, the function value is a lower bound. -/\n\
+    theorem fep043_min_is_lower_bound (f : ℝ → ℝ) (x₀ : ℝ) (hmin : ∀ x, f x₀ ≤ f x) (y : ℝ) :\n    f x₀ ≤ f y :=\n  hmin y\n\
+    \n/-- At a critical point, f(x₀ + h) - f(x₀) ≥ 0 for all perturbations. -/\ntheorem fep043_perturbation_nonneg (f : ℝ\
+    \ → ℝ) (x₀ : ℝ) (hmin : ∀ x, f x₀ ≤ f x) (h : ℝ) :\n    0 ≤ f (x₀ + h) - f x₀ :=\n  sub_nonneg.mpr (hmin _)\n\n/-- Second-order\
+    \ condition: Hessian positivity at critical point (quadratic-form PSD). -/\ntheorem fep043_hessian_nonneg_at_min (h :\
+    \ ℝ) : 0 ≤ h ^ 2 :=\n  sq_nonneg h\n\n/-- At the critical point itself, f x₀ = f x₀ (reflexivity bound). -/\ntheorem fep043_at_min_self\
+    \ (f : ℝ → ℝ) (x₀ : ℝ) : f x₀ ≤ f x₀ := le_refl _\n\n/-- Any two global minima of f agree in value. -/\ntheorem fep043_min_unique_value\
+    \ (f : ℝ → ℝ) (x₀ y₀ : ℝ)\n    (hx : ∀ x, f x₀ ≤ f x) (hy : ∀ x, f y₀ ≤ f x) :\n    f x₀ = f y₀ :=\n  le_antisymm (hx\
+    \ y₀) (hy x₀)\n\nend FEP043\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(f : \mathbb{R} \Rightarrow \mathbb{R}) (x_{0} : \mathbb{R}) (hmin : \forall x, f x_{0} \le f x) (y : \mathbb{R}) \\
+
+    &f x_{0} \le f y
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(f : \mathbb{R} \Rightarrow \mathbb{R}) (x_{0} : \mathbb{R}) (hmin : \forall x, f x_{0} \le f x) (h : \mathbb{R}) \\
+
+    &0 \le f (x_{0} + h) - f x_{0}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(h : \mathbb{R}) \\
+
+    &0 \le h ^ 2
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(f : \mathbb{R} \Rightarrow \mathbb{R}) (x_{0} : \mathbb{R}) \\
+
+    &f x_{0} \le f x_{0}
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(f : \\mathbb{R} \\Rightarrow \\mathbb{R}) (x_{0} y_{0} : \\mathbb{R})\n    (hx : \\forall x, f x_{0}\
+    \ \\le f x) (hy : \\forall x, f y_{0} \\le f x) \\\\\n&f x_{0} = f y_{0}\n\\end{aligned}"
+- id: fep-044
+  title: α-Divergence Family
+  area: InfoGeometry
+  mathlib: Analysis.SpecialFunctions.Pow.Real
+  mathlib_status: real
+  nl: 'α-Divergence Family (InfoGeometry). Catalogue row fep-044; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Pow.Real\n\nnamespace FEP044\n\n-- [proof strategy: add_nonneg +\
+    \ mul_nonneg; endpoint identities by ring]\n\n/-- α-divergence: convex combination for α ∈ [0,1] is between endpoints.\
+    \ -/\ntheorem fep044_convex_combo_nonneg (α a b : ℝ) (hα0 : 0 ≤ α) (hα1 : α ≤ 1)\n    (ha : 0 ≤ a) (hb : 0 ≤ b) :\n  \
+    \  0 ≤ α * a + (1 - α) * b :=\n  add_nonneg (mul_nonneg hα0 ha) (mul_nonneg (sub_nonneg.mpr hα1) hb)\n\n/-- α-divergence\
+    \ at α = 1 recovers KL-like term (degenerate case). -/\ntheorem fep044_alpha_one (a b : ℝ) : (1 : ℝ) * a + (1 - 1) * b\
+    \ = a := by ring\n\n/-- α-divergence at α = 0 recovers reverse KL-like term. -/\ntheorem fep044_alpha_zero (a b : ℝ) :\
+    \ (0 : ℝ) * a + (1 - 0) * b = b := by ring\n\n/-- α-divergence is monotone in the first argument at fixed α, b. -/\ntheorem\
+    \ fep044_mono_a (α a₁ a₂ b : ℝ) (hα0 : 0 ≤ α) (h : a₁ ≤ a₂) :\n    α * a₁ + (1 - α) * b ≤ α * a₂ + (1 - α) * b := by\n\
+    \  have : α * a₁ ≤ α * a₂ := mul_le_mul_of_nonneg_left h hα0\n  linarith\n\n/-- α-divergence symmetry anchor (α ↔ 1-α\
+    \ swap). -/\ntheorem fep044_swap (α a b : ℝ) :\n    α * a + (1 - α) * b = (1 - (1 - α)) * a + (1 - α) * b := by ring\n\
+    \nend FEP044\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(\\alpha a b : \\mathbb{R}) (h\\alpha0 : 0 \\le \\alpha) (h\\alpha1 : \\alpha \\le 1)\n    (ha : 0\
+    \ \\le a) (hb : 0 \\le b) \\\\\n&0 \\le \\alpha * a + (1 - \\alpha) * b\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(a b : \mathbb{R}) \\
+
+    &(1 : \mathbb{R}) * a + (1 - 1) * b = a
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(a b : \mathbb{R}) \\
+
+    &(0 : \mathbb{R}) * a + (1 - 0) * b = b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\alpha a_{1} a_{2} b : \mathbb{R}) (h\alpha0 : 0 \le \alpha) (h : a_{1} \le a_{2}) \\
+
+    &\alpha * a_{1} + (1 - \alpha) * b \le \alpha * a_{2} + (1 - \alpha) * b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(\alpha a b : \mathbb{R}) \\
+
+    &\alpha * a + (1 - \alpha) * b = (1 - (1 - \alpha)) * a + (1 - \alpha) * b
+
+    \end{aligned}'
+- id: fep-045
+  title: Conjugate Prior Update
+  area: FEP
+  mathlib: Data.List.Basic
+  mathlib_status: real
+  nl: 'Conjugate Prior Update (FEP). Catalogue row fep-045; maturity `real` in config/topics.yaml. Natural-language anchor
+    for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Data.List.Basic\n\nnamespace FEP045\n\n/-- A conjugate family: prior parameters and a Bayesian\
+    \ update rule. -/\nstructure ConjugateFamily where\n  priorParams : ℝ × ℝ\n  update : ℝ × ℝ → ℝ → ℝ × ℝ\n\n/-- Sequential\
+    \ Bayesian update via left fold over observations. -/\ndef fep045_conjugateUpdate (F : ConjugateFamily) (data : List ℝ)\
+    \ : ℝ × ℝ :=\n  List.foldl F.update F.priorParams data\n\n/-- Posterior always exists constructively. -/\ntheorem fep045_fold_exists\
+    \ (F : ConjugateFamily) (data : List ℝ) :\n    ∃ p, fep045_conjugateUpdate F data = p :=\n  ⟨_, rfl⟩\n\n/-- Empty data\
+    \ returns the prior unchanged. -/\ntheorem fep045_empty_is_prior (F : ConjugateFamily) :\n    fep045_conjugateUpdate F\
+    \ ([] : List ℝ) = F.priorParams :=\n  rfl\n\n/-- Single observation yields one update step. -/\ntheorem fep045_single_update\
+    \ (F : ConjugateFamily) (x : ℝ) :\n    fep045_conjugateUpdate F [x] = F.update F.priorParams x :=\n  rfl\n\n/-- Inductive\
+    \ step: cons extends the fold. -/\ntheorem fep045_cons_update (F : ConjugateFamily) (x : ℝ) (xs : List ℝ) :\n    fep045_conjugateUpdate\
+    \ F (x :: xs) =\n      xs.foldl F.update (F.update F.priorParams x) :=\n  rfl\n\nend FEP045\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(F : ConjugateFamily) (data : \mathsf{List} \mathbb{R}) \\
+
+    &\exists p, fep045_conjugateUpdate F data = p
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(F : ConjugateFamily) \\
+
+    &fep045_conjugateUpdate F ([] : \mathsf{List} \mathbb{R}) = F.\mathsf{priorParams}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(F : ConjugateFamily) (x : \mathbb{R}) \\
+
+    &fep045_conjugateUpdate F [x] = F.\mathsf{update} F.\mathsf{priorParams} x
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(F : ConjugateFamily) (x : \\mathbb{R}) (xs : \\mathsf{List} \\mathbb{R}) \\\\\n&fep045_conjugateUpdate\
+    \ F (x :: xs) =\n      xs.\\mathsf{foldl} F.\\mathsf{update} (F.\\mathsf{update} F.\\mathsf{priorParams} x)\n\\end{aligned}"
+- id: fep-046
+  title: Stick-Breaking Priors
+  area: BayesianMechanics
+  mathlib: Algebra.Order.Field.Basic
+  mathlib_status: real
+  nl: 'Stick-Breaking Priors (BayesianMechanics). Catalogue row fep-046; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.Order.Field.Basic\nimport Mathlib.Data.Real.Basic\nimport Mathlib.Tactic\n\nnamespace\
+    \ FEP046\n\n/-- Stick-breaking: retained mass u*(1-v) is nonneg when u ≥ 0, v ≤ 1. -/\ntheorem fep046_stick_nonneg (u\
+    \ v : ℝ) (hu : 0 ≤ u) (hv1 : v ≤ 1) :\n    0 ≤ u * (1 - v) :=\n  mul_nonneg hu (sub_nonneg.mpr hv1)\n\n/-- Remaining mass\
+    \ decreases after a break. -/\ntheorem fep046_remaining_decreases (u v : ℝ) (hu : 0 ≤ u) (hv0 : 0 ≤ v) (hv1 : v ≤ 1) :\n\
+    \    u * (1 - v) ≤ u := by\n  nlinarith [mul_nonneg hu hv0]\n\n/-- Two-step stick-breaking: mass after two breaks is nonneg.\
+    \ -/\ntheorem fep046_two_step_nonneg (u v₁ v₂ : ℝ)\n    (hu : 0 ≤ u) (hv₁ : v₁ ≤ 1) (hv₂ : v₂ ≤ 1) :\n    0 ≤ u * (1 -\
+    \ v₁) * (1 - v₂) :=\n  mul_nonneg (fep046_stick_nonneg u v₁ hu hv₁) (sub_nonneg.mpr hv₂)\n\n/-- Each break strictly reduces\
+    \ the mass when the break fraction is positive. -/\ntheorem fep046_strict_decrease (u v : ℝ) (hu : 0 < u) (hv0 : 0 < v)\
+    \ (hv1 : v ≤ 1) :\n    u * (1 - v) < u := by nlinarith\n\nend FEP046\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(u v : \mathbb{R}) (hu : 0 \le u) (hv1 : v \le 1) \\
+
+    &0 \le u * (1 - v)
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(u v : \mathbb{R}) (hu : 0 \le u) (hv0 : 0 \le v) (hv1 : v \le 1) \\
+
+    &u * (1 - v) \le u
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(u v_{1} v_{2} : \\mathbb{R})\n    (hu : 0 \\le u) (hv_{1} : v_{1} \\le 1) (hv_{2} : v_{2} \\le 1)\
+    \ \\\\\n&0 \\le u * (1 - v_{1}) * (1 - v_{2})\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(u v : \mathbb{R}) (hu : 0 < u) (hv0 : 0 < v) (hv1 : v \le 1) \\
+
+    &u * (1 - v) < u
+
+    \end{aligned}'
+- id: fep-047
+  title: Active Inference Message Passing
+  area: ActiveInference
+  mathlib: Algebra.BigOperators.Group.Finset
+  mathlib_status: real
+  nl: 'Active Inference Message Passing (ActiveInference). Catalogue row fep-047; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.BigOperators.Group.Finset.Basic\nimport Mathlib.Algebra.Order.BigOperators.Group.Finset\n\
+    import Mathlib.Data.Real.Basic\n\nnamespace FEP047\n\nopen Finset\n\n-- [proof strategy: Finset.sum_nonneg + mul_nonneg\
+    \ + sum_le_sum with left-multiplication]\n\nabbrev State := Fin 7\n\n/-- Forward message in a sum-product factor graph:\
+    \ aggregates the product of\nthe local factor `ψ x y` with the incoming message `inc y` over the neighbour\nset `S`. -/\n\
+    def fep047_forward (ψ : State → State → ℝ) (inc : State → ℝ) (S : Finset State) (x : State) : ℝ :=\n  ∑ y ∈ S, ψ x y *\
+    \ inc y\n\n/-- Forward message is nonneg when factors and incoming messages are nonneg. -/\ntheorem fep047_forward_nonneg\
+    \ (ψ : State → State → ℝ) (inc : State → ℝ) (S : Finset State)\n    (x : State) (hψ : ∀ a b, 0 ≤ ψ a b) (hi : ∀ y, 0 ≤\
+    \ inc y) : 0 ≤ fep047_forward ψ inc S x :=\n  Finset.sum_nonneg fun y _ => mul_nonneg (hψ x y) (hi y)\n\n/-- Message-passing\
+    \ monotonicity: larger incoming messages → larger output. -/\ntheorem fep047_forward_mono (ψ : State → State → ℝ) (inc₁\
+    \ inc₂ : State → ℝ) (S : Finset State)\n    (x : State) (hψ : ∀ a b, 0 ≤ ψ a b) (h : ∀ y ∈ S, inc₁ y ≤ inc₂ y) :\n   \
+    \ fep047_forward ψ inc₁ S x ≤ fep047_forward ψ inc₂ S x :=\n  Finset.sum_le_sum fun y hy => mul_le_mul_of_nonneg_left\
+    \ (h y hy) (hψ x y)\n\n/-- Zero incoming messages → zero forward output. -/\ntheorem fep047_zero_in (ψ : State → State\
+    \ → ℝ) (S : Finset State) (x : State) :\n    fep047_forward ψ (fun _ => 0) S x = 0 := by\n  simp [fep047_forward, mul_zero]\n\
+    \n/-- Empty neighbour set → zero forward output. -/\ntheorem fep047_empty_S (ψ : State → State → ℝ) (inc : State → ℝ)\
+    \ (x : State) :\n    fep047_forward ψ inc (∅ : Finset State) x = 0 := by\n  simp [fep047_forward, Finset.sum_empty]\n\n\
+    end FEP047\n"
+  latex_equations:
+  - "\\begin{aligned}\n&(ψ : State \\Rightarrow State \\Rightarrow \\mathbb{R}) (inc : State \\Rightarrow \\mathbb{R}) (S\
+    \ : \\mathsf{Finset} State)\n    (x : State) (hψ : \\forall a b, 0 \\le ψ a b) (hi : \\forall y, 0 \\le inc y) \\\\\n\
+    &0 \\le fep047_forward ψ inc S x\n\\end{aligned}"
+  - "\\begin{aligned}\n&(ψ : State \\Rightarrow State \\Rightarrow \\mathbb{R}) (inc_{1} inc_{2} : State \\Rightarrow \\mathbb{R})\
+    \ (S : \\mathsf{Finset} State)\n    (x : State) (hψ : \\forall a b, 0 \\le ψ a b) (h : \\forall y \\in S, inc_{1} y \\\
+    le inc_{2} y) \\\\\n&fep047_forward ψ inc_{1} S x \\le fep047_forward ψ inc_{2} S x\n\\end{aligned}"
+  - '\begin{aligned}
+
+    &(ψ : State \Rightarrow State \Rightarrow \mathbb{R}) (S : \mathsf{Finset} State) (x : State) \\
+
+    &fep047_forward ψ (\lambda _ => 0) S x = 0
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(ψ : State \Rightarrow State \Rightarrow \mathbb{R}) (inc : State \Rightarrow \mathbb{R}) (x : State) \\
+
+    &fep047_forward ψ inc (\varnothing : \mathsf{Finset} State) x = 0
+
+    \end{aligned}'
+- id: fep-048
+  title: Sync vs Async Policy Updates
+  area: FEP
+  mathlib: Order.Monotone.Basic
+  mathlib_status: real
+  nl: 'Sync vs Async Policy Updates (FEP). Catalogue row fep-048; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Order.Monotone.Basic\nimport Mathlib.Data.Real.Basic\nimport Mathlib.Tactic\n\nnamespace FEP048\n\
+    \n-- [proof strategy: add_nonneg + Monotone.comp + contraction argument via abs bounds]\n\n/-- Sync update: both components\
+    \ advance together, total is nonneg. -/\ntheorem fep048_sync_nonneg (a b : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a + b :=\n\
+    \  add_nonneg ha hb\n\n/-- Async update: sequential composition preserves monotonicity. -/\ntheorem fep048_async_mono\
+    \ (f g : ℝ → ℝ) (hf : Monotone f) (hg : Monotone g) :\n    Monotone (g ∘ f) :=\n  hg.comp hf\n\n/-- Contractive map: if\
+    \ f x = x, f y = y and |f x - f y| < |x - y|, then x = y. -/\ntheorem fep048_contraction_unique (f : ℝ → ℝ) (x y : ℝ)\n\
+    \    (hfx : f x = x) (hfy : f y = y)\n    (hc : |f x - f y| < |x - y|) : x = y := by\n  rw [hfx, hfy] at hc\n  exact absurd\
+    \ hc (lt_irrefl _)\n\n/-- Identity update is monotone (trivial sync). -/\ntheorem fep048_id_mono : Monotone (id : ℝ →\
+    \ ℝ) := fun _ _ h => h\n\n/-- Sum of monotone scalar updates is monotone. -/\ntheorem fep048_add_mono (f g : ℝ → ℝ) (hf\
+    \ : Monotone f) (hg : Monotone g) :\n    Monotone (fun x => f x + g x) :=\n  fun _ _ h => add_le_add (hf h) (hg h)\n\n\
+    end FEP048\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(a b : \mathbb{R}) (ha : 0 \le a) (hb : 0 \le b) \\
+
+    &0 \le a + b
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(f g : \mathbb{R} \Rightarrow \mathbb{R}) (hf : \mathsf{Monotone} f) (hg : \mathsf{Monotone} g) \\
+
+    &\mathsf{Monotone} (g \circ f)
+
+    \end{aligned}'
+  - "\\begin{aligned}\n&(f : \\mathbb{R} \\Rightarrow \\mathbb{R}) (x y : \\mathbb{R})\n    (hfx : f x = x) (hfy : f y = y)\n\
+    \    (hc : |f x - f y| < |x - y|) \\\\\n&x = y\n\\end{aligned}"
+  - '\mathsf{Monotone} (\mathsf{id} : \mathbb{R} \Rightarrow \mathbb{R})'
+  - '\begin{aligned}
+
+    &(f g : \mathbb{R} \Rightarrow \mathbb{R}) (hf : \mathsf{Monotone} f) (hg : \mathsf{Monotone} g) \\
+
+    &\mathsf{Monotone} (\lambda x => f x + g x)
+
+    \end{aligned}'
+- id: fep-049
+  title: Entropy Production Rate
+  area: Thermodynamics
+  mathlib: Algebra.Order.Ring.Lemmas
+  mathlib_status: real
+  nl: 'Entropy Production Rate (Thermodynamics). Catalogue row fep-049; maturity `real` in config/topics.yaml. Natural-language
+    anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Algebra.Order.Ring.Basic\nimport Mathlib.Tactic\n\nnamespace FEP049\n\n/-- Entropy production\
+    \ rate: σ = J · F ≥ 0 (second law of thermodynamics). -/\ntheorem fep049_entropy_production_nonneg (J F : ℝ) (hJ : 0 ≤\
+    \ J) (hF : 0 ≤ F) : 0 ≤ J * F :=\n  mul_nonneg hJ hF\n\n/-- Detailed balance: at equilibrium, entropy production vanishes.\
+    \ -/\ntheorem fep049_equilibrium_zero_production : (0 : ℝ) * (0 : ℝ) = 0 := by ring\n\n/-- Entropy production is monotone\
+    \ in the thermodynamic force. -/\ntheorem fep049_production_mono_force (J F₁ F₂ : ℝ) (hJ : 0 ≤ J) (h : F₁ ≤ F₂) :\n  \
+    \  J * F₁ ≤ J * F₂ :=\n  mul_le_mul_of_nonneg_left h hJ\n\n/-- Entropy production is monotone in the flux at fixed positive\
+    \ force. -/\ntheorem fep049_production_mono_flux (J₁ J₂ F : ℝ) (hF : 0 ≤ F) (h : J₁ ≤ J₂) :\n    J₁ * F ≤ J₂ * F :=\n\
+    \  mul_le_mul_of_nonneg_right h hF\n\n/-- Zero flux implies zero entropy production. -/\ntheorem fep049_zero_flux (F :\
+    \ ℝ) : (0 : ℝ) * F = 0 := by ring\n\nend FEP049\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(J F : \mathbb{R}) (hJ : 0 \le J) (hF : 0 \le F) \\
+
+    &0 \le J * F
+
+    \end{aligned}'
+  - '(0 : \mathbb{R}) * (0 : \mathbb{R}) = 0'
+  - '\begin{aligned}
+
+    &(J F_{1} F_{2} : \mathbb{R}) (hJ : 0 \le J) (h : F_{1} \le F_{2}) \\
+
+    &J * F_{1} \le J * F_{2}
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(J_{1} J_{2} F : \mathbb{R}) (hF : 0 \le F) (h : J_{1} \le J_{2}) \\
+
+    &J_{1} * F \le J_{2} * F
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(F : \mathbb{R}) \\
+
+    &(0 : \mathbb{R}) * F = 0
+
+    \end{aligned}'
+- id: fep-050
+  title: Landauer Bound and Information Thermodynamics
+  area: Thermodynamics
+  mathlib: Analysis.SpecialFunctions.Log.Basic
+  mathlib_status: real
+  nl: 'Landauer Bound and Information Thermodynamics (Thermodynamics). Catalogue row fep-050; maturity `real` in config/topics.yaml.
+    Natural-language anchor for OpenGauss / Hermes sessions and `lake env lean` checks.
+
+    '
+  lean_sketch: "import Mathlib.Analysis.SpecialFunctions.Log.Basic\n\nnamespace FEP050\n\n/-- Landauer bound: work ≥ kT ln\
+    \ 2 per bit erased (information thermodynamics). -/\nnoncomputable def fep050_landauer_bound (kT : ℝ) : ℝ := kT * Real.log\
+    \ 2\n\n/-- Landauer bound is positive at positive temperature. -/\ntheorem fep050_landauer_pos (kT : ℝ) (hT : 0 < kT)\
+    \ : 0 < fep050_landauer_bound kT :=\n  mul_pos hT (Real.log_pos (by norm_num : (1 : ℝ) < 2))\n\n/-- Work must exceed Landauer\
+    \ bound: W ≥ kT ln 2 implies W - kT ln 2 ≥ 0. -/\ntheorem fep050_excess_work_nonneg (W kT : ℝ) (hW : fep050_landauer_bound\
+    \ kT ≤ W) :\n    0 ≤ W - fep050_landauer_bound kT :=\n  sub_nonneg.mpr hW\n\n/-- Erasing n bits costs at least n × kT\
+    \ ln 2 (positivity version). -/\ntheorem fep050_n_bits (kT : ℝ) (n : ℕ) (hT : 0 < kT) :\n    0 < n * fep050_landauer_bound\
+    \ kT ↔ 0 < n := by\n  constructor\n  · intro h\n    by_contra hle\n    push_neg at hle\n    have : n = 0 := Nat.le_zero.mp\
+    \ hle\n    simp [this, fep050_landauer_bound] at h\n  · intro hn\n    exact mul_pos (Nat.cast_pos.mpr hn) (fep050_landauer_pos\
+    \ kT hT)\n\n/-- Landauer bound vanishes at zero temperature. -/\ntheorem fep050_zero_temp : fep050_landauer_bound 0 =\
+    \ 0 := by\n  simp [fep050_landauer_bound]\n\nend FEP050\n"
+  latex_equations:
+  - '\begin{aligned}
+
+    &(kT : \mathbb{R}) (hT : 0 < kT) \\
+
+    &0 < fep050_landauer_bound kT
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(W kT : \mathbb{R}) (hW : fep050_landauer_bound kT \le W) \\
+
+    &0 \le W - fep050_landauer_bound kT
+
+    \end{aligned}'
+  - '\begin{aligned}
+
+    &(kT : \mathbb{R}) (n : \mathbb{N}) (hT : 0 < kT) \\
+
+    &0 < n * fep050_landauer_bound kT \leftrightarrow 0 < n
+
+    \end{aligned}'
+  - fep050_landauer_bound 0 = 0

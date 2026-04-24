@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fep_lean"
+version = "0.7.1"
+description = "FEP Lean4 catalogue, OpenGauss-oriented session model, manuscript artifacts"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-timeout>=2.0",
+    "pytest-xdist>=3.5.0",
+    "pytest-httpserver>=1.0.8",
+]
+
+[project.scripts]
+fep-lean-preflight = "verification.preflight:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "serial_lean: Lean/lake workspace tests; do not run in parallel with other lean-heavy files (see tests/AGENTS.md)",
+]
+timeout = 900
+timeout_method = "thread"
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::pytest.PytestWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*", "src/__init__.py"]
+# Figure generation uses ``ProcessPoolExecutor`` (spawn); trace worker processes.
+concurrency = ["multiprocessing"]
+
+[tool.coverage.report]
+# Line coverage ~90%; combined line+branch ~89.6% with current Hermes/network branches.
+fail_under = 89
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
