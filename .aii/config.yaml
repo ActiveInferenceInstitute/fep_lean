@@ -1,0 +1,50 @@
+# AII sidecar — InstituteOS metadata. Schema: instituteos.platform.aii_sidecar
+meta:
+  updated: '2026-06-30'
+repo:
+  name: fep_lean
+  slug: fep-lean
+  full_name: ActiveInferenceInstitute/fep_lean
+  description: '> **Release v1.0.0** (2026-04-24) · DOI [10.5281/zenodo.19699234](https://doi.org/10.5281/zenodo.19699234)
+    · License [CC BY 4.0](LICENSE) > > **Cite as:** Friedman, D. A. (2026). *Towards
+    Lean 4 Formalization of the Free Energy Principle:…'
+institute:
+  category: research-software
+  steward: Active Inference Institute
+ecosystem:
+  links:
+    github: https://github.com/ActiveInferenceInstitute/fep_lean
+    website: https://www.activeinference.org
+artifacts:
+- path: README.md
+  kind: doc
+  description: Repository overview.
+- path: src
+  kind: code
+  description: Source tree.
+- path: pyproject.toml
+  kind: code
+  description: Python package config.
+- path: LICENSE
+  kind: doc
+  description: License.
+provenance:
+  license: CC-BY-4.0
+  citation:
+    doi: 10.5281/zenodo.19699234](https://doi.org/10.5281/zenodo.19699234
+instituteos:
+  tags:
+  - fep
+  - lean
+  - release
+  - '2026'
+  - doi
+  - python
+capabilities:
+- python-package
+- tested
+- documentation
+tasks:
+  test:
+    cmd: python -m pytest
+    description: Run the test suite.
