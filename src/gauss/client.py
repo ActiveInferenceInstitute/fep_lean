@@ -31,6 +31,7 @@ import json
 import logging
 import os
 import sqlite3
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -156,6 +157,7 @@ class OpenGaussClient:
         self._artifacts_dir.mkdir(exist_ok=True)
         self._logs_dir.mkdir(exist_ok=True)
         self._db_path = self._home / "fep_lean_state.db"
+        self._lock = threading.RLock()
         self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         try:
@@ -165,6 +167,17 @@ class OpenGaussClient:
         self._conn.executescript(_SCHEMA_SQL)
         self._conn.commit()
         log.debug("OpenGaussClient ready: db=%s", self._db_path)
+
+    def close(self) -> None:
+        """Close the SQLite connection and release the client resources."""
+        with self._lock:
+            self._conn.close()
+
+    def __enter__(self) -> "OpenGaussClient":
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+        self.close()
 
     # ── Session lifecycle ─────────────────────────────────────────────────────
 
@@ -292,21 +305,25 @@ class OpenGaussClient:
         content = json.dumps(payload, indent=2, ensure_ascii=False)
         sha = _sha256(content)
         now = time.time()
-        # Write to a temp file first; only expose the final path after DB succeeds
+        # Publish the file first, then register the exact published path.  If
+        # registration fails, remove the file so the database and filesystem
+        # cannot diverge.
         tmp.write_text(content, encoding="utf-8")
         try:
-            self._conn.execute(
-                """
-                INSERT INTO artifacts (artifact_id, session_id, file_path, sha256, size_bytes, created_at)
-                VALUES (?,?,?,?,?,?)
-                """,
-                (artifact_id, session_id, str(out), sha, len(content.encode()), now),
-            )
-            self._conn.commit()
+            os.replace(tmp, out)
+            with self._lock:
+                self._conn.execute(
+                    """
+                    INSERT INTO artifacts (artifact_id, session_id, file_path, sha256, size_bytes, created_at)
+                    VALUES (?,?,?,?,?,?)
+                    """,
+                    (artifact_id, session_id, str(out), sha, len(content.encode()), now),
+                )
+                self._conn.commit()
         except Exception:
+            out.unlink(missing_ok=True)
             tmp.unlink(missing_ok=True)
             raise
-        tmp.rename(out)
         log.debug("Artifact written: %s (sha256=%s...)", out.name, sha[:8])
         return out
 

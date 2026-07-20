@@ -1,6 +1,6 @@
 """Tests for open_gauss_client — SQLite session store.
 
-All tests use real SQLite (tmp_path) — no mocks.
+All tests use real SQLite (tmp_path) — no direct execution.
 """
 
 from __future__ import annotations
@@ -122,12 +122,12 @@ def test_context_manager(tmp_path: Path) -> None:
 # ── Hermes cache tests ────────────────────────────────────────────────────────
 
 def test_set_and_get_cached_hermes(client: OpenGaussClient) -> None:
-    payload = json.dumps({"success": True, "model_used": "stub-model", "explanation": "test"})
-    client.set_cached_hermes("key-abc", "fep-001", "verify", "stub-model", payload, "hash123")
+    payload = json.dumps({"success": True, "model_used": "fixture-model", "explanation": "test"})
+    client.set_cached_hermes("key-abc", "fep-001", "verify", "fixture-model", payload, "hash123")
     result = client.get_cached_hermes("key-abc")
     assert result is not None
     assert result["success"] is True
-    assert result["model_used"] == "stub-model"
+    assert result["model_used"] == "fixture-model"
     assert result["explanation"] == "test"
 
 
@@ -137,8 +137,8 @@ def test_get_cached_hermes_missing_returns_none(client: OpenGaussClient) -> None
 
 def test_prune_hermes_cache_removes_old(client: OpenGaussClient) -> None:
     import time as _time
-    payload = json.dumps({"success": True, "model_used": "stub"})
-    client.set_cached_hermes("old-key", "fep-002", "verify", "stub", payload, "h1")
+    payload = json.dumps({"success": True, "model_used": "fixture"})
+    client.set_cached_hermes("old-key", "fep-002", "verify", "fixture", payload, "h1")
     # Manually backdate the entry beyond ttl
     client._conn.execute(
         "UPDATE hermes_cache SET created_at=? WHERE cache_key=?",
@@ -151,8 +151,8 @@ def test_prune_hermes_cache_removes_old(client: OpenGaussClient) -> None:
 
 
 def test_prune_hermes_cache_keeps_fresh(client: OpenGaussClient) -> None:
-    payload = json.dumps({"success": True, "model_used": "stub"})
-    client.set_cached_hermes("fresh-key", "fep-003", "verify", "stub", payload, "h2")
+    payload = json.dumps({"success": True, "model_used": "fixture"})
+    client.set_cached_hermes("fresh-key", "fep-003", "verify", "fixture", payload, "h2")
     pruned = client.prune_hermes_cache(ttl_hours=24.0)
     assert pruned == 0
     assert client.get_cached_hermes("fresh-key") is not None

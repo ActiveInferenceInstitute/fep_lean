@@ -13,6 +13,11 @@ from typing import Any
 import yaml
 
 _MATURITY_ORDER = ("real", "partial", "aspirational")
+_AREAS = {"FEP", "ActiveInference", "BayesianMechanics", "InfoGeometry", "Thermodynamics"}
+
+
+class CatalogueValidationError(ValueError):
+    """Raised when the catalogue cannot be trusted as a verification input."""
 
 
 @dataclass(frozen=True)
@@ -44,29 +49,59 @@ class FEPTopicCatalogue:
 
     @classmethod
     def from_yaml(cls, path: Path | None = None) -> "FEPTopicCatalogue":
-        """Load catalogue from YAML. Default: ``<project>/config/topics.yaml`` next to ``src/``."""
+        """Load and validate the complete catalogue from YAML.
+
+        Validation is deliberately strict because downstream Lean and report
+        stages use this file as their source of truth. Missing or extra rows,
+        malformed identifiers, absent theorem bodies, and mismatched equation
+        signatures are rejected before any external service is contacted.
+        """
         resolved = path if path is not None else _default_topics_path()
-        data = yaml.safe_load(resolved.read_text(encoding="utf-8"))
-        raw: list[dict[str, Any]] = data.get("topics") or []
+        try:
+            data = yaml.safe_load(resolved.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError) as exc:
+            raise CatalogueValidationError(f"cannot read catalogue {resolved}: {exc}") from exc
+        if not isinstance(data, dict) or not isinstance(data.get("topics"), list):
+            raise CatalogueValidationError("catalogue must contain a top-level topics list")
+        raw = data["topics"]
+        if len(raw) != 50:
+            raise CatalogueValidationError(f"catalogue must contain exactly 50 topics, found {len(raw)}")
         topics: list[TopicEntry] = []
-        for row in raw:
+        required = {"id", "title", "area", "mathlib", "mathlib_status", "nl", "lean_sketch", "latex_equations"}
+        for index, row in enumerate(raw, 1):
+            if not isinstance(row, dict):
+                raise CatalogueValidationError(f"topic row {index} must be a mapping")
+            missing = required - set(row)
+            if missing:
+                raise CatalogueValidationError(f"topic row {index} missing fields: {', '.join(sorted(missing))}")
+            expected_id = f"fep-{index:03d}"
+            if row["id"] != expected_id:
+                raise CatalogueValidationError(f"topic row {index} must have id {expected_id!r}")
+            if row["area"] not in _AREAS:
+                raise CatalogueValidationError(f"{expected_id}: unsupported area {row['area']!r}")
+            if str(row["mathlib_status"]).strip().lower() not in _MATURITY_ORDER:
+                raise CatalogueValidationError(f"{expected_id}: unsupported mathlib_status")
+            if not all(isinstance(row[key], str) and row[key].strip() for key in ("title", "mathlib", "nl", "lean_sketch")):
+                raise CatalogueValidationError(f"{expected_id}: title, mathlib, nl, and lean_sketch must be non-empty strings")
             raw_latex = row.get("latex_equations")
-            if isinstance(raw_latex, list):
-                latex_eqs = tuple(str(x) for x in raw_latex)
-            else:
-                latex_eqs = ()
+            if not isinstance(raw_latex, list) or not raw_latex or not all(isinstance(x, str) and x.strip() for x in raw_latex):
+                raise CatalogueValidationError(f"{expected_id}: latex_equations must be a non-empty list of strings")
+            latex_eqs = tuple(raw_latex)
+            theorem_count = sum(1 for line in str(row["lean_sketch"]).splitlines() if line.lstrip().startswith("theorem "))
+            if theorem_count != len(latex_eqs):
+                raise CatalogueValidationError(f"{expected_id}: {theorem_count} theorem declarations but {len(latex_eqs)} equations")
             topics.append(
                 TopicEntry(
-                    id=str(row["id"]),
-                    title=str(row.get("title", "")),
-                    area=str(row.get("area", "")),
-                    mathlib=str(row.get("mathlib", "")),
-                    mathlib_status=str(row.get("mathlib_status", "partial")).strip().lower(),
-                    nl=str(row.get("nl", "")),
-                    lean_sketch=str(row.get("lean_sketch", "")),
+                    id=row["id"], title=row["title"], area=row["area"], mathlib=row["mathlib"],
+                    mathlib_status=str(row["mathlib_status"]).strip().lower(), nl=row["nl"],
+                    lean_sketch=row["lean_sketch"],
                     latex_equations=latex_eqs,
                 )
             )
+        ids = [topic.id for topic in topics]
+        if len(set(ids)) != len(ids):
+            raise CatalogueValidationError("catalogue topic identifiers must be unique")
+        _validate_sketch_source_parity(resolved, topics)
         return cls(topics, resolved)
 
     @property
@@ -99,3 +134,21 @@ def _default_topics_path() -> Path:
     # Project root is parent of ``src/``
     here = Path(__file__).resolve().parent.parent.parent
     return here / "config" / "topics.yaml"
+
+
+def _validate_sketch_source_parity(path: Path, topics: list[TopicEntry]) -> None:
+    """Ensure the YAML sketches match the maintained Python sketch source."""
+    project_root = path.resolve().parent.parent
+    scripts_dir = project_root / "scripts"
+    if not scripts_dir.is_dir():
+        return
+    if str(scripts_dir) not in __import__("sys").path:
+        __import__("sys").path.insert(0, str(scripts_dir))
+    try:
+        from catalogue_sketches import SKETCHES  # type: ignore[import-not-found]
+    except (ImportError, AttributeError):
+        return
+    for topic in topics:
+        source = SKETCHES.get(topic.id)
+        if source is not None and source.strip() != topic.lean_sketch.strip():
+            raise CatalogueValidationError(f"{topic.id}: YAML lean_sketch differs from scripts/catalogue_sketches.py")

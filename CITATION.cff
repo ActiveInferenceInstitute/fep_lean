@@ -5,19 +5,18 @@ title: "FEP_Lean: Towards Lean 4 Formalization of the Free Energy Principle"
 abstract: >-
   A machine-checked catalogue of 50 Free Energy Principle topics spanning
   FEP foundations, Active Inference, Bayesian Mechanics, Information Geometry,
-  and non-equilibrium Thermodynamics, each compiled as a namespaced Lean 4
-  sketch against Mathlib 4. The accompanying Python pipeline layers an
-  LLM-assisted commentary and drafting tool (Hermes / OpenGauss) atop the
-  Lean 4 kernel as sole ground truth, under a strict zero-mock testing
-  discipline. The catalogue compiles 50/50 sorry-free under the pinned
-  Lean 4.29.0 / Mathlib 4.29.0 toolchain.
+  and non-equilibrium Thermodynamics, each represented by a namespaced Lean 4
+  sketch against Mathlib 4. The accompanying Python pipeline layers configured
+  Hermes commentary and OpenGauss persistence atop the Lean 4 kernel as sole
+  ground truth. Full verification is accepted only after the pinned Lean
+  4.29.0 / Mathlib 4.29.0 workspace compiles every row without proof holes.
 authors:
   - family-names: Friedman
     given-names: Daniel Ari
     email: daniel@activeinference.institute
     orcid: "https://orcid.org/0000-0001-6232-9096"
 version: "1.0.0"
-date-released: "2026-04-24"
+date-released: "2026-07-17"
 repository-code: "https://github.com/ActiveInferenceInstitute/FEP_Lean"
 url: "https://github.com/ActiveInferenceInstitute/FEP_Lean"
 license: CC-BY-4.0
@@ -33,7 +32,7 @@ keywords:
   - information geometry
   - LLM-ITP integration
   - reproducible research
-  - zero-mock pipeline
+  - execution-integrity pipeline
   - measure theory
   - stochastic differential equations
 identifiers:

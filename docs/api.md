@@ -514,13 +514,13 @@ def write_unified_formalism_appendix_markdown(
     """Write ``manuscript/09z_unified_formalism_catalogue.md`` (gitignored)."""
 ```
 
-`write_full_topic_lean_catalogue_markdown` and `write_topic_latex_equations_markdown` are **aliases** that write the same path. LaTeX display rows prefer `LATEX_EQUATIONS` from `scripts/catalogue_sketches.py` at render time, with `TopicEntry.latex_equations` in YAML as fallback.
+`write_unified_formalism_appendix_markdown` and `write_typeset_equations_markdown` are **aliases** that write the same path. LaTeX display rows prefer `LATEX_EQUATIONS` from `scripts/catalogue_sketches.py` at render time, with `TopicEntry.latex_equations` in YAML as fallback.
 
-### `build_full_topic_lean_catalogue_markdown` (B-only string)
+### `build_lean_catalogue_markdown` (B-only string)
 
 B-only projection for tests; the PDF uses the unified appendix.
 
-### `build_topic_latex_equations_markdown` (C-only string)
+### `build_typeset_equations_markdown` (C-only string)
 
 C-only projection; optional `project_root` enables `LATEX_EQUATIONS` import.
 

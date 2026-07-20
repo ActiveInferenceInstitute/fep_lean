@@ -51,19 +51,19 @@ def test_output_imports():
     from output.figures import write_all_catalogue_figures
     from output.manuscript import (
         build_manuscript_vars,
-        build_topic_latex_equations_markdown,
+        build_typeset_equations_markdown,
         build_unified_formalism_appendix_markdown,
-        write_full_topic_lean_catalogue_markdown,
+        write_unified_formalism_appendix_markdown,
         write_manuscript_vars,
-        write_topic_latex_equations_markdown,
+        write_typeset_equations_markdown,
         write_unified_formalism_appendix_markdown,
     )
 
     assert callable(build_manuscript_vars)
     assert callable(write_manuscript_vars)
-    assert callable(write_full_topic_lean_catalogue_markdown)
-    assert callable(build_topic_latex_equations_markdown)
-    assert callable(write_topic_latex_equations_markdown)
+    assert callable(write_unified_formalism_appendix_markdown)
+    assert callable(build_typeset_equations_markdown)
+    assert callable(write_typeset_equations_markdown)
     assert callable(build_unified_formalism_appendix_markdown)
     assert callable(write_unified_formalism_appendix_markdown)
     from output.reporter import Reporter, ReportPaths

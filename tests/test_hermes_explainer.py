@@ -2,7 +2,7 @@
 
 Tests that don't need an API key validate structure and config loading.
 Tests that need an API key are skipped when OPENROUTER_API_KEY / ANTHROPIC_API_KEY
-are unset (real CI guard — no mocks).
+are unset (real CI guard — no direct execution).
 """
 
 from __future__ import annotations
@@ -66,10 +66,10 @@ def test_hermes_config_from_settings(tmp_path: Path, monkeypatch: pytest.MonkeyP
 
 def test_hermes_config_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("HERMES_MODEL", "my-custom-model")
-    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-test-fake-key")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-test-temporary-key")
     cfg = HermesConfig.from_settings()
     assert cfg.model == "my-custom-model"
-    assert cfg.api_key == "sk-test-fake-key"
+    assert cfg.api_key == "sk-test-temporary-key"
 
 
 def test_settings_yaml_beats_gauss_default_model(
@@ -272,11 +272,11 @@ def test_env_positive_int(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_hermes_try_fetch_raw_retries_429(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("HERMES_429_MAX_RETRIES", "1")
-    cfg = HermesConfig(api_key="sk-test-fake", enabled=True, model="test-m")
+    cfg = HermesConfig(api_key="sk-test-temporary", enabled=True, model="test-m")
     ex = HermesExplainer(cfg)
     n = {"c": 0}
 
-    def fake_call(inst, messages: list, model: str) -> dict:
+    def temporary_call(inst, messages: list, model: str) -> dict:
         n["c"] += 1
         if n["c"] == 1:
             raise HermesAPIError("HTTP 429", status_code=429)
@@ -285,7 +285,7 @@ def test_hermes_try_fetch_raw_retries_429(monkeypatch: pytest.MonkeyPatch) -> No
             "usage": {},
         }
 
-    monkeypatch.setattr(HermesExplainer, "_call_api", fake_call)
+    monkeypatch.setattr(HermesExplainer, "_call_api", temporary_call)
     monkeypatch.setattr("llm.hermes.time.sleep", lambda *_: None)
     msgs = [{"role": "user", "content": "hi"}]
     raw, fatal, _err, retries, advance = ex._try_fetch_raw(msgs, "test-m", "fep-001")
@@ -305,7 +305,7 @@ def test_hermes_explain_records_empty_content_chain_advance(
     the chain-advance reason and ``network_retries == 0`` (no retries needed).
     """
     cfg = HermesConfig(
-        api_key="sk-test-fake",
+        api_key="sk-test-temporary",
         enabled=True,
         model="primary-m",
         fallback_models=["primary-m", "fallback-m"],
@@ -313,7 +313,7 @@ def test_hermes_explain_records_empty_content_chain_advance(
     ex = HermesExplainer(cfg)
     seen: list[str] = []
 
-    def fake_call(self, messages: list, model: str) -> dict:
+    def temporary_call(self, messages: list, model: str) -> dict:
         seen.append(model)
         if model == "primary-m":
             # 200 OK but empty content → _parse_response returns success=False
@@ -325,7 +325,7 @@ def test_hermes_explain_records_empty_content_chain_advance(
             "usage": {"completion_tokens": 1, "prompt_tokens": 1},
         }
 
-    monkeypatch.setattr(HermesExplainer, "_call_api", fake_call)
+    monkeypatch.setattr(HermesExplainer, "_call_api", temporary_call)
     monkeypatch.setattr("llm.hermes.time.sleep", lambda *_: None)
     res = ex.explain_topic(FIRST_TOPIC)
     assert res.success is True

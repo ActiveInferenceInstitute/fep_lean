@@ -84,6 +84,8 @@ class TopicRunResult:
     stage_results: list[dict[str, Any]] = field(default_factory=list)
     explanation: str = ""
     refined_lean_sketch: str = ""
+    final_lean_sketch: str = ""
+    verification_source: str = "none"
     tokens_used: int = 0
     hermes_model: str = ""
     cache_hit: bool = False
@@ -113,6 +115,8 @@ class TopicRunResult:
             "stage_results": self.stage_results,
             "explanation": self.explanation,
             "refined_lean_sketch": self.refined_lean_sketch,
+            "final_lean_sketch": self.final_lean_sketch,
+            "verification_source": self.verification_source,
             "tokens_used": self.tokens_used,
             "hermes_model": self.hermes_model,
             "cache_hit": self.cache_hit,
@@ -315,15 +319,8 @@ class GaussRunner:
             Stages other than ``"verify"`` require ``FEP_LEAN_GAUSS_WORKFLOWS=1``;
             if unset the stage silently degrades to ``"verify"``.
         """
-        from gauss.cli import workflows_enabled  # local import avoids circular at module level
-
-        if workflow != "verify" and not workflows_enabled():
-            log.debug(
-                "GaussRunner: workflow=%s requires FEP_LEAN_GAUSS_WORKFLOWS=1; "
-                "degrading to 'verify'",
-                workflow,
-            )
-            workflow = "verify"
+        if workflow not in _WORKFLOW_PREAMBLES:
+            raise ValueError(f"unsupported workflow: {workflow}")
 
         preamble = _WORKFLOW_PREAMBLES.get(workflow, "")
         lean_sketch = getattr(topic, "lean_sketch", "") or ""
@@ -438,22 +435,18 @@ class GaussRunner:
         # Overlap Hermes for the next catalogue row with Lean verify (prefetch mode only).
         self._start_prefetch_next_hermes(topic, workflow, preamble, model)
 
-        verify_res = self.lean.verify_sketch(topic.id, refined)
-
-        # ── Fallback: if Hermes-refined fails, compile the original sketch ───
-        # Preserves the 50/50 baseline guarantee while still tracking Hermes quality.
-        # hermes_success remains True (Hermes DID return output); a separate field
-        # `hermes_lean_compiles` records whether the Hermes sketch itself compiled.
-        _hermes_lean_compiles = verify_res.compiles
-        if not verify_res.compiles and lean_sketch:
-            log.info(
-                "Hermes-refined failed for %s — falling back to original sketch",
-                topic.id,
+        if not self.lean.check_lake_available():
+            verify_res = VerifyResult(
+                topic_id=topic.id,
+                compiles=False,
+                has_sorry=False,
+                lean_version=self.lean.lean_version() or "unknown",
+                skip_reason="lake is unavailable or failed its bounded version probe",
             )
-            fallback_res = self.lean.verify_sketch(f"{topic.id}_fallback", lean_sketch)
-            if fallback_res.compiles:
-                log.info("Fallback to original sketch succeeded for %s", topic.id)
-                verify_res = fallback_res
+        else:
+            verify_res = self.lean.verify_sketch(topic.id, refined)
+
+        _hermes_lean_compiles = verify_res.compiles
 
         # ── Optional review pass (workflow="review") ──────────────────────────
         if workflow == "review" and verify_res.compiles:
@@ -507,7 +500,7 @@ class GaussRunner:
         artifact = self._build_artifact_payload(topic, hermes_res, verify_res)
         self.client.write_artifact(session_id, artifact)
 
-        is_success = verify_res.compiles
+        is_success = verify_res.compiles and not verify_res.has_sorry
         status = "success" if is_success else "failed"
 
         self.client.close_session(
@@ -532,6 +525,8 @@ class GaussRunner:
             stage_results=stage_results,
             explanation=hermes_res.explanation,
             refined_lean_sketch=refined,
+            final_lean_sketch=refined,
+            verification_source="hermes_refined",
             tokens_used=hermes_res.tokens_used,
             hermes_model=hermes_res.model_used,
             cache_hit=hermes_res.cache_hit,
@@ -611,5 +606,14 @@ class GaussRunner:
 
         lean = LeanVerifier(project_root / "lean", project_root)
         hermes = HermesExplainer(HermesConfig.from_settings(project_root))
-        client = OpenGaussClient()
+        gauss_home: str | Path | None = os.environ.get("GAUSS_HOME")
+        if not gauss_home:
+            try:
+                import yaml
+
+                settings = yaml.safe_load((project_root / "config" / "settings.yaml").read_text(encoding="utf-8")) or {}
+                gauss_home = settings.get("gauss", {}).get("home")
+            except (OSError, yaml.YAMLError, AttributeError):
+                gauss_home = None
+        client = OpenGaussClient(gauss_home=gauss_home)
         return cls(lean, hermes, client, project_root)

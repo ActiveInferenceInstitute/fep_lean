@@ -117,7 +117,7 @@ A catalogue sketch is **real** when all of the following checkable conditions ho
 
 - The fragment compiles without `sorry` (zero proof gaps in the sketch).
 - All imported constants and lemmas are present in the pinned Mathlib4 version; no local axioms or admitted theorems are used in the sketch.
-- No definitions or theorems in the sketch rely on opaque stubs representing missing mathematics.
+- No definitions or theorems in the sketch rely on opaque fixtures representing missing mathematics.
 
 **Catalogue count (YAML `mathlib_status: real`): {{maturity.real}} of {{total_topics}} topics.** The Lean statement in each row is machine-checked; the natural-language `title` remains the research-facing claim and may call for stronger formalizations as Mathlib4 coverage expands (see §\ref{sec:maturity_assessment_of_the_mathlib_ecosystem}). Sketches vary in depth: some topics prove multiple substantive properties (for example fep-028 defines softmax and proves both non-negativity and normalization; fep-050 defines the Landauer bound $kT \ln 2$ and proves its positivity; fep-005 constructs a four-part partition with a disjoint cover), while others anchor simpler structural lemmas such as measure monotonicity or exponential identities. All sketches are unique — no two topics share identical proof bodies — and each uses a Mathlib4 API that is idiomatic for its domain. Sketches typecheck and anchor the topic in Mathlib4, but they do not by themselves guarantee that every natural-language catalogue title is fully proved at its maximum statement strength.
 

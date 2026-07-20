@@ -46,10 +46,9 @@ def _yaml_topic_ids() -> set[str]:
 
 
 def test_write_aggregate_emits_50_topic_namespaces(tmp_path: Path, generator_module) -> None:
-    fep_all_path, basic_path, n = generator_module.write_aggregate(out_dir=tmp_path)
+    fep_all_path, n = generator_module.write_aggregate(out_dir=tmp_path)
     assert n == 50, f"expected 50 SKETCHES, got {n}"
     assert fep_all_path.is_file()
-    assert basic_path.is_file()
 
     text = fep_all_path.read_text(encoding="utf-8")
     namespaces = {f"fep-{m.group(1)}" for m in _NS_RE.finditer(text)}
@@ -60,7 +59,7 @@ def test_write_aggregate_emits_50_topic_namespaces(tmp_path: Path, generator_mod
 
 
 def test_write_aggregate_covers_every_yaml_topic(tmp_path: Path, generator_module) -> None:
-    fep_all_path, _, _ = generator_module.write_aggregate(out_dir=tmp_path)
+    fep_all_path, _ = generator_module.write_aggregate(out_dir=tmp_path)
     text = fep_all_path.read_text(encoding="utf-8")
     lean_ids = {f"fep-{m.group(1)}" for m in _NS_RE.finditer(text)}
     yaml_ids = _yaml_topic_ids()
@@ -76,7 +75,7 @@ def test_write_aggregate_covers_every_yaml_topic(tmp_path: Path, generator_modul
 
 
 def test_write_aggregate_no_non_comment_sorry(tmp_path: Path, generator_module) -> None:
-    fep_all_path, _, _ = generator_module.write_aggregate(out_dir=tmp_path)
+    fep_all_path, _ = generator_module.write_aggregate(out_dir=tmp_path)
     text = fep_all_path.read_text(encoding="utf-8")
     offending: list[str] = []
     for i, line in enumerate(text.splitlines(), 1):
@@ -93,7 +92,7 @@ def test_write_aggregate_hoists_single_top_level_import(tmp_path: Path, generato
     """Per-sketch ``import Mathlib.*`` lines must be stripped; only the file-level
     ``import Mathlib`` should remain. Avoids duplicate imports that would
     otherwise litter the aggregate after every regeneration."""
-    fep_all_path, _, _ = generator_module.write_aggregate(out_dir=tmp_path)
+    fep_all_path, _ = generator_module.write_aggregate(out_dir=tmp_path)
     text = fep_all_path.read_text(encoding="utf-8")
     import_lines = [ln for ln in text.splitlines() if ln.startswith("import ")]
     assert import_lines == ["import Mathlib"], (
@@ -101,15 +100,11 @@ def test_write_aggregate_hoists_single_top_level_import(tmp_path: Path, generato
     )
 
 
-def test_basic_lean_stub_compiles_grep_target(tmp_path: Path, generator_module) -> None:
-    """Basic.lean is the second target of the CI ``grep ... fep_all.lean Basic.lean``
-    sorry-gate; verify the stub is non-empty, sorry-free, and references Mathlib."""
-    _, basic_path, _ = generator_module.write_aggregate(out_dir=tmp_path)
-    text = basic_path.read_text(encoding="utf-8")
-    assert "import Mathlib" in text
-    assert not re.search(r"^(?!\s*--).*\bsorry\b", text, flags=re.MULTILINE), (
-        "Basic.lean stub contains a non-comment sorry"
-    )
+def test_regenerated_aggregate_is_the_only_library_target(tmp_path: Path, generator_module) -> None:
+    """The generator emits one canonical aggregate and no companion library."""
+    path, _ = generator_module.write_aggregate(out_dir=tmp_path)
+    assert path.name == "fep_all.lean"
+    assert not (tmp_path / "Basic.lean").exists()
 
 
 def test_topic_id_to_namespace_round_trips(generator_module) -> None:

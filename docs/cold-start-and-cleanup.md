@@ -13,7 +13,7 @@ These paths are **regenerated** by the pipeline, tests (with `tmp_path`), or are
 | `output/` | Figures, `reports/run_*`, `latest` symlink, ad-hoc logs, `.cache/` | Recreated on next analysis / Reporter run |
 | `manuscript/manuscript_vars.yaml` | Injected metrics from last pipeline | Rewritten in **Manuscript Artifacts**; raw manuscript `{{…}}` shows until regenerated |
 | `manuscript/09z_unified_formalism_catalogue.md` | Auto-generated B+C: Lean and typeset LaTeX per topic (`{#sec:…}` + `equation` / `\label{eq:…}`) | Rewritten with `write_unified_formalism_appendix_markdown` |
-| `manuscript/09z_appendix_b_lean_catalogue.md` / `09zc_…` | Legacy (older pipeline) | Remove if present; no longer written |
+| `manuscript/09z_appendix_b_lean_catalogue.md` / `09zc_…` | obsolete (older pipeline) | Remove if present; no longer written |
 | `.pytest_cache/` | Pytest node id cache | Harmless; recreated on next `pytest` |
 | `__pycache__/`, `*.egg-info/` | Python bytecode / install metadata | Recreated by interpreter / `uv sync` |
 | `gauss_pf2/`, `gauss_prefetch/`, `gauss_grace/` | Test scratch dirs (belt-and-suspenders ignore) | Safe if present |
@@ -48,7 +48,7 @@ write_unified_formalism_appendix_markdown(root, c)
 "
 ```
 
-That repopulates YAML from the checked-in catalogue and default summary stubs; it does **not** replace a full verifier run’s `verification_manifest.json` metrics — run the pipeline with workflows for live `verify.*` fields.
+That repopulates YAML from the checked-in catalogue and default summary fixtures; it does **not** replace a full verifier run’s `verification_manifest.json` metrics — run the pipeline with workflows for live `verify.*` fields.
 
 ## Optional: Gauss / Hermes state (outside this directory)
 

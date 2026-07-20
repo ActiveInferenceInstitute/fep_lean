@@ -11,7 +11,7 @@ Run from a regular (non-sandboxed) terminal:
 ```bash
 # From the project root (directory containing pyproject.toml)
 bash scripts/_maint_bootstrap_lean_toolchain.sh
-# (``00_lean_mathlib_setup.sh`` is a thin wrapper to the same bootstrap.)
+# (``fep-lean setup`` is a thin wrapper to the same bootstrap.)
 ```
 
 Or manually:

@@ -139,7 +139,7 @@ Hand-editing `config/topics.yaml` without updating `SKETCHES` will fail [`tests/
 ## Standards
 
 - Type hints on public APIs; prefer dataclasses for structured results.
-- No `unittest.mock` in tests (repository policy).
+- Tests exercise local HTTP, subprocess, and temporary-file boundaries directly.
 - Use `logging.getLogger(__name__)` for library code.
 
 ---

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fep_lean"
-version = "0.7.1"
+version = "1.0.0"
 description = "FEP Lean4 catalogue, OpenGauss-oriented session model, manuscript artifacts"
 requires-python = ">=3.10"
 dependencies = [
@@ -23,10 +23,13 @@ dev = [
 ]
 
 [project.scripts]
-fep-lean-preflight = "verification.preflight:main"
+fep-lean = "cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools]
+py-modules = ["cli", "_paths"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

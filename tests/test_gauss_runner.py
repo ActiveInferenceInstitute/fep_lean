@@ -1,7 +1,7 @@
 """Tests for gauss_runner — per-topic session orchestration.
 
 All tests use real SQLite (tmp_path), real HermesExplainer (disabled / no-key),
-and real LeanVerifier (skipped when lake absent).  No mocks.
+and real LeanVerifier (skipped when lake absent).  No direct execution.
 """
 
 from __future__ import annotations
@@ -106,7 +106,7 @@ def test_topic_run_result_as_dict(runner: GaussRunner) -> None:
         assert key in d, f"missing core key: {key}"
 
     # Hermes-derived fields surfaced for downstream reporters.  Types are
-    # asserted (not values) so the contract holds for stub Hermes returns
+    # asserted (not values) so the contract holds for fixture Hermes returns
     # whether or not a network call happens.
     for key, expected_type in (
         ("explanation", str),
@@ -140,10 +140,8 @@ def test_run_topic_result_as_dict_includes_workflow(runner: GaussRunner) -> None
 def test_run_topics_batch_workflow_kwarg(
     runner: GaussRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("FEP_LEAN_GAUSS_WORKFLOWS", "0")
     results = runner.run_topics_batch(TOPICS.topics[:2], workflow="draft")
-    # Without FEP_LEAN_GAUSS_WORKFLOWS=1, draft degrades to verify
-    assert all(r.workflow == "verify" for r in results)
+    assert all(r.workflow == "draft" for r in results)
 
 
 @pytest.mark.skipif(not (_HAS_API_KEY and _LIVE_TESTS_ENABLED), reason="No API key found (set OPENROUTER_API_KEY or ANTHROPIC_API_KEY); or suppressed via FEP_LEAN_LIVE_TESTS=0")
@@ -153,9 +151,9 @@ def test_run_topic_with_real_hermes(tmp_path: Path) -> None:
     Why this test exists
     --------------------
     The other GaussRunner tests in this file use the SQLite-backed runner with
-    Hermes disabled (``HermesConfig(enabled=False)``), so Hermes returns a stub
+    Hermes disabled (``HermesConfig(enabled=False)``), so Hermes returns a fixture
     ``HermesResult`` and no HTTP call is made.  ``FixedHermes`` /
-    ``_CountingHermes`` stubs that exercise the Hermes seam directly live in
+    ``_CountingHermes`` fixtures that exercise the Hermes seam directly live in
     ``test_gauss_runner_branches.py``.  This test is the only one that exercises
     the *real* network path through ``HermesExplainer._call_api`` →
     ``_parse_response`` → ``LeanVerifier`` → ``OpenGaussClient`` in one shot.

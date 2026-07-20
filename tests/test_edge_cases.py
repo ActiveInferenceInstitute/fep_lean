@@ -1,7 +1,7 @@
 """Edge-case tests for uncovered code paths.
 
 Tests input validation, wrap-code logic, empty-catalogue handling,
-and malformed data resilience.  All real objects — no mocks.
+and malformed data resilience.  All real objects — no direct execution.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import FEPTopicCatalogue, TopicEntry
+from catalogue.topics import CatalogueValidationError, FEPTopicCatalogue, TopicEntry
 from gauss.client import OpenGaussClient
 from verification.lean_verifier import LeanVerifier
 
@@ -93,14 +93,12 @@ def test_wrap_lean_code_multiline_imports() -> None:
 # ── Empty catalogue handling ─────────────────────────────────────────────────
 
 
-def test_empty_catalogue_summary(tmp_path: Path) -> None:
-    """FEPTopicCatalogue with zero topics returns empty areas."""
+def test_empty_catalogue_is_rejected(tmp_path: Path) -> None:
+    """An empty source cannot be used as a verification catalogue."""
     yaml_path = tmp_path / "topics.yaml"
     yaml_path.write_text("topics: []\n", encoding="utf-8")
-    cat = FEPTopicCatalogue.from_yaml(yaml_path)
-    s = cat.summary()
-    assert s["total_topics"] == 0
-    assert s["areas"] == {}
+    with pytest.raises(CatalogueValidationError):
+        FEPTopicCatalogue.from_yaml(yaml_path)
 
 
 def test_catalogue_from_yaml_real() -> None:

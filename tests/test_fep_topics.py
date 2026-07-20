@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import FEPTopicCatalogue
+from catalogue.topics import CatalogueValidationError, FEPTopicCatalogue
 
 PROJ = Path(__file__).resolve().parent.parent
 TOPICS = PROJ / "config" / "topics.yaml"
@@ -56,7 +56,7 @@ def test_topic_lean_chars_non_negative() -> None:
 
 def test_unknown_yaml_raises_or_empty() -> None:
     p = PROJ / "config" / "nonexistent_topics.yaml"
-    with pytest.raises(OSError):
+    with pytest.raises(CatalogueValidationError):
         FEPTopicCatalogue.from_yaml(p)
 
 

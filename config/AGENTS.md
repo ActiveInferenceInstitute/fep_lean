@@ -76,7 +76,7 @@ topics:
       The variational free energy F[q,p] ...
     lean_sketch: |                        # Lean4 theorem sketch (multi-line)
       theorem variational_free_energy_bound ...
-    latex_equations:                    # one LaTeX block per ``theorem``; see ``theorem_latex_signatures`` + ``SKETCHES`` in ``scripts/catalogue_sketches.py`` (re-export: ``topic_latex_equations_data``)
+    latex_equations:                    # one LaTeX block per ``theorem``; see ``theorem_latex_signatures`` + ``SKETCHES`` in ``scripts/catalogue_sketches.py`` (direct source: ``catalogue_sketches``)
       - "..."                             # (see generated topics.yaml; do not hand-edit the full list)
 ```
 

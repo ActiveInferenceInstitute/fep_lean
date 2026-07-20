@@ -1,52 +1,41 @@
-"""FEP pipeline core: four recorded `StepResult` rows in `PipelineResult.stages`.
-
-`FEPPipeline.run` records Load Catalogue, Environment Validation, Gauss Sessions
-(skipped when workflows are disabled), and Manuscript Artifacts. Run reporting
-(`Reporter.generate`) is invoked from `pipeline.orchestrator.run_pipeline` after
-`run()` returns — it is not a fifth entry in `PipelineResult.stages`.
-
-Usage:
-    pipeline = FEPPipeline(project_root)
-    result = pipeline.run(topic_filter=["fep-001", "fep-002"])
-"""
+"""Strict catalogue and verification pipeline."""
 
 from __future__ import annotations
 
 import logging
 import os
 import time
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
-# Use subpackage imports
 from catalogue.topics import FEPTopicCatalogue
-from verification.environment import run_validation_checks
-from gauss.cli import workflows_enabled
 from gauss.runner import GaussRunner
-from output.manuscript import write_manuscript_vars
+from output.figures import write_all_catalogue_figures
+from output.manuscript import write_manuscript_vars, write_unified_formalism_appendix_markdown
+from verification.environment import run_validation_checks
 
 log = logging.getLogger(__name__)
+PipelineMode = Literal["full", "catalogue"]
 
 
 def _max_topics_from_env() -> int | None:
-    """If ``FEP_LEAN_MAX_TOPICS`` is a positive integer, cap the catalogue batch size."""
-    raw = (os.environ.get("FEP_LEAN_MAX_TOPICS") or "").strip()
+    raw = os.environ.get("FEP_LEAN_MAX_TOPICS", "").strip()
     if not raw:
         return None
     try:
-        n = int(raw, 10)
-    except ValueError:
-        return None
-    return n if n >= 1 else None
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError("FEP_LEAN_MAX_TOPICS must be a positive integer") from exc
+    if value < 1:
+        raise ValueError("FEP_LEAN_MAX_TOPICS must be a positive integer")
+    return value
 
 
 @dataclass
 class StepResult:
-    """Result record for one pipeline stage execution."""
     name: str
-    status: str  # 'ok', 'warning', 'error', 'skipped'
+    status: str
     message: str = ""
     duration_s: float = 0.0
     payload: Any = None
@@ -55,25 +44,21 @@ class StepResult:
 
 @dataclass
 class PipelineResult:
-    """Aggregated result of an FEPPipeline run, with computed properties for reporting."""
-    status: str  # 'ok', 'warning', 'partial', 'error'
+    status: str
+    mode: PipelineMode = "full"
+    complete: bool = False
     total_duration: float = 0.0
     run_dir: str = ""
     stages: list[StepResult] = field(default_factory=list)
     lean_stats: dict[str, Any] = field(default_factory=dict)
-    # Populated by orchestrator after reporter runs
+    catalogue_topics: int = 0
+    verified_topics: int = 0
+    capabilities: dict[str, bool] = field(default_factory=dict)
+    failure_reason: str = ""
     _topic_results: list[Any] = field(default_factory=list)
-
-    # ── Computed properties exposing Lean/Gauss metrics ─────────────────────
-
-    @property
-    def steps(self) -> list[StepResult]:
-        """Alias for stages — exposes the DAG step list."""
-        return self.stages
 
     @property
     def topic_results(self) -> list[Any]:
-        """List of TopicRunResult from GaussRunner, populated post-run."""
         return self._topic_results
 
     @topic_results.setter
@@ -82,286 +67,155 @@ class PipelineResult:
 
     @property
     def hermes_count(self) -> int:
-        """Number of topics where Hermes LLM succeeded."""
-        return sum(1 for t in self._topic_results if getattr(t, "hermes_success", False))
+        return sum(bool(getattr(item, "hermes_success", False)) for item in self._topic_results)
 
     @property
     def lean_verified_count(self) -> int:
-        """Number of topics where Lean compilation succeeded (any)."""
-        return sum(1 for t in self._topic_results if getattr(t, "lean_compiles", False))
+        return sum(bool(getattr(item, "lean_compiles", False)) for item in self._topic_results)
 
     @property
     def lean_compile_ok(self) -> int:
-        """Number of topics where Lean compiled clean (no sorry)."""
-        return sum(
-            1 for t in self._topic_results
-            if getattr(t, "lean_compiles", False) and not getattr(t, "lean_has_sorry", True)
-        )
-
-    @property
-    def topics_ok(self) -> int:
-        """Number of topics with overall success status."""
-        if self._topic_results:
-            return sum(1 for t in self._topic_results if getattr(t, "success", False))
-        # Fall back to catalogue count loaded by stage 1 if Gauss didn't run
-        cat_stage = next((s for s in self.stages if s.name == "Load Catalogue"), None)
-        if cat_stage and isinstance(cat_stage.payload, dict):
-            return len(cat_stage.payload.get("topics", []))
-        return 0
+        return sum(bool(getattr(item, "lean_compiles", False)) and not bool(getattr(item, "lean_has_sorry", True)) for item in self._topic_results)
 
     @property
     def duration_s(self) -> float:
-        """Total pipeline duration alias."""
         return self.total_duration
 
     @property
     def stats(self) -> dict[str, Any]:
-        """Aggregate pipeline statistics for tests and reporting."""
-        gauss_stage = next((s for s in self.stages if "Gauss" in s.name), None)
+        gauss_stage = next((stage for stage in self.stages if stage.name == "Gauss Sessions"), None)
         return {
-            "topics_total": self.topics_ok,
+            "topics_total": self.catalogue_topics,
+            "topics_verified": self.verified_topics,
             "hermes_success": self.hermes_count,
-            "lean_compile_ok": self.lean_compile_ok,
             "lean_verified": self.lean_verified_count,
-            "stages_ok": sum(1 for s in self.stages if s.status == "ok"),
-            "gauss_ran": gauss_stage is not None and gauss_stage.status == "ok",
+            "lean_compile_ok": self.lean_compile_ok,
+            "stages_ok": sum(stage.status == "ok" for stage in self.stages),
+            "gauss_ran": bool(gauss_stage and gauss_stage.status == "ok"),
             **self.lean_stats,
         }
 
     def as_dict(self) -> dict[str, Any]:
-        """Return serializable dict for JSON reporting and tests (excludes computed properties)."""
         return {
-            "total_duration": round(self.total_duration, 3),
             "status": self.status,
+            "mode": self.mode,
+            "complete": self.complete,
+            "total_duration": round(self.total_duration, 3),
             "run_dir": self.run_dir,
-            "stages": [
-                {
-                    "name": s.name,
-                    "status": s.status,
-                    "duration_s": round(s.duration_s, 3),
-                    "error": s.error,
-                }
-                for s in self.stages
-            ],
+            "catalogue_topics": self.catalogue_topics,
+            "verified_topics": self.verified_topics,
+            "capabilities": self.capabilities,
+            "failure_reason": self.failure_reason,
+            "stages": [{"name": stage.name, "status": stage.status, "message": stage.message, "duration_s": round(stage.duration_s, 3), "error": stage.error} for stage in self.stages],
             "lean_stats": self.lean_stats,
         }
 
 
 def _resolve_output_root(project_root: Path, output_root: Path | None) -> Path:
-    """Resolve the directory that holds ``reports/``, ``.cache/``, etc.
-
-    Resolution order:
-      1. Explicit ``output_root`` argument (if given).
-      2. ``FEP_LEAN_OUTPUT_ROOT`` environment variable (used by tests so
-         pytest-spawned runs do not pollute the live ``output/reports/``).
-      3. ``project_root / "output"`` (the canonical default).
-    """
     if output_root is not None:
         return Path(output_root)
-    env_val = os.environ.get("FEP_LEAN_OUTPUT_ROOT")
-    if env_val:
-        return Path(env_val)
-    return project_root / "output"
+    return Path(os.environ.get("FEP_LEAN_OUTPUT_ROOT", project_root / "output"))
 
 
 class FEPPipeline:
-    """The formalization DAG executing ordered build stages.
-
-    ``output_root`` controls where Reporter run-dirs and the manuscript
-    cache live; it defaults to ``project_root / "output"`` but tests
-    typically override it (or set ``FEP_LEAN_OUTPUT_ROOT``) so spawned
-    runs do not mutate the canonical ``output/reports/`` tree.
-    """
-
-    def __init__(
-        self,
-        project_root: Path,
-        *,
-        output_root: Path | None = None,
-    ) -> None:
-        self.project_root = project_root
-        self.config_dir = project_root / "config"
-        self.topics_file = self.config_dir / "topics.yaml"
-        self.output_root = _resolve_output_root(project_root, output_root)
+    def __init__(self, project_root: Path, *, output_root: Path | None = None) -> None:
+        self.project_root = Path(project_root)
+        self.topics_file = self.project_root / "config" / "topics.yaml"
+        configured_root: Path | None = None
+        if output_root is None:
+            try:
+                import yaml
+                settings = yaml.safe_load((self.project_root / "config" / "settings.yaml").read_text(encoding="utf-8")) or {}
+                configured = settings.get("output", {}).get("root")
+                if configured:
+                    configured_root = (self.project_root / str(configured)).resolve()
+            except (OSError, yaml.YAMLError, AttributeError):
+                configured_root = None
+        self.output_root = _resolve_output_root(self.project_root, output_root or configured_root)
         self._catalogue: FEPTopicCatalogue | None = None
-        self._check_result: dict[str, Any] | None = None
+        self._topics_to_run: list[Any] = []
         self._run_topic_results: list[dict[str, Any]] = []
 
-    def run(
-        self,
-        topic_filter: list[str] | None = None,
-        area_filter: str | None = None,
-    ) -> PipelineResult:
-        """Run the DAG; append four stages to ``PipelineResult.stages``.
-
-        Stages: Load Catalogue, Environment Validation, Gauss Sessions, Manuscript
-        Artifacts. If ``FEP_LEAN_GAUSS_WORKFLOWS`` is unset, **Gauss Sessions** is
-        recorded as ``skipped``. Markdown/JSON reporting is **not** part of
-        ``stages``; see ``orchestrator.run_pipeline``.
-        """
-        t_start = time.time()
+    def run(self, *, mode: PipelineMode = "full", topic_filter: list[str] | None = None, area_filter: str | None = None, workflow: str = "verify") -> PipelineResult:
+        if mode not in ("full", "catalogue"):
+            raise ValueError(f"unsupported pipeline mode: {mode}")
+        started = time.perf_counter()
         stages: list[StepResult] = []
-        pipeline_status = "ok"
 
-        def _run_stage(
-            name: str, fn: Any, *, skip: bool = False, skip_reason: str = ""
-        ) -> StepResult | None:
-            nonlocal pipeline_status
-            if skip:
-                log.info("Skipping stage: %s (%s)", name, skip_reason)
-                r = StepResult(name=name, status="skipped", message=skip_reason, duration_s=0.0)
-                stages.append(r)
-                return r
-
-            log.info("Stage: %s", name)
-            t0 = time.time()
+        def stage(name: str, action: Any) -> tuple[StepResult, Any]:
+            t0 = time.perf_counter()
             try:
-                payload = fn()
-                status = "ok"
-            except Exception as e:
-                log.exception("Stage %s failed: %s", name, e)
-                status = "error"
-                pipeline_status = "error"
+                payload = action()
+                result = StepResult(name, "ok", duration_s=time.perf_counter() - t0, payload=payload)
+            except Exception as exc:
+                result = StepResult(name, "error", duration_s=time.perf_counter() - t0, error=f"{type(exc).__name__}: {exc}")
                 payload = None
-            dur = time.time() - t0
-            r = StepResult(name=name, status=status, duration_s=dur, payload=payload)
-            stages.append(r)
-            icon = "✓" if status == "ok" else ("⚠" if status == "warning" else "✗")
-            log.info("Stage '%s' %s %s (%.1fs)", name, icon, status, dur)
-            return r
+                log.error("stage %s failed: %s", name, exc)
+            stages.append(result)
+            return result, payload
 
-        # Stage 1: Load Catalogue
-        def _stage_catalogue() -> dict[str, Any]:
+        catalogue_stage, catalogue_payload = stage("Load Catalogue", self._load_catalogue(topic_filter, area_filter))
+        if catalogue_stage.status != "ok":
+            return PipelineResult("error", mode=mode, total_duration=time.perf_counter() - started, stages=stages, failure_reason=catalogue_stage.error or "catalogue load failed")
+
+        validation_stage, validation = stage("Environment Validation", lambda: run_validation_checks(self.project_root, mode=mode))
+        if validation_stage.status != "ok" or not validation.get("status") == "ok":
+            reason = validation_stage.error or f"{validation.get('failed_count', 0)} required capability checks failed"
+            result = PipelineResult("error", mode=mode, complete=False, total_duration=time.perf_counter() - started, stages=stages, catalogue_topics=len(self._topics_to_run), capabilities={c["name"]: bool(c["ok"]) for c in validation.get("checks", [])} if isinstance(validation, dict) else {}, failure_reason=reason)
+            return result
+
+        raw_results: list[Any] = []
+        if mode == "full":
+            gauss_stage, gauss_payload = stage("Gauss Sessions", lambda: self._run_gauss(workflow))
+            if gauss_stage.status != "ok":
+                return PipelineResult("error", mode=mode, total_duration=time.perf_counter() - started, stages=stages, catalogue_topics=len(self._topics_to_run), failure_reason=gauss_stage.error or "verification stage failed")
+            raw_results = gauss_payload.get("results", [])
+        else:
+            stages.append(StepResult("Gauss Sessions", "not_run", message="catalogue mode never performs verification"))
+
+        artifact_stage, _ = stage("Manuscript Artifacts", lambda: self._write_artifacts())
+        if artifact_stage.status != "ok":
+            return PipelineResult("error", mode=mode, total_duration=time.perf_counter() - started, stages=stages, catalogue_topics=len(self._topics_to_run), failure_reason=artifact_stage.error or "artifact generation failed", _topic_results=raw_results)
+
+        self._run_topic_results = [item.as_dict() for item in raw_results]
+        stats = self._compute_lean_stats()
+        verified = sum(bool(getattr(item, "success", False)) and bool(getattr(item, "lean_compiles", False)) and not bool(getattr(item, "lean_has_sorry", True)) for item in raw_results)
+        complete = mode == "catalogue" or (len(raw_results) == len(self._topics_to_run) and verified == len(self._topics_to_run))
+        status = "ok" if complete else "error"
+        return PipelineResult(status, mode=mode, complete=complete, total_duration=time.perf_counter() - started, stages=stages, lean_stats=stats, catalogue_topics=len(self._topics_to_run), verified_topics=verified, capabilities={"catalogue": True, "verification": mode == "full"}, failure_reason="" if complete else "one or more topics failed strict verification", _topic_results=raw_results)
+
+    def _load_catalogue(self, topic_filter: list[str] | None, area_filter: str | None) -> Any:
+        def action() -> dict[str, Any]:
             self._catalogue = FEPTopicCatalogue.from_yaml(self.topics_file)
             topics = self._catalogue.topics
             if topic_filter:
-                topics = [t for t in topics if t.id in topic_filter]
+                unknown = sorted(set(topic_filter) - {topic.id for topic in topics})
+                if unknown:
+                    raise ValueError(f"unknown topic ids: {', '.join(unknown)}")
+                topics = [topic for topic in topics if topic.id in topic_filter]
             if area_filter:
-                topics = [t for t in topics if getattr(t, "area", "") == area_filter]
-            cap = _max_topics_from_env()
-            if cap is not None and len(topics) > cap:
-                n_before = len(topics)
-                log.info(
-                    "FEP_LEAN_MAX_TOPICS=%s: running first %d of %d catalogue rows",
-                    os.environ.get("FEP_LEAN_MAX_TOPICS", ""),
-                    cap,
-                    n_before,
-                )
-                topics = topics[:cap]
-            # store filtered subset locally for later stages
-            self._topics_to_run = topics
-            return {"topics": [t.id for t in topics]}
+                topics = [topic for topic in topics if topic.area == area_filter]
+            maximum = _max_topics_from_env()
+            self._topics_to_run = topics[:maximum] if maximum else topics
+            return {"topics": [topic.id for topic in self._topics_to_run], "total_catalogue_topics": len(self._catalogue.topics)}
+        return action
 
-        sr1 = _run_stage("Load Catalogue", _stage_catalogue)
-        if sr1.status == "error":
-            return PipelineResult(status="error", total_duration=time.time() - t_start, stages=stages)
+    def _run_gauss(self, workflow: str) -> dict[str, Any]:
+        runner = GaussRunner.create_default(self.project_root, require_cli=True)
+        if not getattr(runner.hermes, "is_live", False):
+            raise RuntimeError("Hermes is not live; full mode requires configured credentials")
+        runner.hermes.preflight()
+        results = runner.run_topics_batch(self._topics_to_run, workflow=workflow)
+        return {"results": results, "topics": [result.as_dict() for result in results]}
 
-        # Stage 2: Validation
-        def _stage_validation() -> dict[str, Any]:
-            res = run_validation_checks(self.project_root)
-            self._check_result = res
-            if res.get("status") != "ok":
-                raise RuntimeError("Environment checks failed.")
-            return res
-
-        sr2 = _run_stage("Environment Validation", _stage_validation)
-        if sr2.status == "error":
-            # Demote pipeline state to warning if validation fails gracefully
-            # (allowing catalogue & reporting to still run safely)
-            pipeline_status = "warning"
-
-        # Stage 3: LLM + Lean (GaussRunner)
-        _raw_topic_results: list[Any] = []
-
-        def _stage_gauss() -> dict[str, Any]:
-            if not self._topics_to_run:
-                log.info("Gauss Sessions: no topics to process (filter produced empty set)")
-                return {"topics": [], "note": "no_topics_after_filter"}
-            runner = GaussRunner.create_default(self.project_root, require_cli=False)
-            # Preflight once: surface credential failures (e.g. OpenRouter
-            # "Key limit exceeded") before the long Lean batch starts.
-            if getattr(runner, "hermes", None) is not None and runner.hermes.is_live:
-                runner.hermes.preflight()
-            res_list = runner.run_topics_batch(self._topics_to_run)
-            _raw_topic_results.extend(res_list)  # store raw objects for computed props
-            self._run_topic_results = [r.as_dict() for r in res_list]
-            return {"topics": self._run_topic_results}
-
-        run_heavy = workflows_enabled()
-        skip_msg = "workflows disabled (set FEP_LEAN_GAUSS_WORKFLOWS=1)"
-        _run_stage("Gauss Sessions", _stage_gauss, skip=not run_heavy, skip_reason=skip_msg)
-
-        # Stage 4: Artifacts (manuscript vars + appendix in one thread; figures in parallel)
-        def _stage_artifacts() -> dict[str, Any]:
-            from output.manuscript import (
-                write_unified_formalism_appendix_markdown,
-            )
-            from output.figures import write_all_catalogue_figures
-
-            def _manuscript_block() -> tuple[Path, Path]:
-                p = write_manuscript_vars(self.project_root, self._catalogue)
-                apx = write_unified_formalism_appendix_markdown(
-                    self.project_root, self._catalogue
-                )
-                return p, apx
-
-            with ThreadPoolExecutor(max_workers=2) as ex:
-                f_ms = ex.submit(_manuscript_block)
-                f_fig = ex.submit(write_all_catalogue_figures, self._catalogue, self.project_root)
-                path, apx_unified = f_ms.result()
-                f_fig.result()
-            return {
-                "vars_file": str(path),
-                "unified_formalism_md": str(apx_unified),
-                "lean_catalogue_md": str(apx_unified),
-                "latex_equations_md": str(apx_unified),
-            }
-
-        _run_stage("Manuscript Artifacts", _stage_artifacts)
-
-        # Compute lean stats for result bundle
-        l_stats = self._compute_lean_stats()
-
-        # Reporting runs in orchestrator.run_pipeline after this method returns.
-        total_dur = time.time() - t_start
-        log.info(
-            "FEPPipeline complete: %s  %d stages  %.1fs total",
-            pipeline_status, len(stages), total_dur,
-        )
-
-        return PipelineResult(
-            total_duration=total_dur,
-            status=pipeline_status,
-            stages=stages,
-            lean_stats=l_stats,
-            _topic_results=_raw_topic_results,
-        )
+    def _write_artifacts(self) -> dict[str, str]:
+        if self._catalogue is None:
+            raise RuntimeError("catalogue is not loaded")
+        vars_path = write_manuscript_vars(self.project_root, self._catalogue)
+        appendix_path = write_unified_formalism_appendix_markdown(self.project_root, self._catalogue)
+        figures = write_all_catalogue_figures(self._catalogue, self.project_root, output_root=self.output_root)
+        return {"vars_file": str(vars_path), "appendix": str(appendix_path), "figures": str(len(figures))}
 
     def _compute_lean_stats(self) -> dict[str, Any]:
-        """Aggregate verification metrics across all executed topics."""
-        from collections import defaultdict
-        st: dict[str, list[dict[str, Any]]] = defaultdict(list)
-        for r in self._run_topic_results:
-            st[r.get("status", "unknown")].append(r)
-
-        return {
-            "total_processed": len(self._run_topic_results),
-            "compiles_clean": sum(1 for r in st.get("success", []) if not r.get("lean_has_sorry")),
-            "compiles_with_sorry": sum(1 for r in st.get("success", []) if r.get("lean_has_sorry")),
-            "compile_error": len(st.get("failed", [])),
-            "skipped": len(st.get("skipped", [])),
-            "error_logs": [
-                f"{r['topic_id']}: {r.get('error') or 'error details not captured'}"
-                for r in st.get("failed", [])
-            ],
-            "sorry_logs": [
-                f"{r['topic_id']} compiles, but sketch contains 'sorry'"
-                for r in st.get("success", [])
-                if r.get("lean_has_sorry")
-            ],
-            "clean_logs": [
-                f"{r['topic_id']} successfully verified"
-                for r in st.get("success", [])
-                if not r.get("lean_has_sorry")
-            ],
-        }
+        rows = self._run_topic_results
+        return {"total_processed": len(rows), "compiles_clean": sum(bool(row.get("lean_compiles")) and not bool(row.get("lean_has_sorry")) for row in rows), "compile_error": sum(not bool(row.get("lean_compiles")) for row in rows), "hermes_error": sum(not bool(row.get("hermes_success")) for row in rows), "error_logs": [f"{row.get('topic_id')}: {row.get('error', '')}" for row in rows if row.get("error")], "clean_logs": [f"{row.get('topic_id')} successfully verified" for row in rows if row.get("lean_compiles") and not row.get("lean_has_sorry")]}

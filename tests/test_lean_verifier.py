@@ -204,7 +204,7 @@ def test_verify_sketch_returns_result_even_with_bad_sketch(verifier: LeanVerifie
 def test_verify_sketch_with_lake_trivial(verifier: LeanVerifier) -> None:
     """When lake is available and Mathlib is built, verify a trivially true theorem."""
     if not verifier.check_lake_available():
-        pytest.skip("lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or scripts/00_lean_mathlib_setup.sh — wraps it) first")
+        pytest.skip("lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or uv run fep-lean setup — wraps it) first")
     mathlib_ok, mathlib_msg = verifier.check_mathlib_built()
     # Trivial True.intro doesn't actually need Mathlib loaded
     sketch = "theorem fep_lean_trivial_check : True := True.intro"
@@ -218,7 +218,7 @@ def test_verify_sketch_with_lake_trivial(verifier: LeanVerifier) -> None:
 def test_verify_sketch_with_lake_and_mathlib_sorry(verifier: LeanVerifier) -> None:
     """Typical FEP topic sketch: sorry-based, imports Mathlib, must classify correctly."""
     if not verifier.check_lake_available():
-        pytest.skip("lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or scripts/00_lean_mathlib_setup.sh — wraps it) first")
+        pytest.skip("lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or uv run fep-lean setup — wraps it) first")
     mathlib_ok, mathlib_msg = verifier.check_mathlib_built()
     if not mathlib_ok:
         pytest.skip(f"Mathlib not built: {mathlib_msg}")

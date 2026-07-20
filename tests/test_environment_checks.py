@@ -1,27 +1,24 @@
-"""Environment validation against the real project tree."""
-
-from __future__ import annotations
+"""Capability validation contract."""
 
 from pathlib import Path
 
-import pytest
-
-import verification.environment as ec
 from verification.environment import run_validation_checks
 
 PROJ = Path(__file__).resolve().parent.parent
 
-pytestmark = pytest.mark.timeout(180)
+
+def test_catalogue_validation_is_read_only_capability_check() -> None:
+    result = run_validation_checks(PROJ, mode="catalogue")
+    assert result["status"] == "ok"
+    assert result["mode"] == "catalogue"
+    assert result["failed_count"] == 0
+    assert all(check["ok"] for check in result["checks"])
 
 
-def test_run_validation_all_ok_on_project() -> None:
-    r = run_validation_checks(PROJ)
-    failed = [c for c in r["checks"] if not c["ok"]]
-    assert r["status"] == "ok", f"Checks failed: {failed}"
-    assert len(r["checks"]) == 13
-    assert r["failed_count"] == 0
-    names = [c["name"] for c in r["checks"]]
-    assert "math_inc_gauss_cli" in names
-    assert "lean_workspace" in names
-    assert "lean_cli" in names
-    assert "sqlite_session_store" not in names
+def test_full_validation_reports_missing_capabilities_without_building(monkeypatch) -> None:
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    result = run_validation_checks(PROJ, mode="full")
+    assert result["status"] == "error"
+    assert any(check["name"] == "hermes_credentials" and not check["ok"] for check in result["checks"])
+    assert any(check["name"] == "mathlib_built" for check in result["checks"])

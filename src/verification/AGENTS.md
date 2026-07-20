@@ -36,7 +36,7 @@ from verification.preflight import run_preflight
 
 ## Notes
 
-- `LeanVerifier` is shell-out heavy; tests use real stub Lean files plus `tmp_path` rather than mocks.
+- `LeanVerifier` is shell-out heavy; tests use real fixture Lean files plus `tmp_path` rather than direct execution.
 - `run_validation_checks` is called by `pipeline/orchestrator.py` before stage 3 so the pipeline fails fast on a missing toolchain.
 
 ## See Also

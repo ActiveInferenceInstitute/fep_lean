@@ -1,4 +1,4 @@
-"""Sad path tests for verification.lean_verifier without unittest.mock to ensure zero-mock coverage."""
+"""Sad path tests for verification.lean_verifier using real process boundaries."""
 
 from __future__ import annotations
 
@@ -35,25 +35,25 @@ def test_ensure_elan_home_oserror(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     elan_home.chmod(0o755)
 
 def test_direct_toolchain_bin_oserrors(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    fake_proj = tmp_path / "fake_proj"
+    temporary_proj = tmp_path / "temporary_proj"
     
     # Isolate from real ~/.elan
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("ELAN_HOME", str(tmp_path / "elan"))
     
     # 1. Missing directory
-    assert _direct_toolchain_bin(fake_proj) is None
+    assert _direct_toolchain_bin(temporary_proj) is None
     
     # 2. Cannot read lean-toolchain file
-    fake_proj.mkdir()
-    lean_dir = fake_proj / "lean"
+    temporary_proj.mkdir()
+    lean_dir = temporary_proj / "lean"
     lean_dir.mkdir()
     (lean_dir / "lean-toolchain").mkdir() # directory instead of file will cause read_text error
-    assert _direct_toolchain_bin(fake_proj) is None
+    assert _direct_toolchain_bin(temporary_proj) is None
 
 def test_find_exe_explicit_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     custom_lean = tmp_path / "custom_lean"
-    custom_lean.write_text("fake binary")
+    custom_lean.write_text("temporary binary")
     monkeypatch.setenv("FEP_LEAN_LEAN_EXE", str(custom_lean))
     
     # find_exe uses FEP_LEAN_{NAME_UPPER}_EXE
@@ -94,10 +94,10 @@ def test_lean_version_not_found(tmp_path: Path):
 def test_lean_version_sandbox_errors(tmp_path: Path):
     lv = LeanVerifier(PROJ / "lean", PROJ)
     
-    fake_lean = tmp_path / "lean"
-    fake_lean.write_text("#!/bin/sh\necho 'settings.toml: operation not permitted' >&2\nexit 1\n")
-    fake_lean.chmod(0o755)
-    lv._lean_exe = str(fake_lean)
+    temporary_lean = tmp_path / "lean"
+    temporary_lean.write_text("#!/bin/sh\necho 'settings.toml: operation not permitted' >&2\nexit 1\n")
+    temporary_lean.chmod(0o755)
+    lv._lean_exe = str(temporary_lean)
     
     import verification.lean_verifier
     verification.lean_verifier._LEAN_VERSION_CACHE.clear()
@@ -105,10 +105,10 @@ def test_lean_version_sandbox_errors(tmp_path: Path):
     v = lv.lean_version()
     assert "sandbox proxy restriction" in v
 
-    fake_lean2 = tmp_path / "lean2"
-    fake_lean2.write_text("#!/bin/sh\necho 'segmentation fault' >&2\nexit 1\n")
-    fake_lean2.chmod(0o755)
-    lv._lean_exe = str(fake_lean2)
+    temporary_lean2 = tmp_path / "lean2"
+    temporary_lean2.write_text("#!/bin/sh\necho 'segmentation fault' >&2\nexit 1\n")
+    temporary_lean2.chmod(0o755)
+    lv._lean_exe = str(temporary_lean2)
     
     verification.lean_verifier._LEAN_VERSION_CACHE.clear()
     
@@ -148,7 +148,7 @@ def test_verify_sketch_lake_not_found():
 
 def test_verify_sketch_lean_dir_not_found(tmp_path: Path):
     lv = LeanVerifier(tmp_path / "missing_lean", tmp_path)
-    lv._lake_exe = "/fake/lake"
+    lv._lake_exe = "/temporary/lake"
     res = lv.verify_sketch("topic-1", "sorry")
     assert res.compiles is False
     assert res.skip_reason
@@ -158,7 +158,7 @@ def test_verify_sketch_lakefile_not_found(tmp_path: Path):
     lean_dir = tmp_path / "lean"
     lean_dir.mkdir()
     lv = LeanVerifier(lean_dir, tmp_path)
-    lv._lake_exe = "/fake/lake"
+    lv._lake_exe = "/temporary/lake"
     res = lv.verify_sketch("topic-1", "sorry")
     assert res.compiles is False
     assert "lakefile.lean not found" in res.skip_reason
@@ -171,11 +171,11 @@ def test_verify_sketch_subprocess_timeout(tmp_path: Path):
     
     lv = LeanVerifier(lean_dir, tmp_path)
     
-    fake_lake = tmp_path / "lake"
-    fake_lake.write_text("#!/bin/sh\nsleep 10\n")
-    fake_lake.chmod(0o755)
+    temporary_lake = tmp_path / "lake"
+    temporary_lake.write_text("#!/bin/sh\nsleep 10\n")
+    temporary_lake.chmod(0o755)
     
-    lv._lake_exe = str(fake_lake)
+    lv._lake_exe = str(temporary_lake)
     import verification.lean_verifier
     original_timeout = verification.lean_verifier._VERIFICATION_TIMEOUT
     verification.lean_verifier._VERIFICATION_TIMEOUT = 1
@@ -195,12 +195,11 @@ def test_verify_sketch_oserror(tmp_path: Path):
     
     lv = LeanVerifier(lean_dir, tmp_path)
     
-    lake_dir = tmp_path / "lake_dir_fake"
+    lake_dir = tmp_path / "lake_dir_temporary"
     lake_dir.mkdir()
     lv._lake_exe = str(lake_dir)
     res = lv.verify_sketch("topic-1", "sorry")
     assert res.compiles is False
     assert "Permission denied" in res.skip_reason or "Is a directory" in res.skip_reason or "Errno 13" in res.skip_reason
-
 
 

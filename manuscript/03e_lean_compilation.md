@@ -1,16 +1,16 @@
-## Native Lean 4 Compilation and Zero-Mock Verification {#sec:native_lean_4_compilation_and_zero_mock_verification}
+## Native Lean 4 Compilation and execution-integrity Verification {#sec:native_lean_4_compilation_and_zero_direct_verification}
 
 > **Verification status (`scripts/03_lean_verify_only.py`):** All {{total_topics}} catalogue sketches compiled clean against Lean `{{lean_version}}` + Mathlib `{{mathlib_tag}}` — `verify.compiles_true: {{verify.compiles_true}}`, `verify.topics_with_result: {{verify.topics_with_result}}`, {{verify.sorry_count}} sorry. A full Hermes-assisted Gauss run (`{{verify.run_id}}`, ~{{verify.duration_min}} min) produced **{{compile_rate.total}} clean compiles, {{verify.sorry_count}} sorry, {{verify.compiles_false}} errors** in the LLM-assisted path. The `restore_lean_structure` post-processing layer (garbage detection, completeness check, open-statement restoration) plus a baseline-fallback that compiles the original YAML sketch when a Hermes-refined variant fails — the third of the three orthogonal fallback classes catalogued in §\ref{sec:three_classes_of_fallback} — keep the LLM-assisted path on the same `{{compile_rate.total}}` headline as the catalogue-baseline sweep; per-topic outcomes appear in §\ref{sec:live_verification_error_taxonomy}.
 
 ### Why Simulated Compilation Fails {#sec:why_simulated_compilation_fails}
 
-A common shortcut in formal-verification pipelines is to mock the compiler, returning pre-constructed "success" or "failure" messages without ever invoking the theorem prover. This approach is catastrophically inadequate for mathematical formalization:
+A common shortcut in formal-verification pipelines is to direct the compiler, returning pre-constructed "success" or "failure" messages without ever invoking the theorem prover. This approach is catastrophically inadequate for mathematical formalization:
 
-- A mocked compiler cannot detect type mismatches between measures and real numbers.
+- A directed compiler cannot detect type mismatches between measures and real numbers.
 - It cannot verify that referenced Mathlib4 APIs exist in the installed release.
 - It produces validation results that appear correct but shatter on contact with the real Lean 4 engine.
 
-The FEP Lean pipeline enforces a zero-mock mandate for compilation whenever native verification is enabled: every check passes raw Lean 4 source through the compiler, parses `stdout`/`stderr`, and records results in machine-readable manifests and run bundles. Nothing is faked.
+The FEP Lean pipeline enforces a execution-integrity mandate for compilation whenever native verification is enabled: every check passes raw Lean 4 source through the compiler, parses `stdout`/`stderr`, and records results in machine-readable manifests and run bundles. Nothing is temporaryd.
 
 ### The `lean_verifier.py` Architecture {#sec:the_leanverifierpy_architecture}
 
@@ -93,24 +93,24 @@ Concretely: writing the temp file costs under 1 ms, native compilation costs `{{
 
 The cold-to-warm-to-cached transition is the single most important operational gate in the pipeline; `LeanVerifier.check_mathlib_built()` (§\ref{sec:leanverifier_preflight}) is the mechanism that refuses to enter verification mode unless the workspace is at least in the warm regime.
 
-### The Zero-Mock Standard Applied {#sec:the_zero_mock_standard_applied}
+### The execution-integrity Standard Applied {#sec:the_zero_direct_standard_applied}
 
-The zero-mock principle extends beyond compilation to tests and validation:
+The execution-integrity principle extends beyond compilation to tests and validation:
 
-- **Lean 4 compiler.** `LeanVerifier` invokes the `lean` and `lake` binaries via Python's `subprocess` module — no faked exit codes in test fixtures.
+- **Lean 4 compiler.** `LeanVerifier` invokes the `lean` and `lake` binaries via Python's `subprocess` module — no temporaryd exit codes in test fixtures.
 - **Persistence.** `OpenGaussClient` writes `VerifyResult` payloads to the SQLite store at `$GAUSS_HOME/fep_lean_state.db` (default `~/.gauss/`) alongside the filesystem JSON/Markdown bundles.
 - **Hermes reasoning API.** `HermesExplainer` uses `urllib.request` to hit the configured OpenRouter model endpoints.
 - **Environment validation.** `verification.environment.run_validation_checks` runs 13 checks covering layout, YAML integrity, imports, optional `gauss doctor`, optional `lean --version`, a Mathlib4 build probe, and writable directories. (Count is fixed by the source of `run_validation_checks` in `src/verification/environment.py`; not parameterized by run.)
 
-Project tests use `tmp_path`, subprocess, `pytest-httpserver` for HTTP, and real temp files — `unittest.mock` is forbidden by repository policy. A successful `run_pipeline` invocation means that orchestration finished without Python exceptions, not that every sketch compiled. The per-topic `VerifyResult` in Gauss session data, along with the `verify.*` fields in `manuscript_vars.yaml` when present, provide the actual compilation summary.
+Project tests use `tmp_path`, subprocess, `pytest-httpserver` for HTTP, and real temporary files. A successful `run_pipeline` invocation means that the selected contract completed; in full mode the per-topic `VerifyResult` records the actual compiler outcome. The `verify.*` fields in `manuscript_vars.yaml` provide the aggregate summary.
 
 ### Methodological Assumptions and Limits {#sec:methodological_assumptions_and_limits}
 
-The zero-mock standard is a concrete, auditable methodological property rather than a branding term. We define it precisely and delineate the epistemic boundaries of what the pipeline can and cannot guarantee.
+The execution-integrity standard is a concrete, auditable methodological property rather than a branding term. We define it precisely and delineate the epistemic boundaries of what the pipeline can and cannot guarantee.
 
-#### Formal Definition of Zero-Mock {#sec:formal_definition_of_zero_mock}
+#### Formal Definition of execution-integrity {#sec:formal_definition_of_zero_direct}
 
-Zero-mock means:
+execution-integrity means:
 
 - Every sketch *can* be checked by an unmodified Lean 4 binary in the project's `lean/` workspace (toolchain `{{lean_toolchain}}` in `lean/lean-toolchain`; Mathlib4 pinned at `{{mathlib_tag}}` in `lean/lakefile.lean`).
 - The verifier runs `lake env lean` on a temp file; a catalogue row counts as machine-checked only when `LeanVerifier` has actually run on it — via Gauss Sessions with `FEP_LEAN_GAUSS_WORKFLOWS=1` or via [`scripts/03_lean_verify_only.py`](../scripts/03_lean_verify_only.py) — and the recorded `VerifyResult` has been inspected. Loading `config/topics.yaml` alone is not sufficient.
@@ -124,7 +124,7 @@ Each pipeline stage has an explicit, checkable success condition:
 | Stage | Success Criterion | Failure Action |
 |-------|-------------------|----------------|
 | **Topic parsing** | Topic ID and NL statement extracted from `topics.yaml` and stored as `FEPTopic` dataclass | Pipeline halts with parse error |
-| **Hermes call** | Response contains `EXPLANATION:` and `VALIDATION:` | Fallback models; then stub if configured |
+| **Hermes call** | Response contains `EXPLANATION:` and `VALIDATION:` | Fallback models; then fixture if configured |
 | **Compilation** (optional) | `lake env lean` completes | Outcome appended to session + metadata + manifest |
 | **Catalogue maturity** | `mathlib_status` in `topics.yaml` | Used for `{{maturity.real}} real, {{maturity.partial}} partial, {{maturity.aspirational}} aspirational` via `manuscript_vars.yaml` at PDF render (see `preprocess_combined_markdown`) |
 

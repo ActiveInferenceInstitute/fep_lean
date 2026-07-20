@@ -1,0 +1,42 @@
+name: fep_lean
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --extra dev
+      - run: uv run python scripts/_maint_build_fep_all_lean.py
+      - run: git diff --exit-code -- lean/FepSketches/fep_all.lean
+      - run: uv run pytest tests/ -q --cov=src --cov-fail-under=89
+      - run: uv run python docs/check_links.py --strict --include-root
+      - run: uv run python docs/md_hygiene.py --strict
+      - run: uv run python docs/pin_audit.py
+      - run: uv run python docs/xref_audit.py
+
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install elan
+        shell: bash
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Install pinned toolchain
+        run: elan toolchain install "$(cat lean/lean-toolchain)"
+      - name: Build Mathlib and aggregate
+        working-directory: lean
+        run: |
+          lake exe cache get
+          lake build
+      - name: Compile aggregate
+        working-directory: lean
+        run: lake build FepSketches

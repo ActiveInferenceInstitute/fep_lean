@@ -79,6 +79,13 @@ _RE_ERROR = re.compile(r"^.+ error:.*(?:\n\s+.*)*", re.MULTILINE)
 _RE_WARNING = re.compile(r"^.+ warning:.*(?:\n\s+.*)*", re.MULTILINE)
 _RE_SORRY = re.compile(r"\bsorry\b")
 
+
+def _has_sorry(code: str) -> bool:
+    """Detect proof placeholders while ignoring Lean line and block comments."""
+    without_blocks = re.sub(r"/-.*?-/?", "", code, flags=re.DOTALL)
+    without_lines = re.sub(r"--[^\n]*", "", without_blocks)
+    return bool(_RE_SORRY.search(without_lines))
+
 _RE_FAIL_KIND_TIMEOUT = re.compile(r"timeout|timed out", re.I)
 _RE_FAIL_KIND_TACTIC = re.compile(r"unknown tactic|tactic .* failed|unsolved goals", re.I)
 _RE_FAIL_KIND_ARITY = re.compile(
@@ -150,36 +157,25 @@ def _direct_toolchain_bin(lean_dir: Path | None = None) -> Path | None:
 
 
 def _find_exe(name: str, lean_dir: Path | None = None) -> str | None:
-    """Resolve executable in order:
-    1. ``FEP_LEAN_{NAME_UPPER}_EXE`` env var
-    2. Direct toolchain binary from ``~/.elan/toolchains/`` (bypasses sandbox proxy)
-    3. PATH (standard ``shutil.which``)
-    4. ``~/.elan/bin`` (elan proxy — may fail in sandbox)
+    """Resolve an executable from explicit, direct-toolchain, or PATH sources.
+
+    The elan proxy is retained as a final fallback for environments where it
+    is installed but not exposed on ``PATH``.
     """
-    # 1. Explicit env override
     env_key = f"FEP_LEAN_{name.upper()}_EXE"
     explicit = os.environ.get(env_key, "")
     if explicit and Path(explicit).is_file():
         return explicit
-
-    # 2. Direct toolchain binary (bypass elan proxy completely)
-    tc_bin = _direct_toolchain_bin(lean_dir)
-    if tc_bin:
-        direct = tc_bin / name
+    toolchain_bin = _direct_toolchain_bin(lean_dir)
+    if toolchain_bin:
+        direct = toolchain_bin / name
         if direct.is_file():
             return str(direct)
-
-    # 3. PATH
     found = shutil.which(name)
     if found:
         return found
-
-    # 4. elan proxy binary
-    elan_path = _get_elan_bin() / name
-    if elan_path.is_file():
-        return str(elan_path)
-
-    return None
+    elan_proxy = _get_elan_bin() / name
+    return str(elan_proxy) if elan_proxy.is_file() else None
 
 
 def _sanitize_lean_block(code: str) -> str:
@@ -293,6 +289,7 @@ class LeanVerifier:
         self._lake_exe: str | None = _find_exe("lake", self._lean_dir)
         self._lean_exe: str | None = _find_exe("lean", self._lean_dir)
         self._sketches_dir = self._lean_dir / "FepSketches"
+        self._lake_probe: tuple[str | None, bool] | None = None
         self._sketches_dir.mkdir(parents=True, exist_ok=True)
 
         log.debug(
@@ -303,25 +300,36 @@ class LeanVerifier:
     # ── Public ────────────────────────────────────────────────────────────────
 
     def check_lake_available(self) -> bool:
-        """Return ``True`` if ``lake`` is usable (exits 0 on ``lake --version``).
+        """Return ``True`` if the pinned ``lake`` toolchain is usable.
 
-        Uses a short 10-second timeout to detect hanging elan proxy processes
+        Uses a short timeout to detect hanging elan proxy processes
         (common in macOS sandboxed environments where settings.toml is blocked).
         """
         if not self._lake_exe:
             return False
+        cache_key = self._lake_exe
+        if self._lake_probe is not None and self._lake_probe[0] == cache_key:
+            return self._lake_probe[1]
         try:
             r = subprocess.run(
                 [self._lake_exe, "--version"],
                 capture_output=True,
                 text=True,
-                timeout=10,  # short: detect hanging elan proxy quickly
+                timeout=2,
                 check=False,
                 env=_subprocess_env(),
             )
-            return r.returncode == 0
+            output = (r.stdout or "") + (r.stderr or "")
+            pinned = ""
+            toolchain_file = self._lean_dir / "lean-toolchain"
+            if toolchain_file.is_file():
+                match = re.search(r"v(\d+\.\d+\.\d+)", toolchain_file.read_text(encoding="utf-8"))
+                pinned = match.group(1) if match else ""
+            available = r.returncode == 0 and (not pinned or f"Lean version {pinned}" in output)
         except (OSError, subprocess.TimeoutExpired):
-            return False
+            available = False
+        self._lake_probe = (cache_key, available)
+        return available
 
     def lean_version(self) -> str | None:
         """Return the cached ``lean --version`` string, or None if unavailable."""
@@ -376,39 +384,28 @@ class LeanVerifier:
                 False,
                 "Mathlib not yet downloaded — run: cd lean && lake exe cache get",
             )
-        # Lean ≥ 4.29 places oleans under ``.lake/build/lib/lean/``; older
-        # toolchains used ``.lake/build/lib/`` directly. Probe both so the
-        # check works across upgrades without forcing a layout migration.
-        lib_root_legacy = mathlib_pkg / ".lake" / "build" / "lib"
-        lib_root_modern = lib_root_legacy / "lean"
-        lib_root = lib_root_modern if (lib_root_modern / "Mathlib.olean").is_file() else lib_root_legacy
-        mathlib_root_olean = lib_root / "Mathlib.olean"
+        mathlib_pkg = self._lean_dir / ".lake" / "build" / "lib" / "lean"
+        mathlib_root_olean = mathlib_pkg / "Mathlib.olean"
         if not mathlib_root_olean.is_file():
-            olean_count = sum(1 for _ in mathlib_pkg.rglob("*.olean") if _.is_file())
-            if olean_count == 0:
-                return (
-                    False,
-                    "Mathlib not yet downloaded — run: cd lean && lake exe cache get",
-                )
             return (
                 False,
-                "Mathlib source present but `Mathlib.olean` missing — "
-                "run: cd projects/fep_lean/lean && lake build",
+                "Mathlib not yet downloaded or built — missing build artifact: "
+                f"{mathlib_root_olean}",
             )
         # Probe a small, stable set of leaf .olean files that the catalogue
         # sketches universally depend on. If any is missing, the cache is
         # partial / corrupted and a 50-topic batch will fail in opaque ways.
         required_leaves = (
-            lib_root / "Mathlib" / "Data" / "Real" / "Basic.olean",
-            lib_root / "Mathlib" / "Algebra" / "Order" / "Ring" / "Basic.olean",
-            lib_root / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean",
+            mathlib_pkg / "Mathlib" / "Data" / "Real" / "Basic.olean",
+            mathlib_pkg / "Mathlib" / "Algebra" / "Order" / "Ring" / "Basic.olean",
+            mathlib_pkg / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean",
         )
         missing = [str(p.relative_to(mathlib_pkg)) for p in required_leaves if not p.is_file()]
         if missing:
             return (
                 False,
-                "Mathlib partially built — required leaf .olean files missing: "
-                f"{missing}. Run: cd projects/fep_lean/lean && lake exe cache get && lake build",
+                "Mathlib build is incomplete; required leaf .olean files missing: "
+                f"{missing}",
             )
         return True, f"Mathlib built (`{mathlib_root_olean.name}` and required leaves present)"
 
@@ -429,7 +426,7 @@ class LeanVerifier:
             return VerifyResult(
                 topic_id=topic_id,
                 compiles=False,
-                has_sorry=bool(_RE_SORRY.search(lean_code)),
+                has_sorry=_has_sorry(lean_code),
                 lean_version=lv,
                 skip_reason="lake not found — install elan/lean or set FEP_LEAN_LAKE_EXE",
             )
@@ -437,7 +434,7 @@ class LeanVerifier:
             return VerifyResult(
                 topic_id=topic_id,
                 compiles=False,
-                has_sorry=bool(_RE_SORRY.search(lean_code)),
+                has_sorry=_has_sorry(lean_code),
                 lean_version=lv,
                 skip_reason=f"lean_dir not found: {self._lean_dir}",
             )
@@ -445,14 +442,14 @@ class LeanVerifier:
             return VerifyResult(
                 topic_id=topic_id,
                 compiles=False,
-                has_sorry=bool(_RE_SORRY.search(lean_code)),
+                has_sorry=_has_sorry(lean_code),
                 lean_version=lv,
                 skip_reason="lakefile.lean not found",
             )
 
         # Wrap bare theorem declarations in the required import preamble
         full_code = self._wrap_lean_code(lean_code)
-        has_sorry = bool(_RE_SORRY.search(full_code))
+        has_sorry = _has_sorry(full_code)
 
         tmp_file: Path | None = None
         try:
@@ -521,7 +518,7 @@ class LeanVerifier:
             return VerifyResult(
                 topic_id=topic_id,
                 compiles=False,
-                has_sorry=_RE_SORRY.search(lean_code) is not None,
+                has_sorry=_has_sorry(lean_code),
                 lean_version=lv,
                 skip_reason=str(exc),
             )

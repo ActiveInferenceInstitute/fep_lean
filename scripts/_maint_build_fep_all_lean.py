@@ -1,23 +1,18 @@
 """Regenerate ``lean/FepSketches/fep_all.lean`` from ``catalogue_sketches.SKETCHES``.
 
-The aggregate Lake file ``fep_all.lean`` is the whole-workspace compilation
-target used by ``lake build FepSketches`` and the CI sorry-gate. It is
-gitignored (see ``projects/fep_lean/.gitignore`` line 54), so a fresh clone
-or a cold-clean leaves it absent and breaks
-``tests/test_fep_all_lean_ssot.py``. The previous design ("authored manually,
-no checked-in generator") cannot survive either situation.
+The aggregate Lake file is the whole-workspace compilation target used by
+``lake build FepSketches`` and the CI proof-quality gate. It is tracked so a
+fresh clone contains the same canonical Lean input used by the tests.
 
 This script is the single regenerator. It reads the canonical sketch bodies
 from :mod:`catalogue_sketches` (the SKETCHES dict — the same source the
-catalogue YAML is built from) and emits two files:
+catalogue YAML is built from) and emits one file:
 
 * ``lean/FepSketches/fep_all.lean`` — every topic wrapped in
   ``namespace fep_fepNNN ... end fep_fepNNN``. Per-sketch ``import Mathlib.*``
   lines are hoisted to a single top-level ``import Mathlib`` (Mathlib's root
   module re-exports the whole library, so a single import is sufficient and
   matches the per-topic preamble used by ``LeanVerifier._wrap_lean_code``).
-* ``lean/FepSketches/Basic.lean`` — minimal stub so the CI ``grep`` over
-  ``fep_all.lean Basic.lean`` always has both targets.
 
 The aggregate's outer ``namespace fep_fepNNN`` (lowercase, ``fep_`` prefix)
 differs deliberately from each sketch's inner ``namespace FEPNNN``: the outer
@@ -44,24 +39,10 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LEAN_OUT_DIR = PROJECT_ROOT / "lean" / "FepSketches"
 FEP_ALL_PATH = LEAN_OUT_DIR / "fep_all.lean"
-BASIC_PATH = LEAN_OUT_DIR / "Basic.lean"
 
 # Match per-sketch ``import Mathlib...`` (and the rare ``import Lake``) lines so
 # we can hoist them. Anything else is left in place.
 _IMPORT_RE = re.compile(r"^import\s+\S+.*$", re.MULTILINE)
-
-_BASIC_LEAN = """\
--- AUTO-GENERATED placeholder for the FepSketches library entry point.
--- The catalogue itself lives in fep_all.lean. This file exists so the CI
--- ``grep -n 'sorry' fep_all.lean Basic.lean`` gate has both targets present.
-import Mathlib
-
-namespace FepSketchesBasic
-
-theorem trivialEntry : True := True.intro
-
-end FepSketchesBasic
-"""
 
 
 def _import_sketches() -> dict[str, str]:
@@ -133,11 +114,8 @@ def _build_aggregate(sketches: dict[str, str]) -> str:
     return "\n".join(parts).rstrip() + "\n"
 
 
-def write_aggregate(out_dir: Path | None = None) -> tuple[Path, Path, int]:
-    """Write ``fep_all.lean`` and ``Basic.lean`` under *out_dir*.
-
-    Returns ``(fep_all_path, basic_path, namespace_count)``.
-    """
+def write_aggregate(out_dir: Path | None = None) -> tuple[Path, int]:
+    """Write ``fep_all.lean`` under *out_dir* and return its topic count."""
     out_dir = out_dir or LEAN_OUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -145,20 +123,17 @@ def write_aggregate(out_dir: Path | None = None) -> tuple[Path, Path, int]:
     text = _build_aggregate(sketches)
 
     fep_all_path = out_dir / "fep_all.lean"
-    basic_path = out_dir / "Basic.lean"
     fep_all_path.write_text(text, encoding="utf-8")
-    basic_path.write_text(_BASIC_LEAN, encoding="utf-8")
-    return fep_all_path, basic_path, len(sketches)
+    return fep_all_path, len(sketches)
 
 
 def main() -> int:
     try:
-        fep_all_path, basic_path, n = write_aggregate()
+        fep_all_path, n = write_aggregate()
     except (ValueError, OSError) as exc:
         print(f"_maint_build_fep_all_lean: failed: {exc}", file=sys.stderr)
         return 1
     print(f"wrote {n} topic namespaces to {fep_all_path}")
-    print(f"wrote stub to {basic_path}")
     return 0
 
 

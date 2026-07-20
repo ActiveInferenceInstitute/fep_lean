@@ -1,8 +1,8 @@
-"""No-mocks tests for Hermes error paths: preflight + fallback_models chain.
+"""No-direct execution tests for Hermes error paths: preflight + fallback_models chain.
 
 Uses ``pytest-httpserver`` to run a real local HTTP server speaking the
 OpenAI-compatible ``/chat/completions`` contract.  The ``HermesExplainer``
-makes real HTTP calls against ``http://127.0.0.1:<port>/`` — no mocks, no
+makes real HTTP calls against ``http://127.0.0.1:<port>/`` — no direct execution, no
 network dependencies.
 
 Covers:

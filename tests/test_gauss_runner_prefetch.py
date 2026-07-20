@@ -1,4 +1,4 @@
-"""Tests for FEP_LEAN_PREFETCH Hermes/Lean overlap (no mocks; real SQLite + LeanVerifier)."""
+"""Tests for FEP_LEAN_PREFETCH Hermes/Lean overlap (no direct execution; real SQLite + LeanVerifier)."""
 
 from __future__ import annotations
 

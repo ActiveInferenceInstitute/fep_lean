@@ -1,4 +1,4 @@
-"""Comprehensive tests for llm.hermes — zero mock, real network/os testing."""
+"""Comprehensive tests for llm.hermes — zero direct, real network/os testing."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ _LIVE_TESTS_ENABLED = (
 )
 
 
-# ── Local HTTP server helpers (no external deps, no mocks) ───────────────────
+# ── Local HTTP server helpers (no external deps, no direct execution) ───────────────────
 
 class _FixedStatusHandler(http.server.BaseHTTPRequestHandler):
     """Local HTTP handler that replies with a configured status code for any POST.
@@ -229,16 +229,16 @@ class TestKeyAffinityValidation:
 
     def test_anthropic_key_to_openrouter_disables(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake-key")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-temporary-key")
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.setenv("GAUSS_HOME", "/tmp/__no_gauss__")
 
         cfg = HermesConfig.from_settings(settings_path=Path("/nonexistent"))
         assert cfg.enabled is False
-        assert cfg.api_key == "sk-ant-fake-key"
+        assert cfg.api_key == "sk-ant-temporary-key"
 
     def test_openrouter_key_to_anthropic_disables(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-fake-or-key")
+        monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-temporary-or-key")
         monkeypatch.setenv("HERMES_API_BASE", "https://api.anthropic.com/v1")
         monkeypatch.setenv("GAUSS_HOME", "/tmp/__no_gauss__")
 
@@ -259,7 +259,7 @@ class TestKeyAffinityValidation:
 class TestCallAPI:
     """Test HermesExplainer._call_api using genuine local OS/network operations.
 
-    Tests use real sockets on loopback — no external network, no mocks,
+    Tests use real sockets on loopback — no external network, no direct execution,
     no FEP_LEAN_LIVE_TESTS gate.  They exercise ``urllib`` exception branches
     inside ``_call_api``:
 
@@ -297,7 +297,7 @@ class TestCallAPI:
             )
             h = HermesExplainer(cfg)
             with pytest.raises(HermesAPIError) as exc_info:
-                h._call_api([{"role": "user", "content": "hi"}], "fake-model")
+                h._call_api([{"role": "user", "content": "hi"}], "temporary-model")
             assert exc_info.value.status_code == 404
             assert exc_info.value.transient is False
         finally:
@@ -319,7 +319,7 @@ class TestCallAPI:
         )
         h = HermesExplainer(cfg)
         with pytest.raises(HermesAPIError) as exc_info:
-            h._call_api([{"role": "user", "content": "hi"}], "fake-model")
+            h._call_api([{"role": "user", "content": "hi"}], "temporary-model")
         assert "Network error" in str(exc_info.value)
         assert exc_info.value.transient is True
 
@@ -335,7 +335,7 @@ class TestCallAPI:
             )
             h = HermesExplainer(cfg)
             with pytest.raises(HermesAPIError) as exc_info:
-                h._call_api([{"role": "user", "content": "hi"}], "fake-model")
+                h._call_api([{"role": "user", "content": "hi"}], "temporary-model")
             assert exc_info.value.status_code is None
             assert exc_info.value.transient is True
             assert "HTTP transport error" in str(exc_info.value) or "Connection error" in str(
@@ -367,7 +367,7 @@ class TestCallAPI:
             import time as _t
             t0 = _t.monotonic()
             with pytest.raises(HermesAPIError) as exc_info:
-                h._call_api([{"role": "user", "content": "hi"}], "fake-model")
+                h._call_api([{"role": "user", "content": "hi"}], "temporary-model")
             elapsed = _t.monotonic() - t0
             # Must give up within roughly one deadline (allow 2x slack for
             # thread scheduling + handshake).

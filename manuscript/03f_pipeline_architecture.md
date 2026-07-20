@@ -120,7 +120,7 @@ When `verification_manifest.json` exists, its compile-rate fields feed the `veri
 From the `fep_lean` project root:
 
 1. **Python environment.** `uv sync` (dependencies are declared in `pyproject.toml`; this package has no `requirements.txt`).
-2. **Lean workspace.** Run `./scripts/_maint_bootstrap_lean_toolchain.sh` (or `./scripts/00_lean_mathlib_setup.sh`, which wraps it). Optional: `PYTHONPATH=src uv run python scripts/03_lean_verify_only.py` runs the Lean batch check locally across every sketch.
+2. **Lean workspace.** Run `./scripts/_maint_bootstrap_lean_toolchain.sh` (or `uv run fep-lean setup`, which wraps it). Optional: `PYTHONPATH=src uv run python scripts/03_lean_verify_only.py` runs the Lean batch check locally across every sketch.
 3. **Run bundle.** From the project root, `PYTHONPATH=src uv run python scripts/01_fep_catalogue_and_figures.py` or `scripts/02_run_single_topic.py`. From the monorepo root, `uv run python scripts/02_run_analysis.py --project fep_lean`. See `pipeline/orchestrator.py` for the programmatic entrypoints.
 4. **Full run with live Hermes and verification.** Export `OPENROUTER_API_KEY`, set `export FEP_LEAN_GAUSS_WORKFLOWS=1`, and ensure `gauss.verify_lean: true` in `config/settings.yaml` (the default in the shipped file).
 

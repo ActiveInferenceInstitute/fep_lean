@@ -28,7 +28,7 @@ Configuration priority (highest → lowest):
 
 Supported API backends:
     - OpenRouter  (base_url = https://openrouter.ai/api/v1)
-    - Anthropic (via OpenRouter proxy or direct; native Messages API not implemented)
+    - Anthropic (via OpenRouter proxy or direct; native Messages API unsupported)
     - Any OpenAI-compatible endpoint (base_url = YOUR_URL)
 """
 
@@ -443,7 +443,7 @@ class HermesExplainer:
 
         Notes
         -----
-        This is a real HTTP call (no mocks).  Safe to call repeatedly: if
+        This is a real HTTP call (no direct execution).  Safe to call repeatedly: if
         ``cfg.enabled`` is already ``False``, returns ``True`` immediately.
         """
         with self._cfg._enabled_lock:

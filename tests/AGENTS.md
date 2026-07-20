@@ -1,6 +1,6 @@
 # fep_lean/tests/
 
-Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no mocks).
+Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no direct execution).
 
 ## Test census
 
@@ -22,7 +22,7 @@ Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no 
 | `test_gauss_runner_branches.py` | 9 | FixedHermes / BoomClient / review-workflow controlled branches |
 | `test_gauss_runner_prefetch.py` | 5 | `FEP_LEAN_PREFETCH` batch path vs serial; no API key |
 | `test_hermes_comprehensive.py` | 41 | Dotenv, key affinity, `_call_api` (loopback servers), `_parse_response` (1 API-key test) |
-| `test_hermes_error_paths.py` | 9 | `preflight()` 200/403 + `fallback_models` chain via `pytest-httpserver` (no mocks) |
+| `test_hermes_error_paths.py` | 9 | `preflight()` 200/403 + `fallback_models` chain via `pytest-httpserver` (no direct execution) |
 | `test_hermes_explainer.py` | 41 | Config, cache TTL, cache_hit field, preamble, extract, system prompt, restore_lean_structure, _strip_extra_theorems (1 API-key test) |
 | `test_lean_verifier.py` | 24 | VerifyResult, wrap-code, verify_sketch, verify_batch |
 | `test_lean_verifier_sad_paths.py` | 15 | OSError, timeout, missing lake/lean paths |
@@ -94,7 +94,7 @@ Install:
 
 `FEP_LEAN_GAUSS_WORKFLOWS=0` by default so most tests avoid unsolicited LLM traffic; workflow integration tests enable the flag where needed.
 
-`monkeypatch` (and `setattr`) is used for env-var parsing (`workflows_enabled`), `_call_api` overrides, `time.sleep`, `sys.argv`, `preflight.project_root`, and PATH isolation (e.g. hiding `gauss`) — never for stubbing core subprocess or CLI behavior.
+`monkeypatch` (and `setattr`) is used for env-var parsing (`workflows_enabled`), `_call_api` overrides, `time.sleep`, `sys.argv`, `preflight.project_root`, and PATH isolation (e.g. hiding `gauss`) — never for fixturebing core subprocess or CLI behavior.
 
 ## Test isolation: `FEP_LEAN_OUTPUT_ROOT`
 

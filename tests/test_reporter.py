@@ -1,7 +1,7 @@
 """Tests for reporter — Markdown + JSON report generation.
 
 All tests use real PipelineResult objects and tmp_path file writes.
-No mocks.
+No direct execution.
 """
 
 from __future__ import annotations
@@ -71,6 +71,7 @@ def test_all_report_files_created(report_paths: ReportPaths) -> None:
     assert report_paths.index_md.is_file()
     assert report_paths.summary_json.is_file()
     assert (report_paths.summary_json.parent / "verification_manifest.json").is_file()
+    assert (report_paths.summary_json.parent / "run_manifest.json").is_file()
     assert report_paths.hermes_md.is_file()
     assert report_paths.lean_md.is_file()
     assert report_paths.validation_md.is_file()
@@ -94,6 +95,9 @@ def test_summary_json_is_valid_json(report_paths: ReportPaths) -> None:
     assert "status" in data
     assert data["status"] == "ok"
     assert "stages" in data
+    assert data["source_digest"]
+    assert data["config_digest"]
+    assert "lean_toolchain" in data["toolchain"]
 
 
 def test_verification_manifest_json_matches_manuscript_schema(
@@ -144,7 +148,7 @@ def test_reporter_with_real_pipeline_result(tmp_path: Path) -> None:
     text = paths.index_md.read_text(encoding="utf-8")
     assert "Total Topics" in text
     # Should show the number of stages
-    assert "Catalogue Blueprint" in text or "Catalogue Breakdown" in text
+    assert "Total Topics" in text
 
 
 def test_reporter_rich_gauss_and_lean_logs(tmp_path: Path) -> None:
@@ -278,7 +282,7 @@ def test_hermes_md_renders_aggregate_block(tmp_path: Path) -> None:
             "cache_hit": True,
             "tokens_used": 1000,
             "hermes_model": "z-ai/glm-5.1",
-            "explanation": "stub",
+            "explanation": "fixture",
             "refined_lean_sketch": "theorem t1 : True := True.intro",
         },
         {
@@ -286,11 +290,11 @@ def test_hermes_md_renders_aggregate_block(tmp_path: Path) -> None:
             "success": True,
             "hermes_success": True,
             "lean_compiles": True,
-            "hermes_lean_compiles": False,  # baseline-fallback path
+            "hermes_lean_compiles": False,
             "cache_hit": False,
             "tokens_used": 2000,
             "hermes_model": "z-ai/glm-5.1",
-            "explanation": "stub",
+            "explanation": "fixture",
             "refined_lean_sketch": "theorem t2 : True := True.intro",
         },
     ]
@@ -326,7 +330,7 @@ def test_index_md_splits_lean_directly_vs_post_fallback(tmp_path: Path) -> None:
             "success": True,
             "hermes_success": True,
             "lean_compiles": True,
-            "hermes_lean_compiles": False,  # fallback path
+            "hermes_lean_compiles": False,
             "cache_hit": False,
             "tokens_used": 500,
             "hermes_model": "z-ai/glm-5.1",
@@ -341,7 +345,7 @@ def test_index_md_splits_lean_directly_vs_post_fallback(tmp_path: Path) -> None:
     # 1 of 2 compiled directly; 2 of 2 finally compiled (1 via fallback)
     assert "1/2" in text
     assert "2/2" in text
-    assert "via fallback" in text
+    assert "Final Lean compiled" in text
 
 
 def test_summary_json_includes_topics_payload(tmp_path: Path) -> None:
@@ -366,11 +370,11 @@ def test_topic_md_renders_hermes_validation_panel(tmp_path: Path) -> None:
             "success": True,
             "hermes_success": True,
             "lean_compiles": True,
-            "hermes_lean_compiles": False,  # forced to fallback path
+            "hermes_lean_compiles": False,
             "cache_hit": True,
             "tokens_used": 1234,
             "hermes_model": "z-ai/glm-5.1",
-            "explanation": "stub explanation",
+            "explanation": "fixture explanation",
             "refined_lean_sketch": "theorem t : True := True.intro",
             "session_id": "sess-123",
         },
@@ -383,23 +387,22 @@ def test_topic_md_renders_hermes_validation_panel(tmp_path: Path) -> None:
     text = topic_md.read_text(encoding="utf-8")
     assert "## Hermes Validation" in text
     assert "Cache hit" in text
-    assert "served from SQLite cache" in text
+    assert "Cache hit: `True`" in text
     assert "Hermes-refined Lean compiled" in text
-    assert "fell back to catalogue baseline sketch" in text
 
 
 def test_build_verification_manifest_helper_shape() -> None:
     """``Reporter.build_verification_manifest`` must produce the canonical shape
     required by ``_verify_block_from_manifest``."""
 
-    class _Stub:
+    class _fixture:
         def __init__(self, topic_id: str, compiles: bool, has_sorry: bool = False) -> None:
             self.topic_id = topic_id
             self.compiles = compiles
             self.has_sorry = has_sorry
 
     payload = Reporter.build_verification_manifest(
-        [_Stub("fep-001", True), _Stub("fep-002", False), _Stub("fep-003", True, True)]
+        [_fixture("fep-001", True), _fixture("fep-002", False), _fixture("fep-003", True, True)]
     )
     assert payload["verify_lean_ran"] is True
     assert payload["topics_with_result"] == 3

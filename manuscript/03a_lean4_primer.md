@@ -166,7 +166,7 @@ theorem elbo_bound {α : Type*} [MeasurableSpace α]
 
 The formal version forces the researcher to confront every implicit assumption: Which spaces are we working over (`Type*`)? Are those spaces measurable (`[MeasurableSpace α]`)? Are the measures finite (`IsFiniteMeasure`)? Is the variational distribution absolutely continuous with respect to the true posterior (`q ≪ p_posterior`)?
 
-**Catalogue note.** The illustrative blocks above may use explicit `import` lines for pedagogy. The {{total_topics}} committed topic bodies in `scripts/catalogue_sketches.py` (`SKETCHES`) carry their own targeted `import Mathlib.…` lines (typically one to four per topic); [`LeanVerifier._wrap_lean_code`](../src/verification/lean_verifier.py) treats a leading `import` as a signal to pass the body through unchanged rather than prepending the shared preamble (§\ref{sec:native_lean_4_compilation_and_zero_mock_verification}; Appendix B).
+**Catalogue note.** The illustrative blocks above may use explicit `import` lines for pedagogy. The {{total_topics}} committed topic bodies in `scripts/catalogue_sketches.py` (`SKETCHES`) carry their own targeted `import Mathlib.…` lines (typically one to four per topic); [`LeanVerifier._wrap_lean_code`](../src/verification/lean_verifier.py) treats a leading `import` as a signal to pass the body through unchanged rather than prepending the shared preamble (§\ref{sec:native_lean_4_compilation_and_zero_direct_verification}; Appendix B).
 
 ### Reading Type Error Messages {#sec:reading_type_error_messages}
 

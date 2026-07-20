@@ -105,7 +105,7 @@ References are in `manuscript/references.bib`. Inline `[@key]` resolved by Pando
   Lean 4 / Theorem Proving (1)
     buzzard2020                — Buzzard, Commelin & Massot 2020: Formalizing perfectoid spaces (POPL)
 
-  LLM–ITP Integration (2 legacy + 9 modern + 1 follow-on = 12 total)
+  LLM–ITP Integration (2 obsolete + 9 modern + 1 follow-on = 12 total)
     first2023draft             — First, Rabe, Ringer & Brun 2023: Baldur — whole-proof generation and repair with LLMs
     trinh2024alphageometry     — Trinh, Wu, Le, He & Luong 2024: AlphaGeometry — solving olympiad geometry without human demonstrations
     yang2024leandojo           — Yang, Swope, Gu et al. 2024: LeanDojo — theorem proving with retrieval-augmented LLMs

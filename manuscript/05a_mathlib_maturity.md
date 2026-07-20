@@ -1,6 +1,6 @@
 # Discussion: Ecosystem Maturity and Formalization Impacts {#sec:discussion}
 
-Integrating LLM commentary (Hermes) with native Lean 4 compilation establishes a workflow for frontier theory: curated sketches in YAML, structured validation prose, and reproducible zero-mock compiler traces. Pipeline **success** encompasses catalogue loading, environment validation, and artifact generation; native compilation of every sketch is a separate gate (§\ref{sec:native_lean_4_compilation_and_zero_mock_verification}). This section examines the implications for Mathlib, the strict zero-mock mandate, and formal verification in theoretical neuroscience.
+Integrating LLM commentary (Hermes) with native Lean 4 compilation establishes a workflow for frontier theory: curated sketches in YAML, structured validation prose, and reproducible execution-integrity compiler traces. Pipeline **success** encompasses catalogue loading, environment validation, and artifact generation; native compilation of every sketch is a separate gate (§\ref{sec:native_lean_4_compilation_and_zero_direct_verification}). This section examines the implications for Mathlib, the strict execution-integrity mandate, and formal verification in theoretical neuroscience.
 
 ## Maturity Assessment of the Mathlib Ecosystem {#sec:maturity_assessment_of_the_mathlib_ecosystem}
 

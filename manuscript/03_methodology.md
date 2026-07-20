@@ -1,6 +1,6 @@
 # Methodology and System Architecture {#sec:methodology_and_system_architecture}
 
-The methodology rests on a modular technical stack built around the FEP Lean architecture and enforces a strict zero-mock policy: every compiler invocation, database transaction, and HTTP request is executed against the real subsystem rather than a stub. This section gives the high-level view; six detailed sub-sections (§\ref{sec:lean_4_a_primer_for_active_inference_researchers}–§\ref{sec:pipeline_architecture_and_execution_profile}) each expand a single pipeline component — Lean 4 primer, Mathlib4 coverage map, `sorry` maturity taxonomy, Hermes LLM, native compilation, and the 4-stage DAG — with reproducibility-grade detail.
+The methodology rests on a modular technical stack built around the FEP Lean architecture and enforces a strict execution-integrity policy: every compiler invocation, database transaction, and HTTP request is executed against the real subsystem rather than a fixture. This section gives the high-level view; six detailed sub-sections (§\ref{sec:lean_4_a_primer_for_active_inference_researchers}–§\ref{sec:pipeline_architecture_and_execution_profile}) each expand a single pipeline component — Lean 4 primer, Mathlib4 coverage map, `sorry` maturity taxonomy, Hermes LLM, native compilation, and the 4-stage DAG — with reproducibility-grade detail.
 
 > **Readers unfamiliar with Lean 4 or interactive theorem proving** should begin with §\ref{sec:lean_4_a_primer_for_active_inference_researchers}, which introduces the core concepts from the perspective of Active Inference research.
 
@@ -25,7 +25,7 @@ Researchers interact with the FEP Lean infrastructure through a suite of special
 
 - **Catalogue and Figures** (`01_fep_catalogue_and_figures.py`) validates `config/topics.yaml` and regenerates procedural figures. After editing catalogue bodies in `scripts/catalogue_sketches.py` (`SKETCHES`), run `scripts/_maint_build_topics_catalogue.py` to keep the YAML aligned (see the SSOT test `tests/test_catalogue_sketches_ssot.py`).
 - **Single Topic Formalization** (`02_run_single_topic.py <id>`) runs the per-topic Hermes + Lean verification workflow for one topic, which is the primary loop for iterative refinement of theorem sketches.
-- **Batch Lean Verification** (`03_lean_verify_only.py`) bypasses the LLM layer and drives a native Lean 4 compilation check across every sketch in the catalogue, applying the zero-mock mandate at scale.
+- **Batch Lean Verification** (`03_lean_verify_only.py`) bypasses the LLM layer and drives a native Lean 4 compilation check across every sketch in the catalogue, applying the execution-integrity mandate at scale.
 - **Report Generation** (`04_generate_reports.py`) aggregates the latest pipeline outputs into the human-readable documentation hub.
 
 ## The Hermes Agent and LLM Integration {#sec:the_hermes_agent_and_llm_integration}
@@ -47,7 +47,7 @@ Simulated compilation offers no guarantee of mathematical coherence. To validate
 - **Aggressive caching.** Mathlib4 `.olean` artifacts live in the repository Lake workspace under [`lean/`](../lean/), populated by `lake exe cache get` followed by `lake build`. The verifier reuses that environment directly; there is no separate `~/.gauss/` Lean tree for compilation.
 - **Sub-second feedback.** With a primed workspace, the verifier typechecks Lean 4 expressions and parses raw `stdout`/`stderr` from the compiler in about **1.5 seconds per query**. The subprocess is capped by `FEP_LEAN_VERIFY_TIMEOUT` (default **300 s**); any longer run is classified as `timeout` by `classify_failure_kind` and surfaced as a skip in `VerifyResult`.
 
-See §\ref{sec:native_lean_4_compilation_and_zero_mock_verification} for the full compilation architecture, caching strategy, and zero-mock standard.
+See §\ref{sec:native_lean_4_compilation_and_zero_direct_verification} for the full compilation architecture, caching strategy, and execution-integrity standard.
 
 ## OpenGauss Workflow and State Integration {#sec:opengauss_database_integration}
 
@@ -61,7 +61,7 @@ See §\ref{sec:pipeline_architecture_and_execution_profile} for the full databas
 
 ## The Unified Execution Pipeline {#sec:the_unified_execution_pipeline}
 
-The `orchestrator.py` and `pipeline.py` entry points stitch these layers together. A representative full run — a live OpenRouter key, all {{total_topics}} topics, `FEP_LEAN_GAUSS_WORKFLOWS=1`, and `gauss.verify_lean: true` — completes in **roughly {{verify.duration_min}} minutes** (run `{{verify.run_id}}` with primary model `{{hermes.primary_model}}`, a reasoning model whose extended-thinking trace is the dominant wall-clock contributor; non-reasoning chat models such as the prior `z-ai/glm-5.1` historically landed near 21 minutes). Exact durations vary by provider and rate limits. For Lean-only checks without Hermes, use `scripts/03_lean_verify_only.py` or the compile test suite. The pipeline integrates cleanly into the template's multi-project CI orchestrator (`run.sh` and `execute_pipeline.py`); CI and local runs often use stub Hermes (`sk-test-*` or no key) and may set `FEP_LEAN_GAUSS_WORKFLOWS=0` for speed. See `config/settings.yaml` and the environment variable reference for the full set of toggles.
+The `orchestrator.py` and `pipeline.py` entry points stitch these layers together. A representative full run — a live OpenRouter key, all {{total_topics}} topics, `FEP_LEAN_GAUSS_WORKFLOWS=1`, and `gauss.verify_lean: true` — completes in **roughly {{verify.duration_min}} minutes** (run `{{verify.run_id}}` with primary model `{{hermes.primary_model}}`, a reasoning model whose extended-thinking trace is the dominant wall-clock contributor; non-reasoning chat models such as the prior `z-ai/glm-5.1` historically landed near 21 minutes). Exact durations vary by provider and rate limits. For Lean-only checks without Hermes, use `scripts/03_lean_verify_only.py` or the compile test suite. The pipeline integrates cleanly into the template's multi-project CI orchestrator (`run.sh` and `execute_pipeline.py`); CI and local runs often use fixture Hermes (`sk-test-*` or no key) and may set `FEP_LEAN_GAUSS_WORKFLOWS=0` for speed. See `config/settings.yaml` and the environment variable reference for the full set of toggles.
 
 See §\ref{sec:pipeline_architecture_and_execution_profile} for the full 6-step DAG architecture, CLI interface, and detailed execution breakdown.
 
@@ -73,7 +73,7 @@ To reproduce the results presented in this paper, follow the environment-driven 
 2. **Workflow opt-in.** Set `FEP_LEAN_GAUSS_WORKFLOWS=1` to enable the high-latency Hermes and Lean stages. Without this flag, the pipeline runs in lightweight mode and skips active formalization.
 3. **Health check.** Run `gauss doctor` via the `gauss` CLI to confirm that the local SQLite state, Mathlib4 cache, and OpenRouter connectivity are in order.
 4. **Execution.** Invoke the pipeline via the template's root orchestrator: `uv run python scripts/02_run_analysis.py --project fep_lean`.
-5. **Validation.** Inspect the latest `output/reports/run_*/` bundle (`index.md`, and `verification_manifest.json` when present) for the zero-mock verification summary.
+5. **Validation.** Inspect the latest `output/reports/run_*/` bundle (`index.md`, and `verification_manifest.json` when present) for the execution-integrity verification summary.
 
 ## Area-Specific Methodological Constraints {#sec:area_specific_methodological_constraints}
 
@@ -153,16 +153,16 @@ lake build             # Build fep_lean's own files (~30 s)
 
 `LeanVerifier.check_mathlib_built()` runs as a preflight before every batch verification. It checks for `Mathlib.olean` under `lean/.lake/packages/mathlib/.lake/build/lib/` and exits with an actionable message if the cache is absent or partial.
 
-## Zero-Mock Testing Policy {#sec:zero_mock_testing_policy}
+## execution-integrity Testing Policy {#sec:zero_direct_testing_policy}
 
-The test suite enforces a strict zero-mock standard: no `MagicMock`, no `mocker.patch`, no `unittest.mock`. Every test path that touches a stateful subsystem exercises the real implementation:
+The test suite enforces a strict execution-integrity standard. Every test path that touches a stateful subsystem exercises the real implementation:
 
 - **SQLite.** The `tmp_path` fixture creates a throwaway database per test; `OpenGaussClient` transacts against it directly.
 - **HTTP.** Tests that require OpenRouter make real `urllib.request` calls guarded by `pytest.mark.skipif(not OPENROUTER_API_KEY, ...)` so that offline CI skips them cleanly.
 - **Lean compilation.** `test_lean_verifier.py` (22 tests) and `test_lean_verifier_sad_paths.py` (15 tests) drive `LeanVerifier.verify_sketch` and `verify_batch` through real `lake env lean` subprocesses on representative sketches and toolchain-path edge cases. Per-row results for the full {{total_topics}}-topic sweep come from `scripts/03_lean_verify_only.py` (stdout) and, when `FEP_LEAN_GAUSS_WORKFLOWS=1`, from the Gauss Sessions stage, with aggregates written to `output/reports/run_*/verification_manifest.json` by the `Reporter`.
 - **Figures.** `write_all_catalogue_figures` uses real `matplotlib` with `MPLBACKEND=Agg` for headless rendering, and exercises `ProcessPoolExecutor` unless `FEP_LEAN_FIGURES_MP=0`.
 
-This policy means the test suite doubles as an integration harness: a passing run guarantees that the real compiler, database, and HTTP stack behave as expected, not just that mock objects return the right values.
+This policy means the test suite doubles as an integration harness: a passing run guarantees that the real compiler, database, and HTTP stack behave as expected, not just that direct objects return the right values.
 
 ## Namespace Convention and Topic Isolation {#sec:namespace_convention}
 
@@ -220,5 +220,5 @@ The following sub-sections provide comprehensive technical exposition for reader
 - **§\ref{sec:mathlib4_and_measure_theoretic_probability}** — [Mathlib4 and Measure-Theoretic Probability](03b_mathlib4_measure_theory.md): Full coverage map of what Mathlib4 provides for each FEP area, with specific module paths
 - **§\ref{sec:the_sorry_mechanism_and_formalization_maturity}** — [The `sorry` Mechanism and Formalization Maturity](03c_sorry_maturity.md): How to read incomplete proofs, the real/partial/aspirational taxonomy, and the maturity distribution across all {{total_topics}} topics
 - **§\ref{sec:the_hermes_ai_agent_and_llm_assisted_formalization}** — [The Hermes AI Agent and LLM-Assisted Formalization](03d_hermes_llm_pipeline.md): Gauss session protocol, FEP-domain system prompt, model fallback chain, graceful degradation, the **three orthogonal fallback classes** (§\ref{sec:three_classes_of_fallback}), and honest limitations
-- **§\ref{sec:native_lean_4_compilation_and_zero_mock_verification}** — [Native Lean 4 Compilation and Zero-Mock Verification](03e_lean_compilation.md): Compiler bridge architecture, Mathlib4 caching, sub-second feedback, and the zero-mock mandate
+- **§\ref{sec:native_lean_4_compilation_and_zero_direct_verification}** — [Native Lean 4 Compilation and execution-integrity Verification](03e_lean_compilation.md): Compiler bridge architecture, Mathlib4 caching, sub-second feedback, and the execution-integrity mandate
 - **§\ref{sec:pipeline_architecture_and_execution_profile}** — [Pipeline Architecture and Execution Profile](03f_pipeline_architecture.md): 6-step DAG, SQLite session tables, `verification_manifest.json`, operations log, and CLI notes

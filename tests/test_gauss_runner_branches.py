@@ -1,4 +1,4 @@
-"""Extra GaussRunner branches: controlled Hermes results and error paths (no mocks)."""
+"""Extra GaussRunner branches: controlled Hermes results and error paths (no direct execution)."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def test_run_topic_no_refined_sketch(tmp_path: Path) -> None:
     hermes = FixedHermes(
         HermesResult(
             success=True,
-            model_used="stub",
+            model_used="fixture",
             explanation="ok",
             refined_lean_sketch="",
             topic_id="x",
@@ -55,11 +55,11 @@ def test_run_topic_no_refined_sketch(tmp_path: Path) -> None:
 
 def test_run_topic_with_reasoning_turn(tmp_path: Path) -> None:
     lean = LeanVerifier(PROJ / "lean", PROJ)
-    sketch = "theorem stubReason : True := True.intro\n"
+    sketch = "theorem fixtureReason : True := True.intro\n"
     hermes = FixedHermes(
         HermesResult(
             success=True,
-            model_used="stub",
+            model_used="fixture",
             explanation="e",
             refined_lean_sketch=sketch,
             reasoning="internal chain",
@@ -86,42 +86,34 @@ def test_run_topics_batch_catches_runner_exception(tmp_path: Path) -> None:
     assert "Unhandled runner exception" in out[0].error
 
 
-# ── Workflow degradation tests ────────────────────────────────────────────────
+# ── Explicit workflow selection tests ────────────────────────────────────────
 
-def test_workflow_draft_degrades_without_env(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """workflow='draft' silently becomes 'verify' when FEP_LEAN_GAUSS_WORKFLOWS is off."""
-    monkeypatch.setenv("FEP_LEAN_GAUSS_WORKFLOWS", "0")
+def test_workflow_draft_preserves_requested_stage(tmp_path: Path) -> None:
     lean = LeanVerifier(PROJ / "lean", PROJ)
     hermes = FixedHermes(
-        HermesResult(success=False, model_used="stub", topic_id="fep-001")
+        HermesResult(success=False, model_used="fixture", topic_id="fep-001")
     )
     client = OpenGaussClient(gauss_home=tmp_path / "g")
     runner = GaussRunner(lean, hermes, client, PROJ)
     result = runner.run_topic(_topic(), workflow="draft")
-    assert result.workflow == "verify"
+    assert result.workflow == "draft"
 
 
-def test_workflow_prove_degrades_without_env(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """workflow='prove' silently becomes 'verify' when FEP_LEAN_GAUSS_WORKFLOWS is off."""
-    monkeypatch.setenv("FEP_LEAN_GAUSS_WORKFLOWS", "0")
+def test_workflow_prove_preserves_requested_stage(tmp_path: Path) -> None:
     lean = LeanVerifier(PROJ / "lean", PROJ)
     hermes = FixedHermes(
-        HermesResult(success=False, model_used="stub", topic_id="fep-001")
+        HermesResult(success=False, model_used="fixture", topic_id="fep-001")
     )
     client = OpenGaussClient(gauss_home=tmp_path / "g")
     runner = GaussRunner(lean, hermes, client, PROJ)
     result = runner.run_topic(_topic(), workflow="prove")
-    assert result.workflow == "verify"
+    assert result.workflow == "prove"
 
 
 # ── Hermes caching tests ──────────────────────────────────────────────────────
 
 class _CountingHermes(HermesExplainer):
-    """Hermes stub that counts calls and returns a compile-clean sketch."""
+    """Hermes fixture that counts calls and returns a compile-clean sketch."""
 
     def __init__(self) -> None:
         self._cfg = HermesConfig(enabled=False, api_key="")
@@ -131,9 +123,9 @@ class _CountingHermes(HermesExplainer):
         self.call_count += 1
         return HermesResult(
             success=True,
-            model_used="stub",
-            explanation="stub explanation",
-            refined_lean_sketch="theorem stubCached : True := True.intro\n",
+            model_used="fixture",
+            explanation="fixture explanation",
+            refined_lean_sketch="theorem fixtureCached : True := True.intro\n",
             topic_id=topic.id,
         )
 
@@ -156,7 +148,7 @@ def test_stage_results_empty_for_verify(tmp_path: Path) -> None:
     """verify workflow always produces an empty stage_results list."""
     lean = LeanVerifier(PROJ / "lean", PROJ)
     hermes = FixedHermes(
-        HermesResult(success=False, model_used="stub", topic_id="fep-001")
+        HermesResult(success=False, model_used="fixture", topic_id="fep-001")
     )
     client = OpenGaussClient(gauss_home=tmp_path / "g")
     runner = GaussRunner(lean, hermes, client, PROJ)
@@ -175,11 +167,13 @@ def test_run_topic_review_workflow_populates_stage_results(
 
     lean = LeanVerifier(PROJ / "lean", PROJ)
     # A sketch that will compile so verify_res.compiles is True (triggers review pass)
-    compile_sketch = "theorem stubReview : True := True.intro\n"
+    compile_sketch = "theorem fixtureReview : True := True.intro\n"
     hermes = _CountingHermes()
 
     client = OpenGaussClient(gauss_home=tmp_path / "g")
     runner = GaussRunner(lean, hermes, client, PROJ)
+    if not runner.lean.check_lake_available():
+        pytest.skip("pinned Lake is unavailable")
     result = runner.run_topic(_topic(), workflow="review")
 
     assert result.workflow == "review"

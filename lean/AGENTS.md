@@ -26,7 +26,7 @@ Full **Lake** workspace with **Mathlib4** dependency for FEP theorem verificatio
 
 # 1. Run the automated bootstrap script
 bash scripts/_maint_bootstrap_lean_toolchain.sh
-# (`00_lean_mathlib_setup.sh` wraps the same script.)
+# (`fep-lean setup` wraps the same script.)
 
 # Or manually:
 cd lean
@@ -67,5 +67,5 @@ This lock contention results in silent import masking—the `lean` parser succes
 
 - [../AGENTS.md](../AGENTS.md) — project-level documentation
 - [../docs/lean4.md](../docs/lean4.md) — Lean4 + Mathlib4 context
-- [../scripts/_maint_bootstrap_lean_toolchain.sh](../scripts/_maint_bootstrap_lean_toolchain.sh) — setup automation (`00_lean_mathlib_setup.sh` delegates here)
+- [../scripts/_maint_bootstrap_lean_toolchain.sh](../scripts/_maint_bootstrap_lean_toolchain.sh) — setup automation (`fep-lean setup` delegates here)
 - [math-inc/OpenGauss](https://github.com/math-inc/OpenGauss) — optional CLI integration

@@ -4,7 +4,7 @@
 
 `HermesExplainer` (defined in `src/llm/hermes.py`) produces natural-language explanations and refined Lean 4 sketches for the curated catalogue entries in `config/topics.yaml`. Those catalogue bodies originate in `scripts/catalogue_sketches.py` (`SKETCHES`) and are regenerated into YAML by `scripts/_maint_build_topics_catalogue.py`. `HermesExplainer` never authors sketches or updates the catalogue — it reviews whatever the YAML supplies. Current pipeline status is tracked in `docs/_generated/canonical_facts.md`.
 
-Under the hood, `HermesExplainer` uses stdlib HTTP (`urllib.request`) to call OpenRouter or any compatible endpoint. `_try_fetch_raw` wraps `_call_api` in a `ThreadPoolExecutor` worker so that `timeout_s` (or `reasoning_timeout_s` for entries in `_REASONING_MODELS`) is enforced as a hard wall-clock deadline rather than `urllib`'s per-socket-op timeout, and it returns a five-tuple `(content, reasoning, error, network_retries, chain_advance_reason)` so per-call retry and chain-advance metrics propagate to `HermesResult`. The default model set in `config/settings.yaml` is `moonshotai/kimi-k2.6`. The fallback chain and retry logic (controlled by `HERMES_429_MAX_RETRIES` and `HERMES_NETWORK_MAX_RETRIES`) live in `_FREE_MODEL_CHAIN` and `explain_topic`. When `HermesConfig.enabled=False` or no API key is present, `explain_topic` short-circuits before `_call_api` and returns a stub `HermesResult` — see §\ref{sec:model_fallback_chain_and_degradation}.
+Under the hood, `HermesExplainer` uses stdlib HTTP (`urllib.request`) to call OpenRouter or any compatible endpoint. `_try_fetch_raw` wraps `_call_api` in a `ThreadPoolExecutor` worker so that `timeout_s` (or `reasoning_timeout_s` for entries in `_REASONING_MODELS`) is enforced as a hard wall-clock deadline rather than `urllib`'s per-socket-op timeout, and it returns a five-tuple `(content, reasoning, error, network_retries, chain_advance_reason)` so per-call retry and chain-advance metrics propagate to `HermesResult`. The default model set in `config/settings.yaml` is `moonshotai/kimi-k2.6`. The fallback chain and retry logic (controlled by `HERMES_429_MAX_RETRIES` and `HERMES_NETWORK_MAX_RETRIES`) live in `_FREE_MODEL_CHAIN` and `explain_topic`. When `HermesConfig.enabled=False` or no API key is present, `explain_topic` short-circuits before `_call_api` and returns a fixture `HermesResult` — see §\ref{sec:model_fallback_chain_and_degradation}.
 
 ### Gauss Session Protocol {#sec:gauss_session_protocol}
 
@@ -55,7 +55,7 @@ This constraint pattern keeps `HermesExplainer` firmly in a reviewer role relati
 
 ### Hermes vs Native Lean: Compilation Diagnostics {#sec:hermes_vs_native_lean_diagnostics}
 
-Hermes API success and `lake env lean` outcomes are orthogonal: the commentary can succeed while compilation fails, and vice versa. The headline native compile rate is `{{compile_rate.total}}` (§\ref{sec:quantitative_execution_metrics}), injected from measured verifier output. §\ref{sec:native_lean_4_compilation_and_zero_mock_verification} summarizes the verifier architecture; per-topic failures, when they occur, are classified via `VerifyResult.failure_kind` and recorded in `verification_manifest.json`.
+Hermes API success and `lake env lean` outcomes are orthogonal: the commentary can succeed while compilation fails, and vice versa. The headline native compile rate is `{{compile_rate.total}}` (§\ref{sec:quantitative_execution_metrics}), injected from measured verifier output. §\ref{sec:native_lean_4_compilation_and_zero_direct_verification} summarizes the verifier architecture; per-topic failures, when they occur, are classified via `VerifyResult.failure_kind` and recorded in `verification_manifest.json`.
 
 ### Compiler Output and the `VerifyResult` Dataclass {#sec:compiler_driven_error_loop}
 
@@ -77,7 +77,7 @@ The numbers below are anchored to the recorded run `{{hermes.run_id}}` (primary 
 
 - **Prompt + completion tokens.** {{hermes.tokens_total}} tokens total across all {{hermes.processed}} topics on `{{hermes.run_id}}` (mean **{{hermes.tokens_mean}}** tokens/topic) — a dense system prompt plus Lean context per call. Per-call requests are bounded by `HermesConfig.max_tokens` (default **16384**) and the reasoning-model variant `reasoning_max_tokens` (default **65536**).
 - **Wall clock.** Dominated by provider latency: mean **{{hermes.mean_topic_s}} s/topic** of Hermes wall-clock on `{{hermes.run_id}}` (reasoning models in `_REASONING_MODELS` push individual topics into the minutes range; non-reasoning chat models median ≈8 s). Per-request HTTP calls time out at `HermesConfig.timeout_s` (default **150 s**, or **300 s** for reasoning-model paths). Treat per-topic numbers as order-of-magnitude unless copied from a specific `output/reports/{{hermes.run_id}}/summary.json`.
-- **Hermes live vs stub.** With a valid API key and `hermes.enabled: true`, `HermesExplainer.is_live` evaluates to `True` and topics receive genuine model output. Otherwise the code returns a `HermesResult` stub and the pipeline still completes the OpenGauss session and artifact export.
+- **Hermes live vs fixture.** With a valid API key and `hermes.enabled: true`, `HermesExplainer.is_live` evaluates to `True` and topics receive genuine model output. Otherwise the code returns a `HermesResult` fixture and the pipeline still completes the OpenGauss session and artifact export.
 
 Exact per-topic token counts, latency measurements, and model usage are recorded in `output/reports/run_*/summary.json` for every pipeline run; those figures are authoritative for audit purposes.
 
@@ -96,7 +96,7 @@ Exact per-topic token counts, latency measurements, and model usage are recorded
 
 For each model in the chain, the explainer retries on HTTP 429 (rate limit) up to `HERMES_429_MAX_RETRIES` times (default `2`) and on transient network errors such as `IncompleteRead` or `URLError` up to `HERMES_NETWORK_MAX_RETRIES` times (default `2`), with exponential backoff capped at 60 s. Unrecoverable 4xx errors other than 429 disable Hermes for the remainder of the pipeline run. `HERMES_MAX_MODEL_ATTEMPTS` caps the number of models from the chain that the runner will try before giving up.
 
-When `HermesConfig.enabled` is `False` or no API key is set, `explain_topic` returns a stub `HermesResult` (with `success=False` and a descriptive error string) without making any network calls. This stub mode lets the full pipeline — including OpenGauss session recording and artifact export — run without network access, and it is the basis for every unit test that exercises the Hermes code path.
+When `HermesConfig.enabled` is `False` or no API key is set, `explain_topic` returns a fixture `HermesResult` (with `success=False` and a descriptive error string) without making any network calls. This fixture mode lets the full pipeline — including OpenGauss session recording and artifact export — run without network access, and it is the basis for every unit test that exercises the Hermes code path.
 
 ### Three Classes of Fallback {#sec:three_classes_of_fallback}
 

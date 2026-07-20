@@ -2,7 +2,7 @@
 
 The FEP Lean pipeline contributes to a broader program of digitising scientific knowledge into machine-verifiable form. Seven implications follow:
 
-1. **Reproducibility**: Re-run `orchestrator.run_pipeline` with the same commit, keys, and verification flags. `output/reports/run_*/` bundles provide an audit trail; Hermes wording may still vary between runs when enabled. The zero-mock standard ensures that what is reproduced is the *actual* computational trace — real compiler output, real API bytes on the wire, real SQLite rows — rather than a frozen, mocked facsimile of it.
+1. **Reproducibility**: Re-run `orchestrator.run_pipeline` with the same commit, keys, and verification flags. `output/reports/run_*/` bundles provide an audit trail; Hermes wording may still vary between runs when enabled. The execution-integrity standard ensures that what is reproduced is the *actual* computational trace — real compiler output, real API bytes on the wire, real SQLite rows — rather than a frozen, directed facsimile of it.
 
 2. **Living formalization**: Unlike a static journal paper, the formalization catalogue can be *updated* as Mathlib4 grows. As Lean SLT's native `klDiv` formalization nears completion, catalogue topics that currently define KL divergence via custom Radon-Nikodym constructions will become candidates for upgrade to the native infrastructure—a form of automatic scientific progress requiring no change to the pipeline itself. The same pattern applies as Itô integrals, Fokker–Planck operators, and Riemannian manifold infrastructure land in Mathlib4: each upgrade is a one-sketch edit with no restructuring of the surrounding pipeline.
 
