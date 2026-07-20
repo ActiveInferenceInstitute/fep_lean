@@ -70,25 +70,33 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     _configure_logging(args.verbose)
+    previous_project_dir = os.environ.get("PROJECT_DIR")
     if args.project_root is not None:
         os.environ["PROJECT_DIR"] = str(args.project_root.resolve())
-    root = project_root()
-    if args.command == "setup":
-        return _setup(root)
-    if args.command == "preflight":
-        result = run_validation_checks(root, mode="full")
-        print(json.dumps(result, indent=2))
-        return 0 if result["status"] == "ok" else 1
-    if args.command == "catalogue":
-        return _print_result(run_pipeline(mode="catalogue", area_filter=args.area, topic_filter=args.topics))
-    if args.command == "run":
-        return _print_result(run_pipeline(mode="full", area_filter=args.area, topic_filter=args.topics, workflow=args.workflow))
-    if args.command == "topic":
-        return _print_result(run_single_topic(args.topic_id, mode="full", workflow=args.workflow))
-    if args.command == "report":
-        return _print_result(run_pipeline(mode="catalogue"))
-    parser.error(f"unsupported command: {args.command}")
-    return 2
+    try:
+        root = project_root()
+        if args.command == "setup":
+            return _setup(root)
+        if args.command == "preflight":
+            result = run_validation_checks(root, mode="full")
+            print(json.dumps(result, indent=2))
+            return 0 if result["status"] == "ok" else 1
+        if args.command == "catalogue":
+            return _print_result(run_pipeline(mode="catalogue", area_filter=args.area, topic_filter=args.topics))
+        if args.command == "run":
+            return _print_result(run_pipeline(mode="full", area_filter=args.area, topic_filter=args.topics, workflow=args.workflow))
+        if args.command == "topic":
+            return _print_result(run_single_topic(args.topic_id, mode="full", workflow=args.workflow))
+        if args.command == "report":
+            return _print_result(run_pipeline(mode="catalogue"))
+        parser.error(f"unsupported command: {args.command}")
+        return 2
+    finally:
+        if args.project_root is not None:
+            if previous_project_dir is None:
+                os.environ.pop("PROJECT_DIR", None)
+            else:
+                os.environ["PROJECT_DIR"] = previous_project_dir
 
 
 if __name__ == "__main__":
