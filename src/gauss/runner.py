@@ -79,6 +79,7 @@ class TopicRunResult:
     ``hermes_model``, ``cache_hit``, ``hermes_lean_compiles``) are surfaced here
     so downstream reporters render the LLM payload without re-reading SQLite.
     """
+
     topic_id: str
     session_id: str
     success: bool
@@ -185,7 +186,12 @@ class GaussRunner:
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: types.TracebackType | None) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
         self.close()
 
     def _clear_prefetch_state(self) -> None:
@@ -216,16 +222,24 @@ class GaussRunner:
             return self._run_topics_batch_prefetch(subset, workflow=workflow)
         log.info(
             "GaussRunner: processing %d topic(s) [workflow=%s]",
-            len(subset), workflow,
+            len(subset),
+            workflow,
         )
         for i, t in enumerate(subset, 1):
-            log.info("GaussRunner [%d/%d]: starting %s (workflow=%s)", i, len(subset), t.id, workflow)
+            log.info(
+                "GaussRunner [%d/%d]: starting %s (workflow=%s)",
+                i,
+                len(subset),
+                t.id,
+                workflow,
+            )
             try:
                 res = self.run_topic(t, workflow=workflow)
                 results.append(res)
                 hermes_str = "hermes=ok" if res.hermes_success else "hermes=skip"
                 lean_str = (
-                    "lean=ok" if (res.lean_compiles and not res.lean_has_sorry)
+                    "lean=ok"
+                    if (res.lean_compiles and not res.lean_has_sorry)
                     else ("lean=sorry" if res.lean_has_sorry else "lean=fail")
                 )
                 done = len(results)
@@ -233,7 +247,13 @@ class GaussRunner:
                 eta_s = avg_s * (len(subset) - done)
                 log.info(
                     "GaussRunner [%d/%d] %s  %s  %s  %.1fs  ETA ~%.0fs",
-                    i, len(subset), t.id, hermes_str, lean_str, res.duration_s, eta_s,
+                    i,
+                    len(subset),
+                    t.id,
+                    hermes_str,
+                    lean_str,
+                    res.duration_s,
+                    eta_s,
                 )
             except Exception as e:
                 log.exception("GaussRunner: unhandled exception in %s", t.id)
@@ -262,7 +282,9 @@ class GaussRunner:
         results: list[TopicRunResult] = []
         try:
             for i, t in enumerate(subset):
-                self._prefetch_next_topic = subset[i + 1] if i + 1 < len(subset) else None
+                self._prefetch_next_topic = (
+                    subset[i + 1] if i + 1 < len(subset) else None
+                )
                 log.info(
                     "GaussRunner [%d/%d] prefetch-mode: starting %s (workflow=%s)",
                     i + 1,
@@ -275,7 +297,8 @@ class GaussRunner:
                     results.append(res)
                     hermes_str = "hermes=ok" if res.hermes_success else "hermes=skip"
                     lean_str = (
-                        "lean=ok" if (res.lean_compiles and not res.lean_has_sorry)
+                        "lean=ok"
+                        if (res.lean_compiles and not res.lean_has_sorry)
                         else ("lean=sorry" if res.lean_has_sorry else "lean=fail")
                     )
                     done = len(results)
@@ -283,7 +306,13 @@ class GaussRunner:
                     eta_s = avg_s * (len(subset) - done)
                     log.info(
                         "GaussRunner [%d/%d] %s  %s  %s  %.1fs  ETA ~%.0fs",
-                        i + 1, len(subset), t.id, hermes_str, lean_str, res.duration_s, eta_s,
+                        i + 1,
+                        len(subset),
+                        t.id,
+                        hermes_str,
+                        lean_str,
+                        res.duration_s,
+                        eta_s,
                     )
                 except Exception as e:
                     log.exception("GaussRunner: unhandled exception in %s", t.id)
@@ -373,7 +402,9 @@ class GaussRunner:
             lean_sketch,
         )
         self._active_session_id = session_id
-        self.client.log_event("evaluation_started", session_id=session_id, workflow=workflow)
+        self.client.log_event(
+            "evaluation_started", session_id=session_id, workflow=workflow
+        )
 
         # ── Hermes call with cache (prefetch result from prior topic's verify phase) ─
         cached = self.client.get_cached_hermes(cache_key)
@@ -529,12 +560,14 @@ class GaussRunner:
                         result_json=_json.dumps(review_res.as_dict()),
                         lean_sketch_hash=_hashlib.sha256(refined.encode()).hexdigest(),
                     )
-            stage_results.append({
-                "stage": "review_commentary",
-                "success": review_res.success,
-                "explanation": review_res.explanation,
-                "cache_hit": review_res.cache_hit,
-            })
+            stage_results.append(
+                {
+                    "stage": "review_commentary",
+                    "success": review_res.success,
+                    "explanation": review_res.explanation,
+                    "cache_hit": review_res.cache_hit,
+                }
+            )
 
         artifact = self._build_artifact_payload(topic, hermes_res, verify_res)
         self.client.write_artifact(session_id, artifact)
@@ -558,8 +591,14 @@ class GaussRunner:
             lean_compiles=verify_res.compiles,
             lean_has_sorry=verify_res.has_sorry,
             duration_s=time.time() - t0,
-            error=("; ".join(verify_res.errors) if verify_res.errors
-                   else (verify_res.skip_reason or (verify_res.stdout[:300] if verify_res.stdout else ""))),
+            error=(
+                "; ".join(verify_res.errors)
+                if verify_res.errors
+                else (
+                    verify_res.skip_reason
+                    or (verify_res.stdout[:300] if verify_res.stdout else "")
+                )
+            ),
             workflow=workflow,
             stage_results=stage_results,
             explanation=hermes_res.explanation,
@@ -650,7 +689,14 @@ class GaussRunner:
             try:
                 import yaml
 
-                settings = yaml.safe_load((project_root / "config" / "settings.yaml").read_text(encoding="utf-8")) or {}
+                settings = (
+                    yaml.safe_load(
+                        (project_root / "config" / "settings.yaml").read_text(
+                            encoding="utf-8"
+                        )
+                    )
+                    or {}
+                )
                 gauss_home = settings.get("gauss", {}).get("home")
             except (OSError, yaml.YAMLError, AttributeError):
                 gauss_home = None

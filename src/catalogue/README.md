@@ -35,9 +35,11 @@ In-memory view of `config/topics.yaml`.
 ```python
 from catalogue.topics import FEPTopicCatalogue
 
-cat = FEPTopicCatalogue.from_yaml()   # uses project-root / config / topics.yaml
+cat = FEPTopicCatalogue.from_yaml()  # uses project-root / config / topics.yaml
 assert len(cat.topics) == 50
-summary = cat.summary()               # {'total_topics': 50, 'areas': {...}, 'maturity': {...}, 'area_maturity': {...}}
+summary = (
+    cat.summary()
+)  # {'total_topics': 50, 'areas': {...}, 'maturity': {...}, 'area_maturity': {...}}
 ```
 
 `from_yaml(path=None)` resolves `path` explicitly when given, else walks two

@@ -100,7 +100,7 @@ def lint_file(
         # Header spacing
         m = _HEADING.match(line)
         if m:
-            rest = line[len(m.group(1)):]
+            rest = line[len(m.group(1)) :]
             if rest and not rest.startswith(" ") and not rest.startswith("#"):
                 issues.append(
                     f"{path.name}:{i}: header missing space after '{m.group(1)}': {line.rstrip()}"
@@ -115,9 +115,7 @@ def lint_file(
         # Line length — tolerant of table rows (pipe tables have long rows
         # by design) and of lines that are essentially one long link.
         if max_line is not None and len(line) > max_line and not _TABLE_ROW.match(line):
-            issues.append(
-                f"{path.name}:{i}: line length {len(line)} > {max_line}"
-            )
+            issues.append(f"{path.name}:{i}: line length {len(line)} > {max_line}")
 
         if strict:
             # Orphan reference brackets (likely broken link). Strip inline
@@ -184,7 +182,8 @@ def main() -> int:
         help="Also lint sibling files (../README.md, ../AGENTS.md, ../SPEC.md, ../PAI.md).",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Print every file scanned.",
     )

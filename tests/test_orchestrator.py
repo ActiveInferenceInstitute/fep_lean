@@ -24,7 +24,9 @@ def test_project_root_default() -> None:
     assert project_root().resolve() == PROJ.resolve()
 
 
-def test_project_root_uses_project_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_project_root_uses_project_dir(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.setenv("PROJECT_DIR", str(tmp_path))
     assert project_root().resolve() == tmp_path.resolve()
 

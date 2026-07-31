@@ -15,7 +15,9 @@ def test_unknown_topic_returns_structured_error() -> None:
     assert result.failure_reason
 
 
-def test_missing_catalogue_returns_structured_error(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_missing_catalogue_returns_structured_error(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.setenv("PROJECT_DIR", str(tmp_path))
     (tmp_path / "config").mkdir()
     result = run_pipeline(mode="catalogue")
@@ -23,10 +25,14 @@ def test_missing_catalogue_returns_structured_error(monkeypatch: pytest.MonkeyPa
     assert result.complete is False
 
 
-def test_invalid_catalogue_is_rejected(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_invalid_catalogue_is_rejected(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.setenv("PROJECT_DIR", str(tmp_path))
     (tmp_path / "config").mkdir()
-    (tmp_path / "config" / "topics.yaml").write_text("topics:\n  - id: fep-001\n", encoding="utf-8")
+    (tmp_path / "config" / "topics.yaml").write_text(
+        "topics:\n  - id: fep-001\n", encoding="utf-8"
+    )
     result = run_pipeline(mode="catalogue")
     assert result.status == "error"
     assert "catalogue" in result.failure_reason.lower()

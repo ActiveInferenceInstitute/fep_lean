@@ -21,13 +21,14 @@ pytestmark = pytest.mark.serial_lean
 def test_ensure_elan_home_oserror(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     elan_home = tmp_path / "elan"
     elan_home.mkdir()
-    elan_home.chmod(0o555) # un-writable
+    elan_home.chmod(0o555)  # un-writable
     monkeypatch.setenv("ELAN_HOME", str(elan_home / "nested"))
 
     # Should catch OSError and pass silently
     _ensure_elan_home()
 
     elan_home.chmod(0o755)
+
 
 def test_direct_toolchain_bin_oserrors(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     temporary_proj = tmp_path / "temporary_proj"
@@ -43,8 +44,11 @@ def test_direct_toolchain_bin_oserrors(monkeypatch: pytest.MonkeyPatch, tmp_path
     temporary_proj.mkdir()
     lean_dir = temporary_proj / "lean"
     lean_dir.mkdir()
-    (lean_dir / "lean-toolchain").mkdir() # directory instead of file will cause read_text error
+    (
+        lean_dir / "lean-toolchain"
+    ).mkdir()  # directory instead of file will cause read_text error
     assert _direct_toolchain_bin(temporary_proj) is None
+
 
 def test_find_exe_explicit_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     custom_lean = tmp_path / "custom_lean"
@@ -53,6 +57,7 @@ def test_find_exe_explicit_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
 
     # find_exe uses FEP_LEAN_{NAME_UPPER}_EXE
     assert _find_exe("lean") == str(custom_lean)
+
 
 def test_find_exe_elan_proxy(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     # Set ELAN_HOME to tmp_path and provide a proxy
@@ -67,11 +72,13 @@ def test_find_exe_elan_proxy(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     res = _find_exe("lean")
     assert str(res).endswith("lean")
 
+
 def test_lean_verifier_init_defaults(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.chdir(tmp_path)
     lv = LeanVerifier(lean_dir=None, project_root=None)
     assert str(lv._project_root) == str(tmp_path)
     assert lv._lean_dir.name == "lean"
+
 
 def test_check_lake_available_oserror(tmp_path: Path):
     lv = LeanVerifier(PROJ / "lean", PROJ)
@@ -81,20 +88,25 @@ def test_check_lake_available_oserror(tmp_path: Path):
     lv._lake_exe = str(lake_dir)
     assert lv.check_lake_available() is False
 
+
 def test_lean_version_not_found(tmp_path: Path):
     lv = LeanVerifier(PROJ / "lean", PROJ)
     lv._lean_exe = None
     assert lv.lean_version() is None
 
+
 def test_lean_version_sandbox_errors(tmp_path: Path):
     lv = LeanVerifier(PROJ / "lean", PROJ)
 
     temporary_lean = tmp_path / "lean"
-    temporary_lean.write_text("#!/bin/sh\necho 'settings.toml: operation not permitted' >&2\nexit 1\n")
+    temporary_lean.write_text(
+        "#!/bin/sh\necho 'settings.toml: operation not permitted' >&2\nexit 1\n"
+    )
     temporary_lean.chmod(0o755)
     lv._lean_exe = str(temporary_lean)
 
     import verification.lean_verifier
+
     verification.lean_verifier._LEAN_VERSION_CACHE.clear()
 
     v = lv.lean_version()
@@ -110,14 +122,17 @@ def test_lean_version_sandbox_errors(tmp_path: Path):
     v = lv.lean_version()
     assert "exit 1" in v
 
+
 def test_lean_version_oserror(tmp_path: Path):
     lv = LeanVerifier(PROJ / "lean", PROJ)
     lake_dir = tmp_path / "lake_dir"
     lake_dir.mkdir()
     lv._lean_exe = str(lake_dir)
     import verification.lean_verifier
+
     verification.lean_verifier._LEAN_VERSION_CACHE.clear()
     assert lv.lean_version() is None
+
 
 def test_check_mathlib_built_sad_paths(tmp_path: Path):
     lv = LeanVerifier(tmp_path / "lean", tmp_path)
@@ -134,12 +149,14 @@ def test_check_mathlib_built_sad_paths(tmp_path: Path):
     ml = msg.lower()
     assert "not yet downloaded" in ml or "mathlib.olean" in ml or "missing" in ml
 
+
 def test_verify_sketch_lake_not_found():
     lv = LeanVerifier(PROJ / "lean", PROJ)
     lv._lake_exe = None
     res = lv.verify_sketch("topic-1", "sorry")
     assert res.compiles is False
     assert "lake not found" in res.skip_reason
+
 
 def test_verify_sketch_lean_dir_not_found(tmp_path: Path):
     lv = LeanVerifier(tmp_path / "missing_lean", tmp_path)
@@ -149,6 +166,7 @@ def test_verify_sketch_lean_dir_not_found(tmp_path: Path):
     assert res.skip_reason
     assert "lakefile" in res.skip_reason or "lean_dir" in res.skip_reason
 
+
 def test_verify_sketch_lakefile_not_found(tmp_path: Path):
     lean_dir = tmp_path / "lean"
     lean_dir.mkdir()
@@ -157,6 +175,7 @@ def test_verify_sketch_lakefile_not_found(tmp_path: Path):
     res = lv.verify_sketch("topic-1", "sorry")
     assert res.compiles is False
     assert "lakefile.lean not found" in res.skip_reason
+
 
 def test_verify_sketch_subprocess_timeout(tmp_path: Path):
     lean_dir = tmp_path / "lean"
@@ -172,6 +191,7 @@ def test_verify_sketch_subprocess_timeout(tmp_path: Path):
 
     lv._lake_exe = str(temporary_lake)
     import verification.lean_verifier
+
     original_timeout = verification.lean_verifier._VERIFICATION_TIMEOUT
     verification.lean_verifier._VERIFICATION_TIMEOUT = 1
 
@@ -181,6 +201,7 @@ def test_verify_sketch_subprocess_timeout(tmp_path: Path):
         assert "timeout after" in res.skip_reason
     finally:
         verification.lean_verifier._VERIFICATION_TIMEOUT = original_timeout
+
 
 def test_verify_sketch_oserror(tmp_path: Path):
     lean_dir = tmp_path / "lean"
@@ -195,6 +216,8 @@ def test_verify_sketch_oserror(tmp_path: Path):
     lv._lake_exe = str(lake_dir)
     res = lv.verify_sketch("topic-1", "sorry")
     assert res.compiles is False
-    assert "Permission denied" in res.skip_reason or "Is a directory" in res.skip_reason or "Errno 13" in res.skip_reason
-
-
+    assert (
+        "Permission denied" in res.skip_reason
+        or "Is a directory" in res.skip_reason
+        or "Errno 13" in res.skip_reason
+    )

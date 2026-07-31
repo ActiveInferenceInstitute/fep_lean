@@ -53,11 +53,12 @@ filterwarnings = [
 [tool.coverage.run]
 source = ["src"]
 omit = ["tests/*", "src/__init__.py"]
-# Figure generation uses ``ProcessPoolExecutor`` (spawn); trace worker processes.
+# Figure generation uses ProcessPoolExecutor (spawn); trace worker processes.
+# Branch coverage: see docs/coverage-branch.md.
 concurrency = ["multiprocessing"]
 
 [tool.coverage.report]
-# Line coverage ~90%; combined line+branch ~89.6% with current Hermes/network branches.
+# Line coverage ~91%; combined line+branch ~89.6% with current Hermes/network branches.
 fail_under = 89
 
 [tool.mypy]

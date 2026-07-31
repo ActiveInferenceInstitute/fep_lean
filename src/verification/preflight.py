@@ -14,8 +14,11 @@ from verification.environment import run_validation_checks
 def _run_version(cmd: list[str], cwd: Path | None = None) -> tuple[int, str]:
     """Run a bounded version probe for direct command diagnostics."""
     import subprocess
+
     try:
-        proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=5, check=False)
+        proc = subprocess.run(
+            cmd, cwd=cwd, capture_output=True, text=True, timeout=5, check=False
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return 1, str(exc)
     output = (proc.stdout or proc.stderr or "").strip().splitlines()
@@ -31,8 +34,14 @@ def run_preflight(*, require_gauss: bool | None = None) -> int:
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Validate every capability required by full fep_lean execution")
-    parser.add_argument("--require-gauss", action="store_true", help="retained for explicitness; full mode always requires OpenGauss")
+    parser = argparse.ArgumentParser(
+        description="Validate every capability required by full fep_lean execution"
+    )
+    parser.add_argument(
+        "--require-gauss",
+        action="store_true",
+        help="retained for explicitness; full mode always requires OpenGauss",
+    )
     parser.parse_args(argv)
     raise SystemExit(run_preflight(require_gauss=True))
 

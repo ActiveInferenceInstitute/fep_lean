@@ -87,7 +87,9 @@ def test_write_bulk_jsonl(client: OpenGaussClient, tmp_path: Path) -> None:
     out = tmp_path / "bulk.jsonl"
     result = client.write_bulk_jsonl(sessions, out)
     assert result.is_file()
-    lines = [line for line in result.read_text(encoding="utf-8").splitlines() if line.strip()]
+    lines = [
+        line for line in result.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
     assert len(lines) == 2
     first = json.loads(lines[0])
     assert "session_id" in first
@@ -98,7 +100,11 @@ def test_log_event_writes_to_db_and_file(client: OpenGaussClient) -> None:
     client.log_event("test_event", session_id=sid, extra="data")
     ops_file = client._logs_dir / "operations.jsonl"
     assert ops_file.is_file()
-    lines = [line for line in ops_file.read_text(encoding="utf-8").splitlines() if line.strip()]
+    lines = [
+        line
+        for line in ops_file.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     assert any("test_event" in line for line in lines)
 
 
@@ -121,9 +127,14 @@ def test_context_manager(tmp_path: Path) -> None:
 
 # ── Hermes cache tests ────────────────────────────────────────────────────────
 
+
 def test_set_and_get_cached_hermes(client: OpenGaussClient) -> None:
-    payload = json.dumps({"success": True, "model_used": "fixture-model", "explanation": "test"})
-    client.set_cached_hermes("key-abc", "fep-001", "verify", "fixture-model", payload, "hash123")
+    payload = json.dumps(
+        {"success": True, "model_used": "fixture-model", "explanation": "test"}
+    )
+    client.set_cached_hermes(
+        "key-abc", "fep-001", "verify", "fixture-model", payload, "hash123"
+    )
     result = client.get_cached_hermes("key-abc")
     assert result is not None
     assert result["success"] is True
@@ -146,6 +157,7 @@ def test_get_cached_hermes_ignores_malformed_payload(client: OpenGaussClient) ->
 
 def test_prune_hermes_cache_removes_old(client: OpenGaussClient) -> None:
     import time as _time
+
     payload = json.dumps({"success": True, "model_used": "fixture"})
     client.set_cached_hermes("old-key", "fep-002", "verify", "fixture", payload, "h1")
     # Manually backdate the entry beyond ttl

@@ -11,6 +11,7 @@ Skipped files (contain literal {{}} syntax as documentation or are auto-generate
 Usage:
     uv run python scripts/_inject_manuscript_vars.py [--dry-run]
 """
+
 import re
 import sys
 from pathlib import Path

@@ -80,8 +80,8 @@ def collect_anchors(md_text: str) -> set[str]:
 
 def is_external(url: str) -> bool:
     url = url.strip()
-    return (
-        url.startswith(("http://", "https://", "mailto:", "ftp://", "//", "#", "tel:"))
+    return url.startswith(
+        ("http://", "https://", "mailto:", "ftp://", "//", "#", "tel:")
     )
 
 
@@ -165,7 +165,8 @@ def main() -> int:
         help="Also scan sibling files (../README.md, ../AGENTS.md, ../SPEC.md, ../PAI.md).",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Print every file scanned, not just the summary.",
     )

@@ -72,7 +72,9 @@ def test_preflight_disables_hermes_on_403(
 ) -> None:
     """403 => preflight returns False, cfg.enabled flipped, actionable log."""
     httpserver.expect_request("/chat/completions", method="POST").respond_with_data(
-        json.dumps({"error": {"message": "Key limit exceeded (total limit)", "code": 403}}),
+        json.dumps(
+            {"error": {"message": "Key limit exceeded (total limit)", "code": 403}}
+        ),
         status=403,
         content_type="application/json",
     )
@@ -121,7 +123,9 @@ def test_preflight_tolerates_5xx(httpserver: HTTPServer) -> None:
     assert cfg.enabled is True
 
 
-def test_preflight_bounds_reasoning_model_and_restores_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_preflight_bounds_reasoning_model_and_restores_budget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     cfg = HermesConfig(
         model="moonshotai/kimi-k2.6",
         api_key="sk-test",
@@ -147,7 +151,12 @@ def test_preflight_bounds_reasoning_model_and_restores_budget(monkeypatch: pytes
     monkeypatch.setattr(exp, "_call_api", fake_call)
     assert exp.preflight() is True
     assert seen == [(1, 1, 30, 30)]
-    assert (cfg.max_tokens, cfg.reasoning_max_tokens, cfg.timeout_s, cfg.reasoning_timeout_s) == (100, 999, 60, 90)
+    assert (
+        cfg.max_tokens,
+        cfg.reasoning_max_tokens,
+        cfg.timeout_s,
+        cfg.reasoning_timeout_s,
+    ) == (100, 999, 60, 90)
 
 
 # ── fallback_models ──────────────────────────────────────────────────────────

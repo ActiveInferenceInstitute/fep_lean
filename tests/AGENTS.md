@@ -4,13 +4,13 @@ Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no 
 
 ## Test census
 
-**Canonical scale**: `uv run pytest tests/ --collect-only -q` → **342** tests in **30** modules (`test_*.py`). Per-file counts match `pytest --collect-only` per module (regenerate with `pytest ... --collect-only` if drift appears).
+**Canonical scale**: `uv run pytest tests/ --collect-only -q` → **343** tests in **31** test files (`test_*.py`). Per-file counts match `pytest --collect-only` per module (regenerate with `pytest ... --collect-only` if drift appears).
 
 | File | Tests | Description |
 |------|------:|-------------|
 | `test_catalogue_sketches_compile.py` | 1 | Opt-in full-catalogue `verify_batch` (`FEP_LEAN_CATALOGUE_COMPILE_TEST=1`) |
 | `test_catalogue_sketches_ssot.py` | 2 | `topics.yaml` `lean_sketch` matches `catalogue_sketches.SKETCHES` |
-| `test_cli.py` | 10 | Canonical CLI parsing, setup, dispatch, and failure boundaries |
+| `test_cli.py` | 14 | Canonical CLI parsing, setup, dispatch, and failure boundaries |
 | `test_edge_cases.py` | 19 | Input validation, wrap-code, empty catalogues |
 | `test_environment_checks.py` | 2 | Mode-aware validation against the project tree |
 | `test_environment_sad_paths.py` | 12 | Sad path coverage for `verification.environment` |

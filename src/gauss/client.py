@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS hermes_cache (
 CREATE INDEX IF NOT EXISTS idx_hermes_cache_topic ON hermes_cache(topic_id);
 """
 
+
 def _sha256(data: str | bytes) -> str:
     if isinstance(data, str):
         data = data.encode()
@@ -116,6 +117,7 @@ def _sha256(data: str | bytes) -> str:
 @dataclass
 class SessionRecord:
     """Full session record loaded from SQLite for export and reporting."""
+
     session_id: str
     topic_id: str
     area: str
@@ -179,7 +181,12 @@ class OpenGaussClient:
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: types.TracebackType | None) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
         self.close()
 
     # ── Session lifecycle ─────────────────────────────────────────────────────
@@ -285,7 +292,9 @@ class OpenGaussClient:
                 lean_compiles=-1,
             )
             if error:
-                self.log_event("session_cleanup_error", session_id=session_id, error=error)
+                self.log_event(
+                    "session_cleanup_error", session_id=session_id, error=error
+                )
 
     # ── Export ────────────────────────────────────────────────────────────────
 
@@ -341,7 +350,14 @@ class OpenGaussClient:
                     INSERT INTO artifacts (artifact_id, session_id, file_path, sha256, size_bytes, created_at)
                     VALUES (?,?,?,?,?,?)
                     """,
-                    (artifact_id, session_id, str(out), sha, len(content.encode()), now),
+                    (
+                        artifact_id,
+                        session_id,
+                        str(out),
+                        sha,
+                        len(content.encode()),
+                        now,
+                    ),
                 )
                 self._conn.commit()
         except Exception:
@@ -351,9 +367,7 @@ class OpenGaussClient:
         log.debug("Artifact written: %s (sha256=%s...)", out.name, sha[:8])
         return out
 
-    def write_bulk_jsonl(
-        self, sessions: list[dict[str, Any]], out_path: Path
-    ) -> Path:
+    def write_bulk_jsonl(self, sessions: list[dict[str, Any]], out_path: Path) -> Path:
         """Write all session records as one JSON-Lines file for downstream ingestion."""
         out_path.parent.mkdir(parents=True, exist_ok=True)
         lines: list[str] = []
@@ -365,7 +379,9 @@ class OpenGaussClient:
 
     # ── Logging ───────────────────────────────────────────────────────────────
 
-    def log_event(self, event: str, *, session_id: str | None = None, **kwargs: Any) -> None:
+    def log_event(
+        self, event: str, *, session_id: str | None = None, **kwargs: Any
+    ) -> None:
         """Append a structured event to the ``logs`` table and the JSONL file."""
         payload = json.dumps({"session_id": session_id, **kwargs})
         self._conn.execute(
@@ -374,7 +390,9 @@ class OpenGaussClient:
         )
         self._conn.commit()
         # Also append to operations.jsonl for easy grep
-        log_line = json.dumps({"ts": time.time(), "event": event, "session_id": session_id, **kwargs})
+        log_line = json.dumps(
+            {"ts": time.time(), "event": event, "session_id": session_id, **kwargs}
+        )
         ops_file = self._logs_dir / "operations.jsonl"
         with ops_file.open("a", encoding="utf-8") as fh:
             fh.write(log_line + "\n")

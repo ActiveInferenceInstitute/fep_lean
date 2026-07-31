@@ -63,7 +63,8 @@ def main(argv: list[str] | None = None) -> int:
         help="Manuscript directory to scan (default: projects/fep_lean/manuscript).",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Also list every anchor/label definition found.",
     )

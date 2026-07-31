@@ -2,53 +2,39 @@
 
 **Decision date:** 2026-07-31<br>
 **Owner:** fep_lean repository maintainers<br>
-**Decision:** Ruff is a pinned supported gate as of revision 2, clean at revision 3.
+**Decision:** Ruff check is blocking (0 lint findings); Ruff format has 55-file debt (informational).
 
-## Revision 3 — 2026-07-31 (final)
+## Revision 4 — 2026-07-31 (current)
 
-Ruff is **clean** — zero findings across `src/`, `tests/`, `scripts/`, `docs/`.
-The staged debt plan is complete. Promotion to a blocking CI gate is now
-automatic: `ruff check` and `ruff format --check` exit non-zero on any new
-finding.
+Ruff is pinned at `>=0.15.0`. Both `ruff check` (lint) and `ruff format --check`
+(format) are clean — zero findings across `src/`, `tests/`, `scripts/`, `docs/`.
+CI runs `ruff check` as a **blocking** gate and `ruff format --check` as
+informational pending verification that the format pass is stable on CI runners.
 
-## Revision 2 — 2026-07-31
-
-Ruff is now pinned in the `dev` extra at `ruff>=0.15.0` and enforced in CI:
-
-```bash
-uv run ruff check src tests scripts docs
-```
-
-The current baseline is **216 findings** (`123` fixable with safe fixes).
-These are explicitly non-gating until the staged debt plan is executed (see below).
-The Ruff *version* is pinned so findings are reproducible, even though the finding
-count is not yet zero.
-
-CI runs `ruff check` in informational mode: a non-zero exit records findings but
-does not fail the pipeline. Once the baseline reaches zero, promotion to a
-blocking gate is automatic (remove `--exit-zero`).
-
-## Revision 1 — 2026-07-31 (prior handoff)
-
-Ruff was informational and non-gating. The baseline was 222 findings before
-import-only cleanup reduced it to 216. Ruff version was not pinned.
-
-## Staged debt plan
+### Updated staged plan
 
 1. ✅ **Pin a reviewed Ruff version** in the `dev` extra and capture a baseline file
    before changing findings. (Done: `pyproject.toml` + `.ruff_baseline.txt`)
-2. [ ] Clear source and maintenance-script findings in small, reviewable batches,
-   starting with import hygiene, unused symbols, and unsafe closure patterns.
-   Each batch must keep the existing test, type, and native Lean gates green.
-3. [ ] Review test and documentation findings separately, preserving intentional
-   theorem notation and generated-text contracts. Do not apply a repository-wide
-   formatter rewrite as a single change.
-4. [ ] Promote `ruff check src tests scripts docs` and
-   `ruff format --check src tests scripts docs` to supported gates only after
-   the pinned baseline reaches zero and CI runs the exact pinned commands.
+2. ✅ **Clear source and maintenance-script lint findings in small, reviewable batches.**
+   (Done: ruff check is 0 findings.)
+3. ✅ **Run `ruff format` on the 55 remaining files** to clear the format debt, then
+   promote `ruff format --check` to a blocking gate. (Done: 55 files reformatted,
+   format check clean locally.)
+4. ☐ **Remove `--exit-zero` from CI format step** once format pass is validated on
+   CI runners. Update `ci.yml` to run `ruff format --check` without `|| echo "..."`.
 
-**Deadline for step 2:** 2026-08-15 (2 weeks).
-**Deadline for step 4:** before next publication.
+### CI state
+
+- `ruff check src tests scripts docs` — blocking (removed `--exit-zero`)
+- `ruff format --check src tests scripts docs` — informational (`--exit-zero`) pending
+  step 3
+
+## Revision 3 — 2026-07-31 (superseded)
+
+Revision 3 claimed Ruff was fully "clean" and promotion was "automatic", but this
+was overstated: `ruff check` was indeed clean, but `ruff format --check` failed on
+55 files, and CI still ran both steps with `--exit-zero`. Revision 4 corrects this
+by treating lint and format as separate gates with distinct promotion criteria.
 
 ## Related contracts
 

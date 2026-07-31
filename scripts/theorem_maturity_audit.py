@@ -90,14 +90,18 @@ def validate_audit(root: Path = ROOT) -> dict[str, Any]:
         errors.append("every audit topic must be an object")
     ids = [str(row.get("id", "")) for row in rows]
     if ids != list(EXPECTED_IDS):
-        errors.append("audit topic IDs must be exactly fep-001 through fep-050 in order")
+        errors.append(
+            "audit topic IDs must be exactly fep-001 through fep-050 in order"
+        )
     if catalogue is not None and ids != [topic.id for topic in catalogue.topics]:
         errors.append("audit topic IDs do not match config/topics.yaml")
 
     sketches = _source_sketches()
     for row in rows:
         topic_id = str(row.get("id", "<missing>"))
-        missing = [field for field in REQUIRED_FIELDS if not str(row.get(field, "")).strip()]
+        missing = [
+            field for field in REQUIRED_FIELDS if not str(row.get(field, "")).strip()
+        ]
         if missing:
             errors.append(f"{topic_id}: missing review fields: {', '.join(missing)}")
         disposition = row.get("disposition")
@@ -108,10 +112,14 @@ def validate_audit(root: Path = ROOT) -> dict[str, Any]:
         if not body:
             errors.append(f"{topic_id}: missing source sketch")
         elif theorem not in _theorem_names(body):
-            errors.append(f"{topic_id}: primary theorem {theorem!r} is not in the source sketch")
+            errors.append(
+                f"{topic_id}: primary theorem {theorem!r} is not in the source sketch"
+            )
         probe = str(row.get("acceptance_probe", ""))
         if "native Lean compile" not in probe:
-            errors.append(f"{topic_id}: acceptance_probe must name a native Lean compile")
+            errors.append(
+                f"{topic_id}: acceptance_probe must name a native Lean compile"
+            )
 
     if errors:
         raise ValueError("theorem maturity audit failed:\n- " + "\n- ".join(errors))
@@ -201,7 +209,9 @@ def render_markdown(data: dict[str, Any]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--write", action="store_true", help="write the generated Markdown projection")
+    parser.add_argument(
+        "--write", action="store_true", help="write the generated Markdown projection"
+    )
     args = parser.parse_args(argv)
     data = validate_audit()
     if args.write:

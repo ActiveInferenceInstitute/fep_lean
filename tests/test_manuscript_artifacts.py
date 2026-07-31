@@ -46,9 +46,13 @@ def test_build_manuscript_vars_shape() -> None:
     assert "maturity_icon" in v["topics"]["fep-035"]
     assert "lean_chars" in v["topics"]["fep-035"]
     assert "verify" in v
-    assert v["lean_toolchain"] == (PROJ / "lean" / "lean-toolchain").read_text(
-        encoding="utf-8"
-    ).strip().splitlines()[0]
+    assert (
+        v["lean_toolchain"]
+        == (PROJ / "lean" / "lean-toolchain")
+        .read_text(encoding="utf-8")
+        .strip()
+        .splitlines()[0]
+    )
     assert v["lean_version"] == "4.29.0"
     assert v["mathlib_tag"] == "v4.29.0"
 
@@ -475,7 +479,9 @@ def test_write_manuscript_vars_roundtrip(tmp_path: Path) -> None:
 
     shutil.copytree(PROJ / "config", tmp_path / "config")
     (tmp_path / "manuscript").mkdir()
-    (tmp_path / "manuscript" / "config.yaml").write_text("paper:\n  title: t\n", encoding="utf-8")
+    (tmp_path / "manuscript" / "config.yaml").write_text(
+        "paper:\n  title: t\n", encoding="utf-8"
+    )
     for d in ("scripts", "tests", "src", "output"):
         (tmp_path / d).mkdir()
     (tmp_path / "src" / "__init__.py").write_text('"""x"""\n', encoding="utf-8")
@@ -517,7 +523,9 @@ def test_count_test_cases_invalidates_on_test_change(tmp_path: Path) -> None:
     cache_dir.mkdir(parents=True)
     cache_path = cache_dir / "tests_collected.json"
 
-    cache_path.write_text(json.dumps({"collected": 99, "ts": "fixture"}), encoding="utf-8")
+    cache_path.write_text(
+        json.dumps({"collected": 99, "ts": "fixture"}), encoding="utf-8"
+    )
     old_mtime = cache_path.stat().st_mtime - 10.0
     os.utime(cache_path, (old_mtime, old_mtime))
     test_mtime = old_mtime - 100.0

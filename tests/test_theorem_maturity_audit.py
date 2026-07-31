@@ -19,7 +19,9 @@ def test_theorem_maturity_audit_covers_native_source() -> None:
     assert len(data["topics"]) == 50
     assert data["topics"][0]["id"] == "fep-001"
     assert data["topics"][-1]["id"] == "fep-050"
-    assert all("native Lean compile" in row["acceptance_probe"] for row in data["topics"])
+    assert all(
+        "native Lean compile" in row["acceptance_probe"] for row in data["topics"]
+    )
     assert any(row["disposition"] == "scope_gap" for row in data["topics"])
     assert any(row["disposition"] == "assumption_gap" for row in data["topics"])
 

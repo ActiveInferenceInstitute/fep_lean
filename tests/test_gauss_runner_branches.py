@@ -105,6 +105,7 @@ def test_run_topic_closes_session_after_unexpected_error(tmp_path: Path) -> None
 
 # ── Explicit workflow selection tests ────────────────────────────────────────
 
+
 def test_workflow_draft_preserves_requested_stage(tmp_path: Path) -> None:
     lean = LeanVerifier(PROJ / "lean", PROJ)
     hermes = FixedHermes(
@@ -128,6 +129,7 @@ def test_workflow_prove_preserves_requested_stage(tmp_path: Path) -> None:
 
 
 # ── Hermes caching tests ──────────────────────────────────────────────────────
+
 
 class _CountingHermes(HermesExplainer):
     """Hermes fixture that counts calls and returns a compile-clean sketch."""
@@ -174,6 +176,7 @@ def test_stage_results_empty_for_verify(tmp_path: Path) -> None:
 
 
 # ── Review workflow stage_results test ───────────────────────────────────────
+
 
 def test_run_topic_review_workflow_populates_stage_results(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch

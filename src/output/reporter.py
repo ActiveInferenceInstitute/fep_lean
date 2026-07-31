@@ -56,7 +56,9 @@ def _digest_files(root: Path, paths: Iterable[Path]) -> str:
     return digest.hexdigest()
 
 
-def _repository_digest(root: Path, directories: tuple[str, ...], files: tuple[str, ...] = ()) -> str:
+def _repository_digest(
+    root: Path, directories: tuple[str, ...], files: tuple[str, ...] = ()
+) -> str:
     candidates: list[Path] = []
     for directory in directories:
         base = root / directory
@@ -66,7 +68,9 @@ def _repository_digest(root: Path, directories: tuple[str, ...], files: tuple[st
     return _digest_files(root, candidates)
 
 
-def validate_report_receipt(report_root: Path, *, require_complete: bool = False) -> dict[str, Any]:
+def validate_report_receipt(
+    report_root: Path, *, require_complete: bool = False
+) -> dict[str, Any]:
     """Independently validate a generated report bundle.
 
     The report's ``summary.json`` is intentionally excluded from its own hash
@@ -126,24 +130,36 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
         if not isinstance(summary.get("complete"), bool):
             errors.append("summary complete must be a boolean")
         raw_selected = summary.get("catalogue_topics")
-        if not isinstance(raw_selected, int) or isinstance(raw_selected, bool) or raw_selected < 0:
+        if (
+            not isinstance(raw_selected, int)
+            or isinstance(raw_selected, bool)
+            or raw_selected < 0
+        ):
             errors.append("summary catalogue_topics must be a non-negative integer")
         else:
             selected_topics = raw_selected
         raw_verified = summary.get("verified_topics")
-        if not isinstance(raw_verified, int) or isinstance(raw_verified, bool) or raw_verified < 0:
+        if (
+            not isinstance(raw_verified, int)
+            or isinstance(raw_verified, bool)
+            or raw_verified < 0
+        ):
             errors.append("summary verified_topics must be a non-negative integer")
         else:
             verified_topics = raw_verified
         raw_rows = summary.get("topics", [])
-        if not isinstance(raw_rows, list) or not all(isinstance(row, dict) for row in raw_rows):
+        if not isinstance(raw_rows, list) or not all(
+            isinstance(row, dict) for row in raw_rows
+        ):
             errors.append("summary topics must be a list of objects")
         else:
             summary_rows = [row for row in raw_rows if isinstance(row, dict)]
         for digest_name in ("source_digest", "config_digest"):
             digest = summary.get(digest_name)
             if not isinstance(digest, str) or not _SHA256_RE.fullmatch(digest):
-                errors.append(f"summary {digest_name} must be a lowercase SHA-256 digest")
+                errors.append(
+                    f"summary {digest_name} must be a lowercase SHA-256 digest"
+                )
         if not isinstance(summary.get("toolchain"), dict):
             errors.append("summary toolchain must be an object")
 
@@ -158,11 +174,15 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
                 continue
             relative = Path(raw_relative)
             if relative.is_absolute() or ".." in relative.parts:
-                errors.append(f"artifact path escapes report directory: {raw_relative!r}")
+                errors.append(
+                    f"artifact path escapes report directory: {raw_relative!r}"
+                )
                 continue
             artifact = (root / relative).resolve()
             if artifact == root or root not in artifact.parents:
-                errors.append(f"artifact path escapes report directory: {raw_relative!r}")
+                errors.append(
+                    f"artifact path escapes report directory: {raw_relative!r}"
+                )
                 continue
             if not artifact.is_file():
                 errors.append(f"hashed artifact is missing: {raw_relative}")
@@ -177,9 +197,13 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
                 errors.append(f"artifact hash mismatch: {raw_relative}")
         missing_required = sorted(_REQUIRED_REPORT_ARTIFACTS - seen_artifacts)
         if missing_required:
-            errors.append("required artifacts are not hashed: " + ", ".join(missing_required))
+            errors.append(
+                "required artifacts are not hashed: " + ", ".join(missing_required)
+            )
 
-    def rows_from(payload: dict[str, Any] | None, field: str, label: str) -> list[dict[str, Any]]:
+    def rows_from(
+        payload: dict[str, Any] | None, field: str, label: str
+    ) -> list[dict[str, Any]]:
         if payload is None:
             return []
         raw = payload.get(field, [])
@@ -189,7 +213,9 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
         return [row for row in raw if isinstance(row, dict)]
 
     run_rows = rows_from(run_manifest, "topics", "run manifest")
-    verification_rows = rows_from(verification_manifest, "results", "verification manifest")
+    verification_rows = rows_from(
+        verification_manifest, "results", "verification manifest"
+    )
 
     def row_ids(rows: list[dict[str, Any]], label: str) -> list[str]:
         ids: list[str] = []
@@ -220,15 +246,29 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
     summary_flags = [
         (
             row_bool(row, ("success",), f"summary topic {row.get('topic_id', '')}"),
-            row_bool(row, ("lean_compiles", "compiles"), f"summary topic {row.get('topic_id', '')}"),
-            row_bool(row, ("lean_has_sorry", "has_sorry"), f"summary topic {row.get('topic_id', '')}"),
+            row_bool(
+                row,
+                ("lean_compiles", "compiles"),
+                f"summary topic {row.get('topic_id', '')}",
+            ),
+            row_bool(
+                row,
+                ("lean_has_sorry", "has_sorry"),
+                f"summary topic {row.get('topic_id', '')}",
+            ),
         )
         for row in summary_rows
     ]
     verification_flags = [
         (
-            row_bool(row, ("compiles",), f"verification topic {row.get('topic_id', '')}"),
-            row_bool(row, ("lean_has_sorry",), f"verification topic {row.get('topic_id', '')}"),
+            row_bool(
+                row, ("compiles",), f"verification topic {row.get('topic_id', '')}"
+            ),
+            row_bool(
+                row,
+                ("lean_has_sorry",),
+                f"verification topic {row.get('topic_id', '')}",
+            ),
         )
         for row in verification_rows
     ]
@@ -264,13 +304,19 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
         expected_true = sum(compiles for compiles, _ in verification_flags)
         expected_false = len(verification_rows) - expected_true
         if verification_manifest.get("verify_lean_ran") != bool(verification_rows):
-            errors.append("verification manifest verify_lean_ran disagrees with its rows")
+            errors.append(
+                "verification manifest verify_lean_ran disagrees with its rows"
+            )
         if verification_manifest.get("topics_with_result") != len(verification_rows):
-            errors.append("verification manifest topics_with_result disagrees with its rows")
+            errors.append(
+                "verification manifest topics_with_result disagrees with its rows"
+            )
         if verification_manifest.get("compiles_true") != expected_true:
             errors.append("verification manifest compiles_true disagrees with its rows")
         if verification_manifest.get("compiles_false") != expected_false:
-            errors.append("verification manifest compiles_false disagrees with its rows")
+            errors.append(
+                "verification manifest compiles_false disagrees with its rows"
+            )
         for summary_row, summary_flags_row, verification_flags_row in zip(
             summary_rows,
             summary_flags,
@@ -281,9 +327,13 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
             expected_sorry = summary_flags_row[2]
             verification_compiles, verification_sorry = verification_flags_row
             if verification_compiles != expected_compiles:
-                errors.append(f"verification compile flag disagrees for {summary_row.get('topic_id', '')}")
+                errors.append(
+                    f"verification compile flag disagrees for {summary_row.get('topic_id', '')}"
+                )
             if verification_sorry != expected_sorry:
-                errors.append(f"verification sorry flag disagrees for {summary_row.get('topic_id', '')}")
+                errors.append(
+                    f"verification sorry flag disagrees for {summary_row.get('topic_id', '')}"
+                )
 
     expected_verified = sum(
         success and compiles and not has_sorry
@@ -300,14 +350,29 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
         if not summary_rows or selected_topics == 0:
             errors.append("complete full-mode receipt must select at least one topic")
         if verified_topics != selected_topics:
-            errors.append("complete full-mode receipt does not verify every selected topic")
-        if any(row.get("verification_source") != "hermes_refined" for row in summary_rows):
-            errors.append("complete full-mode rows must identify hermes_refined verification")
-        if run_manifest is not None and run_manifest.get("verification_source") != "hermes_refined":
-            errors.append("complete full-mode run manifest has the wrong verification source")
+            errors.append(
+                "complete full-mode receipt does not verify every selected topic"
+            )
+        if any(
+            row.get("verification_source") != "hermes_refined" for row in summary_rows
+        ):
+            errors.append(
+                "complete full-mode rows must identify hermes_refined verification"
+            )
+        if (
+            run_manifest is not None
+            and run_manifest.get("verification_source") != "hermes_refined"
+        ):
+            errors.append(
+                "complete full-mode run manifest has the wrong verification source"
+            )
         if run_manifest is not None and run_manifest.get("lean_clean") is not True:
             errors.append("complete full-mode run manifest must mark lean_clean true")
-    elif run_manifest is not None and run_manifest.get("verification_source") != "none" and not summary_rows:
+    elif (
+        run_manifest is not None
+        and run_manifest.get("verification_source") != "none"
+        and not summary_rows
+    ):
         errors.append("run manifest reports a verification source without topic rows")
 
     claim_ready = (
@@ -315,7 +380,10 @@ def validate_report_receipt(report_root: Path, *, require_complete: bool = False
         and mode == "full"
         and complete
         and selected_topics > 0
-        and selected_topics == verified_topics == len(summary_rows) == len(verification_rows)
+        and selected_topics
+        == verified_topics
+        == len(summary_rows)
+        == len(verification_rows)
     )
     if require_complete and not claim_ready:
         errors.append("complete full-mode receipt is required")
@@ -347,30 +415,65 @@ class ReportPaths:
     run_manifest_json: Path | None = None
 
     def as_dict(self) -> dict[str, str]:
-        data = {"root": str(self.root), "index_md": str(self.index_md), "summary_json": str(self.summary_json), "hermes_md": str(self.hermes_md), "lean_md": str(self.lean_md), "validation_md": str(self.validation_md), "verification_manifest": str(self.manifest_json)}
+        data = {
+            "root": str(self.root),
+            "index_md": str(self.index_md),
+            "summary_json": str(self.summary_json),
+            "hermes_md": str(self.hermes_md),
+            "lean_md": str(self.lean_md),
+            "validation_md": str(self.validation_md),
+            "verification_manifest": str(self.manifest_json),
+        }
         if self.run_manifest_json is not None:
             data["run_manifest"] = str(self.run_manifest_json)
         return data
 
 
 class Reporter:
-    def __init__(self, project_root: Path, *, run_id: str | None = None, output_root: Path | None = None) -> None:
+    def __init__(
+        self,
+        project_root: Path,
+        *,
+        run_id: str | None = None,
+        output_root: Path | None = None,
+    ) -> None:
         self.project_root = Path(project_root)
-        self.output_root = Path(output_root) if output_root is not None else self.project_root / "output"
+        self.output_root = (
+            Path(output_root)
+            if output_root is not None
+            else self.project_root / "output"
+        )
         self.reports_dir = self.output_root / "reports"
-        self.run_id = run_id or f"run_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
+        self.run_id = (
+            run_id
+            or f"run_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
+        )
 
     @staticmethod
     def build_verification_manifest(results: Iterable[Any]) -> dict[str, Any]:
         rows = []
         for result in results:
-            row = dict(result) if isinstance(result, dict) else {"topic_id": getattr(result, "topic_id", "")}
+            row = (
+                dict(result)
+                if isinstance(result, dict)
+                else {"topic_id": getattr(result, "topic_id", "")}
+            )
             if "compiles" not in row:
-                row["compiles"] = bool(row.get("lean_compiles", getattr(result, "compiles", False)))
+                row["compiles"] = bool(
+                    row.get("lean_compiles", getattr(result, "compiles", False))
+                )
             if "lean_has_sorry" not in row:
-                row["lean_has_sorry"] = bool(row.get("has_sorry", getattr(result, "has_sorry", False)))
+                row["lean_has_sorry"] = bool(
+                    row.get("has_sorry", getattr(result, "has_sorry", False))
+                )
             rows.append(row)
-        return {"verify_lean_ran": bool(rows), "topics_with_result": len(rows), "compiles_true": sum(bool(r.get("compiles")) for r in rows), "compiles_false": sum(not bool(r.get("compiles")) for r in rows), "results": rows}
+        return {
+            "verify_lean_ran": bool(rows),
+            "topics_with_result": len(rows),
+            "compiles_true": sum(bool(r.get("compiles")) for r in rows),
+            "compiles_false": sum(not bool(r.get("compiles")) for r in rows),
+            "results": rows,
+        }
 
     def generate(self, catalogue: FEPTopicCatalogue, result: Any) -> ReportPaths:
         root = self.reports_dir / self.run_id
@@ -387,16 +490,26 @@ class Reporter:
         config_digest = _repository_digest(
             self.project_root,
             (),
-            ("config/settings.yaml", "config/topics.yaml", "manuscript/config.yaml", "lean/lean-toolchain", "lean/lakefile.lean"),
+            (
+                "config/settings.yaml",
+                "config/topics.yaml",
+                "manuscript/config.yaml",
+                "lean/lean-toolchain",
+                "lean/lakefile.lean",
+            ),
         )
         toolchain = {
-            "lean_toolchain": (self.project_root / "lean" / "lean-toolchain").read_text(encoding="utf-8").strip()
-            if (self.project_root / "lean" / "lean-toolchain").is_file() else "",
+            "lean_toolchain": (self.project_root / "lean" / "lean-toolchain")
+            .read_text(encoding="utf-8")
+            .strip()
+            if (self.project_root / "lean" / "lean-toolchain").is_file()
+            else "",
             "mathlib_tag": "",
         }
         lakefile = self.project_root / "lean" / "lakefile.lean"
         if lakefile.is_file():
             import re
+
             match = re.search(r'@\s*"([^"]+)"', lakefile.read_text(encoding="utf-8"))
             if match:
                 toolchain["mathlib_tag"] = match.group(1)
@@ -404,13 +517,18 @@ class Reporter:
             "run_id": self.run_id,
             "mode": summary.get("mode", ""),
             "complete": bool(summary.get("complete", False)),
-            "catalogue_topics": int(summary.get("catalogue_topics", len(catalogue.topics))),
+            "catalogue_topics": int(
+                summary.get("catalogue_topics", len(catalogue.topics))
+            ),
             "verified_topics": int(summary.get("verified_topics", 0)),
             "capabilities": summary.get("capabilities", {}),
-            "verification_source": "hermes_refined" if any(
-                row.get("verification_source") == "hermes_refined" or row.get("hermes_success")
+            "verification_source": "hermes_refined"
+            if any(
+                row.get("verification_source") == "hermes_refined"
+                or row.get("hermes_success")
                 for row in topics
-            ) else "none",
+            )
+            else "none",
             "lean_clean": bool(summary.get("complete", False))
             and int(summary.get("verified_topics", 0))
             == int(summary.get("catalogue_topics", len(catalogue.topics)))
@@ -425,16 +543,30 @@ class Reporter:
         summary["config_digest"] = config_digest
         summary["toolchain"] = toolchain
         summary["artifact_hashes"] = {}
-        for name, content in (("hermes.md", self._hermes_md(topics)), ("lean.md", self._lean_md(getattr(result, "lean_stats", {}))), ("validation.md", self._validation_md(result)), ("index.md", self._index_md(catalogue, result))):
+        for name, content in (
+            ("hermes.md", self._hermes_md(topics)),
+            ("lean.md", self._lean_md(getattr(result, "lean_stats", {}))),
+            ("validation.md", self._validation_md(result)),
+            ("index.md", self._index_md(catalogue, result)),
+        ):
             _atomic_text(root / name, content)
         for row in topics:
             topic_id = str(row.get("topic_id", "")).strip()
             if topic_id:
                 _atomic_text(root / "topics" / f"{topic_id}.md", self._topic_md(row))
-        _atomic_text(root / "summary.json", json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n")
+        _atomic_text(
+            root / "summary.json",
+            json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n",
+        )
         manifest = self.build_verification_manifest(topics)
-        _atomic_text(root / "verification_manifest.json", json.dumps(manifest, indent=2, sort_keys=True) + "\n")
-        _atomic_text(root / "run_manifest.json", json.dumps(run_manifest, indent=2, sort_keys=True, default=str) + "\n")
+        _atomic_text(
+            root / "verification_manifest.json",
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        )
+        _atomic_text(
+            root / "run_manifest.json",
+            json.dumps(run_manifest, indent=2, sort_keys=True, default=str) + "\n",
+        )
         # ``summary.json`` contains this map, so hashing it would create a
         # self-referential value.  Hash every other report artifact, including
         # nested per-topic files, and make the exclusion explicit in the key
@@ -445,90 +577,185 @@ class Reporter:
             if p.is_file() and p.name != "summary.json"
         }
         summary["artifact_hashes"] = hashes
-        _atomic_text(root / "summary.json", json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n")
-        return ReportPaths(root, root / "index.md", root / "summary.json", root / "hermes.md", root / "lean.md", root / "validation.md", root / "verification_manifest.json", root / "run_manifest.json")
+        _atomic_text(
+            root / "summary.json",
+            json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n",
+        )
+        return ReportPaths(
+            root,
+            root / "index.md",
+            root / "summary.json",
+            root / "hermes.md",
+            root / "lean.md",
+            root / "validation.md",
+            root / "verification_manifest.json",
+            root / "run_manifest.json",
+        )
 
     @staticmethod
     def _topic_rows(result: Any) -> list[dict[str, Any]]:
         direct = getattr(result, "topic_results", [])
-        rows = [row.as_dict() if hasattr(row, "as_dict") else dict(row) for row in direct]
+        rows = [
+            row.as_dict() if hasattr(row, "as_dict") else dict(row) for row in direct
+        ]
         if rows:
             return rows
         for stage in getattr(result, "stages", []):
             if stage.name != "Gauss Sessions" or not isinstance(stage.payload, dict):
                 continue
-            candidate = stage.payload.get("topics") or stage.payload.get("results") or []
-            return [row.as_dict() if hasattr(row, "as_dict") else dict(row) for row in candidate]
+            candidate = (
+                stage.payload.get("topics") or stage.payload.get("results") or []
+            )
+            return [
+                row.as_dict() if hasattr(row, "as_dict") else dict(row)
+                for row in candidate
+            ]
         return []
 
     def _index_md(self, catalogue: FEPTopicCatalogue, result: Any) -> str:
         stats = getattr(result, "stats", {})
         rows = self._topic_rows(result)
         direct = sum(bool(row.get("hermes_lean_compiles")) for row in rows)
-        final = sum(bool(row.get("lean_compiles")) and not bool(row.get("lean_has_sorry")) for row in rows)
-        selected_topics = int(getattr(result, "catalogue_topics", 0) or len(rows) or len(catalogue.topics))
-        lines = [f"# fep_lean run `{self.run_id}`", "", f"**Status:** `{getattr(result, 'status', 'unknown')}`", f"**Mode:** `{getattr(result, 'mode', 'full')}`", f"**Total Topics:** {selected_topics}", f"**Catalogue Topics:** {len(catalogue.topics)}", f"**Verified topics:** {getattr(result, 'verified_topics', 0)}", f"**Hermes-refined Lean compiled directly:** {direct}/{len(rows) or 0}", f"**Final Lean compiled:** {final}/{len(rows) or 0}", "", "## Stages", "", "| Stage | Status | Duration |", "| --- | --- | ---: |"]
+        final = sum(
+            bool(row.get("lean_compiles")) and not bool(row.get("lean_has_sorry"))
+            for row in rows
+        )
+        selected_topics = int(
+            getattr(result, "catalogue_topics", 0) or len(rows) or len(catalogue.topics)
+        )
+        lines = [
+            f"# fep_lean run `{self.run_id}`",
+            "",
+            f"**Status:** `{getattr(result, 'status', 'unknown')}`",
+            f"**Mode:** `{getattr(result, 'mode', 'full')}`",
+            f"**Total Topics:** {selected_topics}",
+            f"**Catalogue Topics:** {len(catalogue.topics)}",
+            f"**Verified topics:** {getattr(result, 'verified_topics', 0)}",
+            f"**Hermes-refined Lean compiled directly:** {direct}/{len(rows) or 0}",
+            f"**Final Lean compiled:** {final}/{len(rows) or 0}",
+            "",
+            "## Stages",
+            "",
+            "| Stage | Status | Duration |",
+            "| --- | --- | ---: |",
+        ]
         for stage in getattr(result, "stages", []):
             lines.append(f"| {stage.name} | {stage.status} | {stage.duration_s:.2f}s |")
-        lines.extend(["", "## Metrics", "", "```json", json.dumps(stats, indent=2, default=str), "```", ""])
+        lines.extend(
+            [
+                "",
+                "## Metrics",
+                "",
+                "```json",
+                json.dumps(stats, indent=2, default=str),
+                "```",
+                "",
+            ]
+        )
         return "\n".join(lines)
 
     def _hermes_md(self, topics: list[dict[str, Any]]) -> str:
-        tokens = [int(row.get("tokens_used", 0) or 0) for row in topics if int(row.get("tokens_used", 0) or 0) > 0]
-        models = sorted({str(row.get("hermes_model", "")) for row in topics if row.get("hermes_model")})
+        tokens = [
+            int(row.get("tokens_used", 0) or 0)
+            for row in topics
+            if int(row.get("tokens_used", 0) or 0) > 0
+        ]
+        models = sorted(
+            {
+                str(row.get("hermes_model", ""))
+                for row in topics
+                if row.get("hermes_model")
+            }
+        )
         direct = sum(bool(row.get("hermes_lean_compiles")) for row in topics)
         lines = [
-            "# Hermes results", "",
+            "# Hermes results",
+            "",
             f"Processed: {len(topics)}",
             f"Successful: {sum(bool(t.get('hermes_success')) for t in topics)}",
             f"Cache hits: {sum(bool(t.get('cache_hit')) for t in topics)}/{len(topics) or 0}",
             f"Mean tokens/topic: {sum(tokens) // len(tokens) if tokens else 0}",
             f"Models used: {', '.join(models) or 'none'}",
-            f"Hermes-refined Lean compiled: {direct}/{len(topics) or 0}", "",
+            f"Hermes-refined Lean compiled: {direct}/{len(topics) or 0}",
+            "",
         ]
         for row in topics:
-            lines.extend([
-                f"## {row.get('topic_id', '')}", "",
-                f"- Hermes success: `{row.get('hermes_success', False)}`",
-                f"- Model: `{row.get('hermes_model', '')}`",
-                f"- Verification source: `{row.get('verification_source', 'none')}`",
+            lines.extend(
+                [
+                    f"## {row.get('topic_id', '')}",
+                    "",
+                    f"- Hermes success: `{row.get('hermes_success', False)}`",
+                    f"- Model: `{row.get('hermes_model', '')}`",
+                    f"- Verification source: `{row.get('verification_source', 'none')}`",
+                    f"- Error: {row.get('error', '') or 'none'}",
+                    "",
+                    "### Explanation",
+                    "",
+                    str(row.get("explanation", "") or "(none)"),
+                    "",
+                    "### Refined Lean source",
+                    "",
+                    "```lean",
+                    str(row.get("refined_lean_sketch", "") or ""),
+                    "```",
+                    "",
+                ]
+            )
+        return "\n".join(lines)
+
+    def _topic_md(self, row: dict[str, Any]) -> str:
+        return "\n".join(
+            [
+                f"# Topic {row.get('topic_id', '')}",
+                "",
+                "## Hermes Validation",
+                "",
+                f"- Success: `{row.get('hermes_success', False)}`",
+                f"- Cache hit: `{row.get('cache_hit', False)}`",
+                f"- Model: `{row.get('hermes_model', '') or 'none'}`",
+                f"- Hermes-refined Lean compiled: `{row.get('hermes_lean_compiles', False)}`",
+                f"- Final verification source: `{row.get('verification_source', 'none')}`",
+                f"- Final Lean compiled cleanly: `{bool(row.get('lean_compiles')) and not bool(row.get('lean_has_sorry'))}`",
                 f"- Error: {row.get('error', '') or 'none'}",
                 "",
-                "### Explanation",
+                "## Explanation",
                 "",
-                str(row.get("explanation", "") or "(none)"),
+                str(row.get("explanation", "") or "(no explanation recorded)"),
                 "",
-                "### Refined Lean source",
+                "## Refined Lean source",
                 "",
                 "```lean",
                 str(row.get("refined_lean_sketch", "") or ""),
                 "```",
                 "",
-            ])
-        return "\n".join(lines)
-
-    def _topic_md(self, row: dict[str, Any]) -> str:
-        return "\n".join([
-            f"# Topic {row.get('topic_id', '')}", "",
-            "## Hermes Validation", "",
-            f"- Success: `{row.get('hermes_success', False)}`",
-            f"- Cache hit: `{row.get('cache_hit', False)}`",
-            f"- Model: `{row.get('hermes_model', '') or 'none'}`",
-            f"- Hermes-refined Lean compiled: `{row.get('hermes_lean_compiles', False)}`",
-            f"- Final verification source: `{row.get('verification_source', 'none')}`",
-            f"- Final Lean compiled cleanly: `{bool(row.get('lean_compiles')) and not bool(row.get('lean_has_sorry'))}`",
-            f"- Error: {row.get('error', '') or 'none'}", "",
-            "## Explanation", "", str(row.get("explanation", "") or "(no explanation recorded)"), "",
-            "## Refined Lean source", "", "```lean", str(row.get("refined_lean_sketch", "") or ""), "```", "",
-        ])
+            ]
+        )
 
     def _lean_md(self, stats: dict[str, Any]) -> str:
-        return "# Lean results\n\n```json\n" + json.dumps(stats, indent=2, default=str) + "\n```\n"
+        return (
+            "# Lean results\n\n```json\n"
+            + json.dumps(stats, indent=2, default=str)
+            + "\n```\n"
+        )
 
     def _validation_md(self, result: Any) -> str:
-        payload: Any = next((s.payload for s in getattr(result, "stages", []) if s.name == "Environment Validation"), {})
+        payload: Any = next(
+            (
+                s.payload
+                for s in getattr(result, "stages", [])
+                if s.name == "Environment Validation"
+            ),
+            {},
+        )
         validation: dict[str, Any] = payload if isinstance(payload, dict) else {}
-        lines = ["# Environment validation", "", f"Status: `{validation.get('status', 'not-run')}`", ""]
+        lines = [
+            "# Environment validation",
+            "",
+            f"Status: `{validation.get('status', 'not-run')}`",
+            "",
+        ]
         for check in validation.get("checks", []):
-            lines.append(f"- `{check.get('name', '')}`: `{check.get('ok', False)}` — {check.get('message', '')}")
+            lines.append(
+                f"- `{check.get('name', '')}`: `{check.get('ok', False)}` — {check.get('message', '')}"
+            )
         return "\n".join(lines) + "\n"

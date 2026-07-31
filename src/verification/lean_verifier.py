@@ -93,8 +93,11 @@ def _has_sorry(code: str) -> bool:
     without_lines = re.sub(r"--[^\n]*", "", without_blocks)
     return bool(_RE_SORRY.search(without_lines))
 
+
 _RE_FAIL_KIND_TIMEOUT = re.compile(r"timeout|timed out", re.IGNORECASE)
-_RE_FAIL_KIND_TACTIC = re.compile(r"unknown tactic|tactic .* failed|unsolved goals", re.IGNORECASE)
+_RE_FAIL_KIND_TACTIC = re.compile(
+    r"unknown tactic|tactic .* failed|unsolved goals", re.IGNORECASE
+)
 _RE_FAIL_KIND_ARITY = re.compile(
     r"type mismatch|Application type mismatch|number of fields|wrong number of",
     re.IGNORECASE,
@@ -140,6 +143,7 @@ def _subprocess_env() -> dict[str, str]:
     instance's ``_lean_dir`` when available via ``_direct_toolchain_bin``.
     """
     from verification._toolchain import subprocess_env as _tc_subprocess_env
+
     return _tc_subprocess_env()
 
 
@@ -182,24 +186,31 @@ def _sanitize_lean_block(code: str) -> str:
     statements after namespace declarations; this strips them to prevent
     'invalid import command' errors.
     """
-    lines = code.split('\n')
+    lines = code.split("\n")
     first_non_import = len(lines)
     for i, ln in enumerate(lines):
         s = ln.strip()
-        if s and not s.startswith('import') and not s.startswith('--') \
-                and not s.startswith('/-') and not s.startswith('-/'):
+        if (
+            s
+            and not s.startswith("import")
+            and not s.startswith("--")
+            and not s.startswith("/-")
+            and not s.startswith("-/")
+        ):
             first_non_import = i
             break
     cleaned = [
-        ln for i, ln in enumerate(lines)
-        if not (ln.strip().startswith('import') and i > first_non_import)
+        ln
+        for i, ln in enumerate(lines)
+        if not (ln.strip().startswith("import") and i > first_non_import)
     ]
-    return '\n'.join(cleaned)
+    return "\n".join(cleaned)
 
 
 @dataclass
 class VerifyResult:
     """Outcome of compiling one Lean sketch with full Mathlib4 context."""
+
     topic_id: str
     compiles: bool
     has_sorry: bool
@@ -291,7 +302,10 @@ class LeanVerifier:
 
         log.debug(
             "LeanVerifier: lean_dir=%s lake=%s lean=%s elan_home=%s",
-            self._lean_dir, self._lake_exe, self._lean_exe, _get_elan_home_override(),
+            self._lean_dir,
+            self._lake_exe,
+            self._lean_exe,
+            _get_elan_home_override(),
         )
 
     # ── Public ────────────────────────────────────────────────────────────────
@@ -320,9 +334,13 @@ class LeanVerifier:
             pinned = ""
             toolchain_file = self._lean_dir / "lean-toolchain"
             if toolchain_file.is_file():
-                match = re.search(r"v(\d+\.\d+\.\d+)", toolchain_file.read_text(encoding="utf-8"))
+                match = re.search(
+                    r"v(\d+\.\d+\.\d+)", toolchain_file.read_text(encoding="utf-8")
+                )
                 pinned = match.group(1) if match else ""
-            available = r.returncode == 0 and (not pinned or f"Lean version {pinned}" in output)
+            available = r.returncode == 0 and (
+                not pinned or f"Lean version {pinned}" in output
+            )
         except (OSError, subprocess.TimeoutExpired):
             available = False
         self._lake_probe = (cache_key, available)
@@ -349,9 +367,13 @@ class LeanVerifier:
             # elan sandbox issue: settings.toml write is blocked or isolated ELAN_HOME
             # causes 'no default toolchain'. Both are proxy sandbox issues.
             if r.returncode != 0:
-                if ("settings.toml" in combined_err and "operation not permitted" in combined_err) or \
-                   "no default toolchain configured" in combined_err:
-                    version = f"lean (sandbox proxy restriction; binary at {self._lean_exe})"
+                if (
+                    "settings.toml" in combined_err
+                    and "operation not permitted" in combined_err
+                ) or "no default toolchain configured" in combined_err:
+                    version = (
+                        f"lean (sandbox proxy restriction; binary at {self._lean_exe})"
+                    )
                 else:
                     version = f"lean (exit {r.returncode})"
             elif r.returncode == 0:
@@ -388,8 +410,10 @@ class LeanVerifier:
         if not mathlib_root_olean.is_file():
             return (
                 False,
-                ("Mathlib not yet downloaded or built — missing build artifact: "
-                f"{mathlib_root_olean}"),
+                (
+                    "Mathlib not yet downloaded or built — missing build artifact: "
+                    f"{mathlib_root_olean}"
+                ),
             )
         # Probe a small, stable set of leaf .olean files that the catalogue
         # sketches universally depend on. If any is missing, the cache is
@@ -397,16 +421,29 @@ class LeanVerifier:
         required_leaves = (
             mathlib_build / "Mathlib" / "Data" / "Real" / "Basic.olean",
             mathlib_build / "Mathlib" / "Algebra" / "Order" / "Ring" / "Basic.olean",
-            mathlib_build / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean",
+            mathlib_build
+            / "Mathlib"
+            / "MeasureTheory"
+            / "Measure"
+            / "MeasureSpace.olean",
         )
-        missing = [str(p.relative_to(mathlib_build)) for p in required_leaves if not p.is_file()]
+        missing = [
+            str(p.relative_to(mathlib_build))
+            for p in required_leaves
+            if not p.is_file()
+        ]
         if missing:
             return (
                 False,
-                ("Mathlib build is incomplete; required leaf .olean files missing: "
-                f"{missing}"),
+                (
+                    "Mathlib build is incomplete; required leaf .olean files missing: "
+                    f"{missing}"
+                ),
             )
-        return True, f"Mathlib built (`{mathlib_root_olean.name}` and required leaves present)"
+        return (
+            True,
+            f"Mathlib built (`{mathlib_root_olean.name}` and required leaves present)",
+        )
 
     def verify_sketch(self, topic_id: str, lean_code: str) -> VerifyResult:
         """Compile ``lean_code`` inside the Lean workspace using full Mathlib4.
@@ -475,13 +512,18 @@ class LeanVerifier:
 
             log.info(
                 "verify_sketch %s: compiles=%s sorry=%s errors=%d (%.2fs)",
-                topic_id, compiles, has_sorry, len(errors), elapsed,
+                topic_id,
+                compiles,
+                has_sorry,
+                len(errors),
+                elapsed,
             )
             if len(combined) > 8000:
                 log.warning(
                     "verify_sketch %s: output truncated from %d → 8000 chars; "
                     "full stderr may be missing from stored result",
-                    topic_id, len(combined),
+                    topic_id,
+                    len(combined),
                 )
             fk: FailureKind = "other"
             if not compiles:
@@ -526,9 +568,7 @@ class LeanVerifier:
                 with contextlib.suppress(OSError):
                     tmp_file.unlink()
 
-    def verify_batch(
-        self, items: list[tuple[str, str]]
-    ) -> list[VerifyResult]:
+    def verify_batch(self, items: list[tuple[str, str]]) -> list[VerifyResult]:
         """Verify multiple ``(topic_id, lean_code)`` pairs sequentially
         (max_workers=1 to avoid .olean race conditions)."""
         results: list[VerifyResult] = []
@@ -536,18 +576,28 @@ class LeanVerifier:
         # calls share the same .lake/build/ workspace and can race on .olean files,
         # causing spurious "invalid .olean file" errors. Sequential execution is safe.
         max_workers = 1
-        log.info("Verifying %d Lean sketches sequentially (serialized for .olean safety)...", len(items))
+        log.info(
+            "Verifying %d Lean sketches sequentially (serialized for .olean safety)...",
+            len(items),
+        )
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {executor.submit(self.verify_sketch, topic_id, lean_code): topic_id for topic_id, lean_code in items}
+            futures = {
+                executor.submit(self.verify_sketch, topic_id, lean_code): topic_id
+                for topic_id, lean_code in items
+            }
             for future in concurrent.futures.as_completed(futures):
                 results.append(future.result())
-        assert all(r.topic_id for r in results), "VerifyResult missing topic_id — cannot sort batch"
+        assert all(r.topic_id for r in results), (
+            "VerifyResult missing topic_id — cannot sort batch"
+        )
         # Re-sort results by topic_id to maintain consistency
         results.sort(key=lambda r: r.topic_id)
         return results
 
     @staticmethod
-    def summarize_batch_durations(results: list[VerifyResult]) -> dict[str, float | int]:
+    def summarize_batch_durations(
+        results: list[VerifyResult],
+    ) -> dict[str, float | int]:
         """Min / median / p95 of ``duration_s`` for non-skipped rows (metrics / §04e)."""
         vals = sorted(
             r.duration_s for r in results if not r.skip_reason and r.duration_s >= 0

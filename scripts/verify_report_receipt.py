@@ -22,7 +22,9 @@ def main(argv: list[str] | None = None) -> int:
         help="require a complete, non-empty full-mode receipt suitable for a verification claim",
     )
     args = parser.parse_args(argv)
-    receipt = validate_report_receipt(args.report_root, require_complete=args.require_complete)
+    receipt = validate_report_receipt(
+        args.report_root, require_complete=args.require_complete
+    )
     print(json.dumps(receipt, indent=2))
     return 0 if receipt["valid"] else 1
 

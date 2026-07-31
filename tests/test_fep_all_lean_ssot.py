@@ -41,9 +41,13 @@ def test_fep_all_lean_covers_all_yaml_topics() -> None:
 
     errors: list[str] = []
     if missing_from_lean:
-        errors.append(f"In topics.yaml but not in fep_all.lean: {sorted(missing_from_lean)}")
+        errors.append(
+            f"In topics.yaml but not in fep_all.lean: {sorted(missing_from_lean)}"
+        )
     if extra_in_lean:
-        errors.append(f"In fep_all.lean but not in topics.yaml: {sorted(extra_in_lean)}")
+        errors.append(
+            f"In fep_all.lean but not in topics.yaml: {sorted(extra_in_lean)}"
+        )
 
     assert not errors, "\n".join(errors)
 
@@ -51,7 +55,9 @@ def test_fep_all_lean_covers_all_yaml_topics() -> None:
 def test_fep_all_lean_has_50_topics() -> None:
     """fep_all.lean should contain exactly 50 topic namespaces."""
     lean_ids = _extract_lean_topic_ids(FEP_ALL.read_text(encoding="utf-8"))
-    assert len(lean_ids) == 50, f"Expected 50 topics, found {len(lean_ids)}: {sorted(lean_ids)}"
+    assert len(lean_ids) == 50, (
+        f"Expected 50 topics, found {len(lean_ids)}: {sorted(lean_ids)}"
+    )
 
 
 def test_fep_all_lean_has_no_sorry() -> None:

@@ -10,24 +10,32 @@ from gauss.cli import _require_gauss_from_env, check_gauss_cli
 
 PROJ = Path(__file__).resolve().parent.parent
 
+
 def test_require_gauss_from_env(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("FEP_LEAN_REQUIRE_GAUSS", "1")
     assert _require_gauss_from_env() is True
     monkeypatch.setenv("FEP_LEAN_REQUIRE_GAUSS", "false")
     assert _require_gauss_from_env() is False
 
-def test_check_gauss_cli_missing_not_required(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+
+def test_check_gauss_cli_missing_not_required(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
     # Ensure gauss is not on path
     monkeypatch.setenv("PATH", str(tmp_path))
     ok, msg = check_gauss_cli(PROJ, require=False)
     assert ok is True
     assert "not configured" in msg
 
-def test_check_gauss_cli_missing_required(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+
+def test_check_gauss_cli_missing_required(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
     monkeypatch.setenv("PATH", str(tmp_path))
     ok, msg = check_gauss_cli(PROJ, require=True)
     assert ok is False
     assert "unavailable" in msg
+
 
 def test_check_gauss_cli_exit_error(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     # Create a temporary gauss binary that exits with error
@@ -44,6 +52,7 @@ def test_check_gauss_cli_exit_error(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     ok, msg = check_gauss_cli(PROJ, require=False)
     assert ok is True
     assert "doctor: exit 1" in msg
+
 
 def test_check_gauss_cli_ok(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     temporary_gauss = tmp_path / "gauss"

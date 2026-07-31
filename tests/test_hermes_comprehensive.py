@@ -27,13 +27,13 @@ _FEP_LEAN_LIVE_VAR = os.environ.get("FEP_LEAN_LIVE_TESTS", "").lower()
 _HAS_API_KEY = bool(
     os.environ.get("OPENROUTER_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
 )
-_LIVE_TESTS_ENABLED = (
-    _FEP_LEAN_LIVE_VAR in ("1", "true", "yes")
-    or (_HAS_API_KEY and _FEP_LEAN_LIVE_VAR not in ("0", "false", "no"))
+_LIVE_TESTS_ENABLED = _FEP_LEAN_LIVE_VAR in ("1", "true", "yes") or (
+    _HAS_API_KEY and _FEP_LEAN_LIVE_VAR not in ("0", "false", "no")
 )
 
 
 # ── Local HTTP server helpers (no external deps, no direct execution) ───────────────────
+
 
 class _FixedStatusHandler(http.server.BaseHTTPRequestHandler):
     """Local HTTP handler that replies with a configured status code for any POST.
@@ -93,6 +93,7 @@ class _SlowResponseHandler(http.server.BaseHTTPRequestHandler):
             except (BrokenPipeError, ConnectionResetError):
                 return  # client gave up — expected when the deadline fires
             import time as _t
+
             _t.sleep(self._delay_per_byte)
 
     def log_message(self, *args: object) -> None:
@@ -165,10 +166,13 @@ def _free_port() -> int:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
 
+
 class TestLoadGaussDotenv:
     """Test HermesConfig._load_gauss_dotenv."""
 
-    def test_loads_keys_from_dotenv(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_loads_keys_from_dotenv(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         dotenv = tmp_path / ".env"
         dotenv.write_text("FOO_KEY=bar123\nBAZ=qux\n", encoding="utf-8")
         monkeypatch.setenv("GAUSS_HOME", str(tmp_path))
@@ -179,7 +183,9 @@ class TestLoadGaussDotenv:
         assert os.environ["FOO_KEY"] == "bar123"
         assert os.environ["BAZ"] == "qux"
 
-    def test_does_not_overwrite_existing_env(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_does_not_overwrite_existing_env(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         dotenv = tmp_path / ".env"
         dotenv.write_text("EXISTING_VAR=from_file\n", encoding="utf-8")
         monkeypatch.setenv("GAUSS_HOME", str(tmp_path))
@@ -188,11 +194,15 @@ class TestLoadGaussDotenv:
         HermesConfig._load_gauss_dotenv()
         assert os.environ["EXISTING_VAR"] == "original"
 
-    def test_handles_missing_dotenv(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_handles_missing_dotenv(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("GAUSS_HOME", str(tmp_path))
         HermesConfig._load_gauss_dotenv()  # should not raise
 
-    def test_handles_comments_and_blank_lines(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_handles_comments_and_blank_lines(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         dotenv = tmp_path / ".env"
         dotenv.write_text("# comment\n\nVALID=yes\n  \n", encoding="utf-8")
         monkeypatch.setenv("GAUSS_HOME", str(tmp_path))
@@ -201,7 +211,9 @@ class TestLoadGaussDotenv:
         HermesConfig._load_gauss_dotenv()
         assert os.environ["VALID"] == "yes"
 
-    def test_strips_quotes_from_values(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_strips_quotes_from_values(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         dotenv = tmp_path / ".env"
         dotenv.write_text("Q1='single'\nQ2=\"double\"\n", encoding="utf-8")
         monkeypatch.setenv("GAUSS_HOME", str(tmp_path))
@@ -212,7 +224,9 @@ class TestLoadGaussDotenv:
         assert os.environ["Q1"] == "single"
         assert os.environ["Q2"] == "double"
 
-    def test_handles_read_error(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_handles_read_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("GAUSS_HOME", str(tmp_path))
         dotenv = tmp_path / ".env"
         dotenv.write_text("X=Y\n", encoding="utf-8")
@@ -226,7 +240,9 @@ class TestLoadGaussDotenv:
 class TestKeyAffinityValidation:
     """Test that API key ↔ endpoint mismatches are caught."""
 
-    def test_anthropic_key_to_openrouter_disables(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_anthropic_key_to_openrouter_disables(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-temporary-key")
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
@@ -236,7 +252,9 @@ class TestKeyAffinityValidation:
         assert cfg.enabled is False
         assert cfg.api_key == "sk-ant-temporary-key"
 
-    def test_openrouter_key_to_anthropic_disables(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_openrouter_key_to_anthropic_disables(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-temporary-or-key")
         monkeypatch.setenv("HERMES_API_BASE", "https://api.anthropic.com/v1")
         monkeypatch.setenv("GAUSS_HOME", "/tmp/__no_gauss__")
@@ -337,9 +355,9 @@ class TestCallAPI:
                 h._call_api([{"role": "user", "content": "hi"}], "temporary-model")
             assert exc_info.value.status_code is None
             assert exc_info.value.transient is True
-            assert "HTTP transport error" in str(exc_info.value) or "Connection error" in str(
+            assert "HTTP transport error" in str(
                 exc_info.value
-            )
+            ) or "Connection error" in str(exc_info.value)
         finally:
             server.shutdown()
 
@@ -364,6 +382,7 @@ class TestCallAPI:
             )
             h = HermesExplainer(cfg)
             import time as _t
+
             t0 = _t.monotonic()
             with pytest.raises(HermesAPIError) as exc_info:
                 h._call_api([{"role": "user", "content": "hi"}], "temporary-model")
@@ -429,23 +448,35 @@ class TestHermesConfigMisc:
         assert cfg2.is_reasoning_model() is False
 
     def test_effective_max_tokens(self) -> None:
-        cfg = HermesConfig(model="nvidia/nemotron-3-super-120b-a12b:free", max_tokens=100, reasoning_max_tokens=9999)
+        cfg = HermesConfig(
+            model="nvidia/nemotron-3-super-120b-a12b:free",
+            max_tokens=100,
+            reasoning_max_tokens=9999,
+        )
         assert cfg.effective_max_tokens() == 9999
         cfg2 = HermesConfig(model="other", max_tokens=100, reasoning_max_tokens=9999)
         assert cfg2.effective_max_tokens() == 100
 
     def test_effective_timeout(self) -> None:
-        cfg = HermesConfig(model="nvidia/nemotron-3-super-120b-a12b:free", timeout_s=30, reasoning_timeout_s=600)
+        cfg = HermesConfig(
+            model="nvidia/nemotron-3-super-120b-a12b:free",
+            timeout_s=30,
+            reasoning_timeout_s=600,
+        )
         assert cfg.effective_timeout() == 600
 
     def test_hermes_result_as_dict(self) -> None:
-        r = HermesResult(success=True, model_used="m", topic_id="t", reasoning="x" * 3000)
+        r = HermesResult(
+            success=True, model_used="m", topic_id="t", reasoning="x" * 3000
+        )
         d = r.as_dict()
         assert d["success"] is True
         assert len(d["reasoning"]) <= 2000
 
     def test_build_model_chain_openrouter(self) -> None:
-        cfg = HermesConfig(model="primary-model", base_url="https://openrouter.ai/api/v1")
+        cfg = HermesConfig(
+            model="primary-model", base_url="https://openrouter.ai/api/v1"
+        )
         h = HermesExplainer(cfg)
         chain = h._build_model_chain()
         assert chain[0] == "primary-model"
@@ -461,7 +492,9 @@ class TestHermesConfigMisc:
 class TestFromSettingsEdgeCases:
     """Cover HermesConfig.from_settings branches: malformed YAML, API key priority, is_live."""
 
-    def test_malformed_settings_yaml(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_malformed_settings_yaml(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Cover lines 178-179: YAML parse exception branch."""
         bad_yaml = tmp_path / "settings.yaml"
         bad_yaml.write_text("hermes: { bad: [ yaml }", encoding="utf-8")
@@ -492,7 +525,9 @@ class TestFromSettingsEdgeCases:
         cfg = HermesConfig.from_settings(settings_path=Path("/nonexistent"))
         assert cfg.api_key == "sk-openai-test456"
 
-    def test_api_key_from_settings_yaml(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_api_key_from_settings_yaml(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Cover lines 212-214: api_key from settings.yaml when no env vars."""
         yaml_file = tmp_path / "settings.yaml"
         yaml_file.write_text("hermes:\n  api_key: sk-yaml-key789\n", encoding="utf-8")
@@ -503,7 +538,9 @@ class TestFromSettingsEdgeCases:
         cfg = HermesConfig.from_settings(settings_path=yaml_file)
         assert cfg.api_key == "sk-yaml-key789"
 
-    def test_no_api_key_anywhere(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_no_api_key_anywhere(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Cover line 215-216: empty api_key when none set."""
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
@@ -554,7 +591,13 @@ class TestParseResponse:
     def test_valid_response_with_lean_block(self) -> None:
         h = self._make_explainer()
         raw = {
-            "choices": [{"message": {"content": "Explanation.\n\n```lean\ntheorem x : True := trivial\n```"}}],
+            "choices": [
+                {
+                    "message": {
+                        "content": "Explanation.\n\n```lean\ntheorem x : True := trivial\n```"
+                    }
+                }
+            ],
             "usage": {"completion_tokens": 100, "prompt_tokens": 50},
         }
         r = h._parse_response(raw, "model-y", 2.5, "fep-002")
@@ -568,7 +611,13 @@ class TestParseResponse:
     def test_think_tags_extracted_as_reasoning(self) -> None:
         h = self._make_explainer()
         raw = {
-            "choices": [{"message": {"content": "Before<think>Deep reasoning here</think>After text"}}],
+            "choices": [
+                {
+                    "message": {
+                        "content": "Before<think>Deep reasoning here</think>After text"
+                    }
+                }
+            ],
             "usage": {"completion_tokens": 50, "prompt_tokens": 20},
         }
         r = h._parse_response(raw, "model-z", 1.0, "fep-003")
@@ -579,7 +628,9 @@ class TestParseResponse:
     def test_reasoning_field_direct(self) -> None:
         h = self._make_explainer()
         raw = {
-            "choices": [{"message": {"content": "content", "reasoning": "direct reasoning"}}],
+            "choices": [
+                {"message": {"content": "content", "reasoning": "direct reasoning"}}
+            ],
             "usage": {},
         }
         r = h._parse_response(raw, "model-r", 0.5, "fep-004")

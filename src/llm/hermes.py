@@ -114,6 +114,7 @@ _FREE_MODEL_CHAIN = [
     "arcee-ai/trinity-large-preview:free",
 ]
 
+
 def _env_positive_int(name: str) -> int | None:
     """Parse ``name`` as a positive int, or return ``None`` if unset/invalid."""
     raw = os.environ.get(name, "").strip()
@@ -191,7 +192,9 @@ class HermesConfig:
     # Empty list ⇒ use the built-in ``_FREE_MODEL_CHAIN`` default.
     fallback_models: list[str] = field(default_factory=list)
     # Shared by all HermesExplainer instances using this config (prefetch worker + main).
-    _enabled_lock: threading.Lock = field(default_factory=threading.Lock, repr=False, compare=False)
+    _enabled_lock: threading.Lock = field(
+        default_factory=threading.Lock, repr=False, compare=False
+    )
     # Extra OpenRouter headers
     http_referer: str = "https://github.com/docxology/template"
     x_title: str = "FEP-Lean Formalization"
@@ -228,7 +231,10 @@ class HermesConfig:
 
     @classmethod
     def from_settings(
-        cls, project_root: Path | str | None = None, *, settings_path: Path | None = None
+        cls,
+        project_root: Path | str | None = None,
+        *,
+        settings_path: Path | None = None,
     ) -> HermesConfig:
         """Load config from ``config/settings.yaml``, then apply env overrides.
 
@@ -260,6 +266,7 @@ class HermesConfig:
         if settings_path and settings_path.is_file():
             try:
                 import yaml  # available via PyYAML in project deps
+
                 raw = yaml.safe_load(settings_path.read_text(encoding="utf-8")) or {}
                 cfg = raw.get("hermes", {})
             except Exception as exc:
@@ -349,7 +356,9 @@ class HermesConfig:
 
     def effective_max_tokens(self) -> int:
         """Return model-appropriate max_tokens (larger for reasoning models)."""
-        return self.reasoning_max_tokens if self.is_reasoning_model() else self.max_tokens
+        return (
+            self.reasoning_max_tokens if self.is_reasoning_model() else self.max_tokens
+        )
 
     def effective_timeout(self) -> int:
         """Return model-appropriate timeout (longer for reasoning models)."""
@@ -367,6 +376,7 @@ class HermesResult:
     primary (one of ``empty_content``, ``wall_clock_timeout``,
     ``transport_error``, ``non_retriable_http``, ``parse_error``).
     """
+
     success: bool
     model_used: str
     explanation: str = ""
@@ -466,11 +476,16 @@ class HermesExplainer:
             self._call_api(probe_messages, self._cfg.model)
             log.info(
                 "Hermes preflight OK (model=%s, base_url=%s)",
-                self._cfg.model, self._cfg.base_url,
+                self._cfg.model,
+                self._cfg.base_url,
             )
             return True
         except HermesAPIError as exc:
-            if exc.status_code and 400 <= exc.status_code < 500 and exc.status_code != 429:
+            if (
+                exc.status_code
+                and 400 <= exc.status_code < 500
+                and exc.status_code != 429
+            ):
                 with self._cfg._enabled_lock:
                     self._cfg.enabled = False
                 log.error(
@@ -480,7 +495,8 @@ class HermesExplainer:
                     "HERMES_API_BASE=https://api.anthropic.com/v1 with "
                     "ANTHROPIC_API_KEY to fall back to Anthropic. See "
                     "projects/fep_lean/docs/troubleshooting.md#hermes-http-403.",
-                    exc.status_code, self._cfg.model,
+                    exc.status_code,
+                    self._cfg.model,
                 )
                 return False
             log.warning(
@@ -499,9 +515,7 @@ class HermesExplainer:
 
     # ── Public ────────────────────────────────────────────────────────────────
 
-    def explain_topic(
-        self, topic: TopicEntry, *, preamble: str = ""
-    ) -> HermesResult:
+    def explain_topic(self, topic: TopicEntry, *, preamble: str = "") -> HermesResult:
         """Explain ``topic`` and return a refined Lean 4 sketch.
 
         If ``HermesConfig.enabled`` is False, or if no API key is set, returns
@@ -570,15 +584,26 @@ class HermesExplainer:
                 elapsed = time.monotonic() - t0
                 result = self._parse_response(raw, model, elapsed, topic.id)
                 if result.success:
-                    log.info("Hermes OK: %s via %s (%.2fs, %d tok)",
-                             topic.id, model, elapsed, result.tokens_used)
+                    log.info(
+                        "Hermes OK: %s via %s (%.2fs, %d tok)",
+                        topic.id,
+                        model,
+                        elapsed,
+                        result.tokens_used,
+                    )
                     result.network_retries = total_network_retries
                     if model != primary_model:
-                        result.chain_advance_reason = chain_advance_reason or "empty_content"
+                        result.chain_advance_reason = (
+                            chain_advance_reason or "empty_content"
+                        )
                     return result
                 last_err = result.error
-                log.warning("Hermes model %s returned no content for %s: %s",
-                            model, topic.id, last_err)
+                log.warning(
+                    "Hermes model %s returned no content for %s: %s",
+                    model,
+                    topic.id,
+                    last_err,
+                )
                 if model == primary_model and not chain_advance_reason:
                     chain_advance_reason = "empty_content"
             except (
@@ -651,8 +676,14 @@ class HermesExplainer:
                     )
                     time.sleep(delay)
                     continue
-                log.warning("Hermes API error (model=%s, topic=%s): %s", model, topic_id, exc)
-                if exc.status_code and 400 <= exc.status_code < 500 and exc.status_code != 429:
+                log.warning(
+                    "Hermes API error (model=%s, topic=%s): %s", model, topic_id, exc
+                )
+                if (
+                    exc.status_code
+                    and 400 <= exc.status_code < 500
+                    and exc.status_code != 429
+                ):
                     with self._cfg._enabled_lock:
                         self._cfg.enabled = False
                     log.error(
@@ -662,13 +693,19 @@ class HermesExplainer:
                         "HERMES_API_BASE=https://api.anthropic.com/v1 with "
                         "ANTHROPIC_API_KEY to fall back to Anthropic. See "
                         "projects/fep_lean/docs/troubleshooting.md#hermes-http-403.",
-                        exc.status_code, topic_id, model,
+                        exc.status_code,
+                        topic_id,
+                        model,
                     )
                     return (None, True, last_err, retries, "non_retriable_http")
                 # Distinguish wall-clock timeout (transient=True with no
                 # status_code) from generic transport failures so we can
                 # report it separately in chain_advance_reason aggregates.
-                if is_transient and exc.status_code is None and "Wall-clock timeout" in last_err:
+                if (
+                    is_transient
+                    and exc.status_code is None
+                    and "Wall-clock timeout" in last_err
+                ):
                     advance = "wall_clock_timeout"
                 elif is_transient:
                     advance = "transport_error"
@@ -693,7 +730,9 @@ class HermesExplainer:
         lean_sketch = getattr(topic, "lean_sketch", "") or ""
         statement = getattr(topic, "nl", getattr(topic, "statement", topic.id))
         topic_name = getattr(topic, "title", getattr(topic, "name", topic.id))
-        mathlib_imports = getattr(topic, "mathlib", getattr(topic, "mathlib_imports", "MeasureTheory"))
+        mathlib_imports = getattr(
+            topic, "mathlib", getattr(topic, "mathlib_imports", "MeasureTheory")
+        )
         area = getattr(topic, "area", "FEP")
 
         area_context = {
@@ -738,13 +777,13 @@ class HermesExplainer:
                     chain.append(m)
         return chain
 
-    def _call_api(
-        self, messages: list[dict[str, str]], model: str
-    ) -> dict[str, Any]:
+    def _call_api(self, messages: list[dict[str, str]], model: str) -> dict[str, Any]:
         """Make the HTTP POST and return the parsed JSON response body."""
         url = self._cfg.base_url.rstrip("/") + "/chat/completions"
         is_reasoning = model in _REASONING_MODELS
-        max_tokens = self._cfg.reasoning_max_tokens if is_reasoning else self._cfg.max_tokens
+        max_tokens = (
+            self._cfg.reasoning_max_tokens if is_reasoning else self._cfg.max_tokens
+        )
         timeout = self._cfg.reasoning_timeout_s if is_reasoning else self._cfg.timeout_s
 
         body: dict[str, Any] = {
@@ -837,8 +876,11 @@ class HermesExplainer:
         choices = raw.get("choices", [])
         if not choices:
             return HermesResult(
-                success=False, model_used=model, error="empty choices",
-                duration_s=elapsed, topic_id=topic_id,
+                success=False,
+                model_used=model,
+                error="empty choices",
+                duration_s=elapsed,
+                topic_id=topic_id,
             )
         choice = choices[0]
         msg = choice.get("message", {})
@@ -850,7 +892,9 @@ class HermesExplainer:
             think_start = tag_open_pos + len("<think>")
             think_end = content.index("</think>")
             reasoning = content[think_start:think_end].strip()
-            content = (content[:tag_open_pos] + content[think_end + len("</think>"):]).strip()
+            content = (
+                content[:tag_open_pos] + content[think_end + len("</think>") :]
+            ).strip()
 
         usage = raw.get("usage", {})
         tokens = usage.get("completion_tokens", 0) + usage.get("prompt_tokens", 0)
@@ -889,9 +933,11 @@ class HermesAPIError(Exception):
 
 # ── Text extraction helpers ───────────────────────────────────────────────────
 
+
 def _extract_lean_block(content: str) -> str:
     """Extract the first ```lean...``` fenced code block from the LLM response."""
     import re
+
     m = re.search(r"```lean\s*\n(.*?)```", content, re.DOTALL)
     if m:
         return m.group(1).strip()
@@ -900,7 +946,11 @@ def _extract_lean_block(content: str) -> str:
     if m2:
         return m2.group(1).strip()
     # Fallback: bare theorem text without any fence (LLM omitted markdown)
-    m3 = re.search(r"((?:import\s+\S+\s*\n|open\s+\S+\s*\n)*theorem\s+\w[^\n]*(?:\n.*?)*?(?::=\s*\n?(?:\s+\S[^\n]*\n)+|:=\s*\S[^\n]*\n))", content, re.DOTALL)
+    m3 = re.search(
+        r"((?:import\s+\S+\s*\n|open\s+\S+\s*\n)*theorem\s+\w[^\n]*(?:\n.*?)*?(?::=\s*\n?(?:\s+\S[^\n]*\n)+|:=\s*\S[^\n]*\n))",
+        content,
+        re.DOTALL,
+    )
     if m3:
         return m3.group(1).strip()
     return ""
@@ -951,10 +1001,14 @@ def restore_lean_structure(refined: str, original: str) -> str:
         return original
 
     # ── 1. Collect import lines from original ONLY ───────────────────────────
-    orig_imports: list[str] = [line for line in orig_lines if line.strip().startswith("import ")]
+    orig_imports: list[str] = [
+        line for line in orig_lines if line.strip().startswith("import ")
+    ]
 
     # ── 2. Strip all import lines from refined body ──────────────────────────
-    non_import_body: list[str] = [line for line in refined_lines if not line.strip().startswith("import ")]
+    non_import_body: list[str] = [
+        line for line in refined_lines if not line.strip().startswith("import ")
+    ]
 
     # ── 3. Build import block: originals only (no LLM additions) ─────────────
     merged_imports = orig_imports  # exact original order, no dedup needed
@@ -974,22 +1028,39 @@ def restore_lean_structure(refined: str, original: str) -> str:
         if f"namespace {ns_name}" not in result:
             if merged_imports:
                 import_block = "\n".join(merged_imports)
-                after_imports = result[len(import_block):].strip()
-                result = import_block + f"\n\nnamespace {ns_name}\n\n" + after_imports + f"\n\nend {ns_name}"
+                after_imports = result[len(import_block) :].strip()
+                result = (
+                    import_block
+                    + f"\n\nnamespace {ns_name}\n\n"
+                    + after_imports
+                    + f"\n\nend {ns_name}"
+                )
             else:
-                result = f"namespace {ns_name}\n\n" + result.strip() + f"\n\nend {ns_name}"
+                result = (
+                    f"namespace {ns_name}\n\n" + result.strip() + f"\n\nend {ns_name}"
+                )
 
     # ── 5.5. Restore `open` statements from original that Hermes dropped ────────
     # Only restore opens that appear in the original; never add Hermes-invented ones.
-    orig_open_stmts = [line.rstrip() for line in orig_lines if line.strip().startswith("open ")]
+    orig_open_stmts = [
+        line.rstrip() for line in orig_lines if line.strip().startswith("open ")
+    ]
     if orig_open_stmts:
         result_lines = result.splitlines()
-        existing_opens: set[str] = {line.strip() for line in result_lines if line.strip().startswith("open ")}
-        missing_opens = [line for line in orig_open_stmts if line.strip() not in existing_opens]
+        existing_opens: set[str] = {
+            line.strip() for line in result_lines if line.strip().startswith("open ")
+        }
+        missing_opens = [
+            line for line in orig_open_stmts if line.strip() not in existing_opens
+        ]
         if missing_opens:
             # Insert them right after the namespace declaration line (or after imports)
             ns_idx = next(
-                (i for i, line in enumerate(result_lines) if re.match(r"^\s*namespace\s+\w+", line)),
+                (
+                    i
+                    for i, line in enumerate(result_lines)
+                    if re.match(r"^\s*namespace\s+\w+", line)
+                ),
                 None,
             )
             if ns_idx is not None:
@@ -997,7 +1068,11 @@ def restore_lean_structure(refined: str, original: str) -> str:
             else:
                 # No namespace line — prepend after imports
                 last_import = max(
-                    (i for i, line in enumerate(result_lines) if line.strip().startswith("import ")),
+                    (
+                        i
+                        for i, line in enumerate(result_lines)
+                        if line.strip().startswith("import ")
+                    ),
                     default=-1,
                 )
                 insert_at = last_import + 1
@@ -1014,18 +1089,30 @@ def restore_lean_structure(refined: str, original: str) -> str:
     # compiles=False (this was the lone refined-fail in run_20260420_131713 on
     # fep-042). Mirrors step 5.5 for `open`: only restore declarations that
     # appear in the original; never invent new ones.
-    orig_variable_stmts = [line.rstrip() for line in orig_lines if line.strip().startswith("variable ")]
+    orig_variable_stmts = [
+        line.rstrip() for line in orig_lines if line.strip().startswith("variable ")
+    ]
     if orig_variable_stmts:
         result_lines = result.splitlines()
-        existing_vars: set[str] = {line.strip() for line in result_lines if line.strip().startswith("variable ")}
-        missing_vars = [line for line in orig_variable_stmts if line.strip() not in existing_vars]
+        existing_vars: set[str] = {
+            line.strip()
+            for line in result_lines
+            if line.strip().startswith("variable ")
+        }
+        missing_vars = [
+            line for line in orig_variable_stmts if line.strip() not in existing_vars
+        ]
         if missing_vars:
             log.info(
                 "restore_lean_structure: re-injecting %d `variable` declaration(s) dropped by Hermes",
                 len(missing_vars),
             )
             ns_idx = next(
-                (i for i, line in enumerate(result_lines) if re.match(r"^\s*namespace\s+\w+", line)),
+                (
+                    i
+                    for i, line in enumerate(result_lines)
+                    if re.match(r"^\s*namespace\s+\w+", line)
+                ),
                 None,
             )
             if ns_idx is not None:
@@ -1041,7 +1128,11 @@ def restore_lean_structure(refined: str, original: str) -> str:
                 result_lines[insert_at:insert_at] = missing_vars + [""]
             else:
                 last_import = max(
-                    (i for i, line in enumerate(result_lines) if line.strip().startswith("import ")),
+                    (
+                        i
+                        for i, line in enumerate(result_lines)
+                        if line.strip().startswith("import ")
+                    ),
                     default=-1,
                 )
                 insert_at = last_import + 1
@@ -1059,7 +1150,9 @@ def restore_lean_structure(refined: str, original: str) -> str:
     # replaced everything with `theorem a : True := trivial`), the sketch is
     # useless — return the original.
     if orig_theorem_names:
-        result_theorem_names: set[str] = set(re.findall(r"\btheorem[^\S\n]+(\w+)", result))
+        result_theorem_names: set[str] = set(
+            re.findall(r"\btheorem[^\S\n]+(\w+)", result)
+        )
         if not result_theorem_names.intersection(orig_theorem_names):
             log.warning(
                 "restore_lean_structure: no original theorem names survive after strip "
@@ -1113,7 +1206,9 @@ def _strip_extra_theorems(sketch: str, allowed_names: set[str]) -> str:
             # Determine if this line ends the theorem block:
             # A blank line followed by a new theorem or end-of-namespace signals end.
             # For simplicity, keep accumulating until we hit the next `theorem` or `end`.
-            if line.strip().startswith("end ") and not line.strip().startswith("end --"):
+            if line.strip().startswith("end ") and not line.strip().startswith(
+                "end --"
+            ):
                 # End of namespace: flush current theorem, then add the end line
                 flush_pending(current_name in allowed_names)
                 in_theorem = False
@@ -1143,6 +1238,7 @@ def _strip_extra_theorems(sketch: str, allowed_names: set[str]) -> str:
 def _extract_explanation(content: str) -> str:
     """Extract the plain-text explanation (before any code block)."""
     import re
+
     # Remove code fences
     no_code = re.sub(r"```.*?```", "", content, flags=re.DOTALL).strip()
     # Take the first 3 non-empty paragraphs

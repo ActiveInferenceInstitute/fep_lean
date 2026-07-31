@@ -119,7 +119,7 @@ def _read_mathlib_tag(root: Path) -> str:
     m = _RE_LAKEFILE_MATHLIB.search(text)
     if not m:
         raise SystemExit(
-            "lean/lakefile.lean: could not find a `mathlib4.git \"@\" \"vX.Y.Z\"` pin"
+            'lean/lakefile.lean: could not find a `mathlib4.git "@" "vX.Y.Z"` pin'
         )
     return m.group(1)
 
@@ -199,14 +199,18 @@ def _scan_file(path: Path, pins: CanonicalPins) -> list[Drift]:
         for m in _RE_LEAN_TOOLCHAIN.finditer(line):
             found = m.group(0)
             if found != pins.lean_toolchain:
-                drifts.append(Drift(path, i, found, pins.lean_toolchain, "lean_toolchain"))
+                drifts.append(
+                    Drift(path, i, found, pins.lean_toolchain, "lean_toolchain")
+                )
         for m in _RE_LEAN_PROSE.finditer(line):
             found_version = m.group(1)
             if found_version != pins.lean_version:
                 drifts.append(
                     Drift(
-                        path, i,
-                        m.group(0), f"Lean 4 v{pins.lean_version}",
+                        path,
+                        i,
+                        m.group(0),
+                        f"Lean 4 v{pins.lean_version}",
                         "lean_prose",
                     )
                 )
@@ -215,15 +219,19 @@ def _scan_file(path: Path, pins: CanonicalPins) -> list[Drift]:
             if found_version != pins.mathlib_tag:
                 drifts.append(
                     Drift(
-                        path, i,
-                        m.group(0), f"Mathlib4 {pins.mathlib_tag}",
+                        path,
+                        i,
+                        m.group(0),
+                        f"Mathlib4 {pins.mathlib_tag}",
                         "mathlib_tag",
                     )
                 )
         for m in _RE_KIMI.finditer(line):
             found = m.group(0)
             if found != pins.primary_model:
-                drifts.append(Drift(path, i, found, pins.primary_model, "primary_model"))
+                drifts.append(
+                    Drift(path, i, found, pins.primary_model, "primary_model")
+                )
     return drifts
 
 
@@ -244,7 +252,8 @@ def _gather_files(root: Path) -> list[Path]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n", 1)[0])
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Print every confirming pin sighting (not only drift).",
     )
@@ -296,9 +305,15 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if all_drifts else 0
 
     print("Canonical pins:")
-    print(f"  lean_toolchain : {pins.lean_toolchain}  (from {pins.sources['lean_toolchain']})")
-    print(f"  mathlib_tag    : {pins.mathlib_tag}  (from {pins.sources['mathlib_tag']})")
-    print(f"  primary_model  : {pins.primary_model}  (from {pins.sources['primary_model']})")
+    print(
+        f"  lean_toolchain : {pins.lean_toolchain}  (from {pins.sources['lean_toolchain']})"
+    )
+    print(
+        f"  mathlib_tag    : {pins.mathlib_tag}  (from {pins.sources['mathlib_tag']})"
+    )
+    print(
+        f"  primary_model  : {pins.primary_model}  (from {pins.sources['primary_model']})"
+    )
     print()
 
     if all_drifts:
@@ -309,7 +324,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.verbose:
-        print(f"OK: {len(files)} file(s) scanned, {confirmed} pin sighting(s) — no drift.")
+        print(
+            f"OK: {len(files)} file(s) scanned, {confirmed} pin sighting(s) — no drift."
+        )
     else:
         print(f"OK: {len(files)} file(s) scanned — no drift.")
     return 0

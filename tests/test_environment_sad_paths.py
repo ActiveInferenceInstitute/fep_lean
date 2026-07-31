@@ -85,6 +85,7 @@ def test_catalogue_import_missing_root(tmp_path: Path) -> None:
 
 def test_gauss_state_path_is_writable(monkeypatch, tmp_path: Path) -> None:
     from verification.environment import _check_gauss_config
+
     path = tmp_path / "gauss"
     monkeypatch.setenv("GAUSS_HOME", str(path))
     ok, _ = _check_gauss_config(tmp_path)

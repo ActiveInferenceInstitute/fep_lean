@@ -18,8 +18,14 @@ class _Result:
 
 def test_build_parser_registers_all_commands() -> None:
     parser = cli.build_parser()
-    assert parser.parse_args(["catalogue", "--area", "FEP", "--topic", "fep-001"]).command == "catalogue"
-    assert parser.parse_args(["verify", "--area", "FEP", "--topic", "fep-001"]).command == "verify"
+    assert (
+        parser.parse_args(["catalogue", "--area", "FEP", "--topic", "fep-001"]).command
+        == "catalogue"
+    )
+    assert (
+        parser.parse_args(["verify", "--area", "FEP", "--topic", "fep-001"]).command
+        == "verify"
+    )
     assert parser.parse_args(["run", "--workflow", "review"]).workflow == "review"
     assert parser.parse_args(["topic", "fep-001"]).topic_id == "fep-001"
     assert parser.parse_args(["report"]).command == "report"
@@ -108,9 +114,13 @@ def test_verify_command_is_lean_only(monkeypatch, tmp_path: Path, capsys) -> Non
             assert items == [("fep-001", "theorem fixture : True := True.intro")]
             return [VerifyResult()]
 
-    monkeypatch.setattr(cli.FEPTopicCatalogue, "from_yaml", staticmethod(lambda _path: Catalogue()))
+    monkeypatch.setattr(
+        cli.FEPTopicCatalogue, "from_yaml", staticmethod(lambda _path: Catalogue())
+    )
     monkeypatch.setattr(cli, "LeanVerifier", FakeVerifier)
-    assert cli.main(["--project-root", str(tmp_path), "verify", "--topic", "fep-001"]) == 0
+    assert (
+        cli.main(["--project-root", str(tmp_path), "verify", "--topic", "fep-001"]) == 0
+    )
     payload = json.loads(capsys.readouterr().out)
     assert payload["mode"] == "lean-only"
     assert payload["complete"] is True
@@ -146,5 +156,78 @@ def test_main_dispatches_pipeline_commands(monkeypatch) -> None:
     assert calls[3] == ("pipeline", {"mode": "catalogue"})
 
 
-def test_main_preflight_returns_error_for_incomplete_root(monkeypatch, tmp_path: Path) -> None:
+def test_main_preflight_returns_error_for_incomplete_root(
+    monkeypatch, tmp_path: Path
+) -> None:
     assert cli.main(["--project-root", str(tmp_path), "--verbose", "preflight"]) == 1
+
+
+def test_verify_rejects_unknown_topics(monkeypatch, tmp_path: Path, capsys) -> None:
+    """Verify --topic with IDs not in the catalogue returns error."""
+
+    class Topic:
+        def __init__(self) -> None:
+            self.id = "fep-001"
+            self.area = "FEP"
+            self.lean_sketch = "theorem fixture : True := True.intro"
+
+    class Catalogue:
+        def __init__(self) -> None:
+            self.topics = [Topic()]
+
+    mkdir = tmp_path / "config"
+    mkdir.mkdir()
+    monkeypatch.setattr(
+        cli.FEPTopicCatalogue, "from_yaml", staticmethod(lambda _path: Catalogue())
+    )
+    result = cli.main(["--project-root", str(tmp_path), "verify", "--topic", "fep-999"])
+    assert result == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "error"
+    assert "unknown topic id" in payload["failure_reason"]
+
+
+def test_verify_returns_error_when_no_topics_match(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    """Verify with an area filter that matches nothing returns error."""
+
+    class Topic:
+        def __init__(self) -> None:
+            self.id = "fep-001"
+            self.area = "FEP"
+            self.lean_sketch = "theorem fixture : True := True.intro"
+
+    class Catalogue:
+        def __init__(self) -> None:
+            self.topics = [Topic()]
+
+    mkdir = tmp_path / "config"
+    mkdir.mkdir()
+    monkeypatch.setattr(
+        cli.FEPTopicCatalogue, "from_yaml", staticmethod(lambda _path: Catalogue())
+    )
+    result = cli.main(["--project-root", str(tmp_path), "verify", "--area", "AI"])
+    assert result == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "error"
+    assert "no catalogue topics matched" in payload["failure_reason"]
+
+
+def test_print_result_returns_1_for_incomplete_object_without_as_dict() -> None:
+    """_print_result returns 1 for objects lacking as_dict and complete=False fallback."""
+
+    class Incomplete:
+        pass
+
+    assert cli._print_result(Incomplete()) == 1
+
+
+def test_main_returns_2_for_unsupported_command(monkeypatch, tmp_path: Path) -> None:
+    """An unrecognised subcommand returns exit code 2 via argparse error."""
+    monkeypatch.setenv("FEP_LEAN_SETUP_TIMEOUT_SEC", "1800")
+    try:
+        cli.main(["--project-root", str(tmp_path), "nonexistent"])
+        assert False, "expected SystemExit"
+    except SystemExit as exc:
+        assert exc.code == 2

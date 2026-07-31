@@ -15,6 +15,7 @@ def test_root_package_init_importable():
         sys.path.insert(0, src_parent)
     try:
         import src
+
         assert src.__version__
         # Spot-check a few re-exported names
         assert hasattr(src, "FEPTopicCatalogue")
@@ -30,19 +31,27 @@ def test_root_package_init_importable():
 
 def test_catalogue_imports():
     from catalogue.topics import FEPTopicCatalogue
+
     assert FEPTopicCatalogue is not None
+
 
 def test_verification_imports():
     from verification.lean_verifier import LeanVerifier
+
     assert LeanVerifier is not None
+
 
 def test_gauss_imports():
     from gauss.client import OpenGaussClient
+
     assert OpenGaussClient is not None
+
 
 def test_llm_imports():
     from llm.hermes import HermesExplainer
+
     assert HermesExplainer is not None
+
 
 def test_output_imports():
     from output.manuscript import (
@@ -62,10 +71,11 @@ def test_output_imports():
     assert callable(build_unified_formalism_appendix_markdown)
     assert callable(write_unified_formalism_appendix_markdown)
     from output.reporter import Reporter
+
     assert Reporter is not None
+
 
 def test_pipeline_imports():
     from pipeline.core import FEPPipeline
+
     assert FEPPipeline is not None
-
-

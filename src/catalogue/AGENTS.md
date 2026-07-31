@@ -22,6 +22,7 @@ Loads the canonical YAML-backed catalogue of FEP theorems (`config/topics.yaml`)
 
 ```python
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
+
 # or via the backward-compat shim at the package root
 from fep_lean import FEPTopicCatalogue, TopicEntry
 ```
