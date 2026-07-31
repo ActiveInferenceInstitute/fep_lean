@@ -12,6 +12,7 @@
 - [Theorem maturity audit](theorem-maturity-audit.md) — semantic scope review beyond compilation.
 - [Quality-gate decision](quality.md) — Ruff baseline, ownership, and staged policy.
 - [Test suite review](test-suite-review.md) — structure, coverage, parallelism, and anti-pattern audit.
+- [Mahakala adversarial review](mahakala-review.md) — multi-wave red-team, deception detection, and persona-based review.
 - [Publication](development.md) — documentation and rendered-artifact gates.
 
 All paths in this directory resolve within this repository. Generated files are

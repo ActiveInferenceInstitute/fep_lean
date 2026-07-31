@@ -4,16 +4,28 @@
 Inference, Bayesian Mechanics, Information Geometry, and Thermodynamics topics.
 Each row contains a natural-language statement, a Lean 4 theorem body, and
 typeset signatures. The pinned Lean workspace is the verification authority.
+The catalogue covers core formal results across five subdomains — 50 was the
+natural count after surveying the FEP literature; every topic has a maintained
+semantic review in `config/theorem_maturity.yaml`.
 
 ## Contract
 
 `full` execution is strict. It requires the pinned Lean/Lake/Mathlib workspace,
 the `gauss` executable, configured Hermes credentials, and writable SQLite
-state. A missing capability returns a failed result and no successful report.
+state. **Missing capability → `complete: false`, no report directory.**
 
 `catalogue` execution is deterministic and offline. It validates the complete
 YAML source and writes figures, manuscript variables, the unified appendix, and
 a report explicitly marked `catalogue`; it does not count topics as verified.
+
+`verify` execution is Lean-only. Runs the native 50-topic compile sweep without
+Hermes or OpenGauss.
+
+**Releaseable for local verification.** The full-mode credential-gated path
+(FEP-FULL-002 in [TODO.md](TODO.md)) is required before a publication claim
+can include live-LLM verification evidence. Until then, the local gates
+(tests, mypy, Lean, docs audits, report receipt validation) are the supported
+evidence boundary.
 
 ## Quick start
 

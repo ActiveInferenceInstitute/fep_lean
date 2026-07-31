@@ -199,8 +199,7 @@ class GaussRunner:
         ----------
         workflow:
             Workflow stage to use for each topic.  See ``_WORKFLOW_PREAMBLES``
-            for supported values.  Requires ``FEP_LEAN_GAUSS_WORKFLOWS=1`` for
-            stages other than ``"verify"``; otherwise silently degrades.
+            for supported values.  Defaults to ``"verify"``.
         """
         self._clear_prefetch_state()
         results: list[TopicRunResult] = []
@@ -349,8 +348,6 @@ class GaussRunner:
             - ``"draft"`` — produce a new typed skeleton (sorry ok in sub-goals).
             - ``"prove"`` — attempt a full proof minimising sorry usage.
             - ``"review"`` — verify then request a post-compile review commentary.
-            Stages other than ``"verify"`` require ``FEP_LEAN_GAUSS_WORKFLOWS=1``;
-            if unset the stage silently degrades to ``"verify"``.
         """
         if workflow not in _WORKFLOW_PREAMBLES:
             raise ValueError(f"unsupported workflow: {workflow}")
