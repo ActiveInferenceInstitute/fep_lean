@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
 from catalogue.topics import FEPTopicCatalogue
 
 UNIFIED_FORMALISM_CATALOGUE_FILENAME = "09z_unified_formalism_catalogue.md"
@@ -119,7 +120,7 @@ def _count_test_cases(project_root: Path) -> int:
         except (OSError, ValueError, TypeError):
             pass
     try:
-        proc = subprocess.run([sys.executable, "-m", "pytest", "tests", "--collect-only", "-q"], cwd=project_root, capture_output=True, text=True, timeout=120)
+        proc = subprocess.run([sys.executable, "-m", "pytest", "tests", "--collect-only", "-q"], cwd=project_root, capture_output=True, text=True, timeout=120, check=False)
         count = 0
         match = re.search(r"(\d+) tests? collected", proc.stdout + proc.stderr)
         if match:

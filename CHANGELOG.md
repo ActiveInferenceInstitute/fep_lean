@@ -74,11 +74,24 @@
 - Added `docs/mahakala-review.md` (multi-wave adversarial review with 6 persona
   proxies, 15 findings, GO with 3 pre-conditions, 9/10 overall score).
 
+### Ruff cleanup (216 → 0)
+
+- Applied 125 auto-fixed + 18 unsafe-fixed findings across 49 files
+- Manually fixed 25 E741 ambiguous-variable-name violations (l→line)
+- Fixed 3 B023 loop-variable-in-closure (captured via default arg)
+- Fixed 7 E402 import-ordering violations (moved imports to top)
+- Fixed 6 PYI036 `__exit__` type annotations, 1 PLW1510 `check=False`,
+  1 TRY004 `TypeError` vs `ValueError`
+- Suppressed RUF001/RUF003 (intentional math Unicode), BLE001 (fail-closed
+  design), EXE001 (scripts imported not execed) via pyproject.toml
+- `.ruff_baseline.txt`: baseline reduced to 0
+- `docs/quality.md`: revision 3 — Ruff is clean, staged debt plan complete
+
 ### Gate verification
 
 All gates re-run and passing after improvements:
-- 339 passed, 3 skipped, 90.47% coverage (≥89%)
+- 339 passed, 3 skipped, 90.49% coverage (was 90.25%)
 - mypy: 23 source files, no issues
-- ruff check: 58 findings (was 216 — 73% reduction via auto-fix + E741 cleanup)
+- **ruff: 0 findings** (was 216 — 100% reduction)
 - Lean verify: 50/50 clean, `complete: true`
-- All 6 doc audits pass
+- All 6 doc audits pass (links, md_hygiene, pin_audit, xref, catalogue, receipt)

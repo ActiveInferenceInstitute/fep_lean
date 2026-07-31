@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from catalogue.topics import FEPTopicCatalogue
 from output.manuscript import _verify_block_from_manifest
 from output.reporter import Reporter, ReportPaths, validate_report_receipt

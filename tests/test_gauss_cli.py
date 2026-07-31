@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import os
 
-import gauss.cli as gauss_cli
 import pytest
 
-PROJ = Path(__file__).resolve().parent.parent
+import gauss.cli as gauss_cli
 
 pytestmark = pytest.mark.timeout(180)
-
-
-import os
 
 
 @pytest.mark.skipif("gauss" in os.environ.get("FEP_LEAN_TOOLS_MISSING", ""),

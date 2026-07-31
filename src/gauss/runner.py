@@ -14,14 +14,22 @@ import json as _json
 import logging
 import os
 import time
+import types
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
+
 from gauss.cli import check_gauss_cli
 from gauss.client import OpenGaussClient
-from llm.hermes import HermesConfig, HermesExplainer, HermesResult, restore_lean_structure
+from llm.hermes import (
+    HermesConfig,
+    HermesExplainer,
+    HermesResult,
+    restore_lean_structure,
+)
 from verification.lean_verifier import LeanVerifier, VerifyResult
 
 if TYPE_CHECKING:
@@ -174,10 +182,10 @@ class GaussRunner:
         self.client.close()
         self._closed = True
 
-    def __enter__(self) -> GaussRunner:
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: types.TracebackType | None) -> None:
         self.close()
 
     def _clear_prefetch_state(self) -> None:

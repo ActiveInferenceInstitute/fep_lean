@@ -48,6 +48,7 @@ VerifyResult fields
 from __future__ import annotations
 
 import concurrent.futures
+import contextlib
 import logging
 import math
 import os
@@ -60,6 +61,12 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
+
+from verification._toolchain import ensure_writable_elan_home as _ensure_elan_home
+from verification._toolchain import find_toolchain_bin as _shared_find_toolchain_bin
+from verification._toolchain import get_elan_home as _get_elan_home
+from verification._toolchain import get_writable_elan_home as _get_elan_home_override
+from verification._toolchain import read_toolchain_name as _read_toolchain_name
 
 log = logging.getLogger(__name__)
 
@@ -86,11 +93,11 @@ def _has_sorry(code: str) -> bool:
     without_lines = re.sub(r"--[^\n]*", "", without_blocks)
     return bool(_RE_SORRY.search(without_lines))
 
-_RE_FAIL_KIND_TIMEOUT = re.compile(r"timeout|timed out", re.I)
-_RE_FAIL_KIND_TACTIC = re.compile(r"unknown tactic|tactic .* failed|unsolved goals", re.I)
+_RE_FAIL_KIND_TIMEOUT = re.compile(r"timeout|timed out", re.IGNORECASE)
+_RE_FAIL_KIND_TACTIC = re.compile(r"unknown tactic|tactic .* failed|unsolved goals", re.IGNORECASE)
 _RE_FAIL_KIND_ARITY = re.compile(
     r"type mismatch|Application type mismatch|number of fields|wrong number of",
-    re.I,
+    re.IGNORECASE,
 )
 
 _LAKE_TIMEOUT_S = int(os.environ.get("FEP_LEAN_VERIFY_TIMEOUT", "300"))
@@ -113,32 +120,13 @@ def classify_failure_kind(stderr_out: str, *, timed_out: bool = False) -> Failur
         return "tactic_failure"
     if _RE_FAIL_KIND_ARITY.search(s):
         return "arity_mismatch"
-    if re.search(r"could not resolve import|unknown module", s, re.I):
+    if re.search(r"could not resolve import|unknown module", s, re.IGNORECASE):
         return "missing_import"
     if re.search(r"unknownIdentifier|Unknown constant", s):
         return "renamed_identifier"
     if "import" in s and "error" in s.lower():
         return "missing_import"
     return "other"
-
-
-import contextlib
-
-from verification._toolchain import (
-    ensure_writable_elan_home as _ensure_elan_home,
-)
-from verification._toolchain import (
-    find_toolchain_bin as _shared_find_toolchain_bin,
-)
-from verification._toolchain import (
-    get_elan_home as _get_elan_home,
-)
-from verification._toolchain import (
-    get_writable_elan_home as _get_elan_home_override,
-)
-from verification._toolchain import (
-    read_toolchain_name as _read_toolchain_name,
-)
 
 
 def _get_elan_bin() -> Path:
@@ -400,8 +388,8 @@ class LeanVerifier:
         if not mathlib_root_olean.is_file():
             return (
                 False,
-                "Mathlib not yet downloaded or built — missing build artifact: "
-                f"{mathlib_root_olean}",
+                ("Mathlib not yet downloaded or built — missing build artifact: "
+                f"{mathlib_root_olean}"),
             )
         # Probe a small, stable set of leaf .olean files that the catalogue
         # sketches universally depend on. If any is missing, the cache is
@@ -415,8 +403,8 @@ class LeanVerifier:
         if missing:
             return (
                 False,
-                "Mathlib build is incomplete; required leaf .olean files missing: "
-                f"{missing}",
+                ("Mathlib build is incomplete; required leaf .olean files missing: "
+                f"{missing}"),
             )
         return True, f"Mathlib built (`{mathlib_root_olean.name}` and required leaves present)"
 

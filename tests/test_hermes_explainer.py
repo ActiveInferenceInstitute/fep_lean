@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 
 import pytest
+
 from catalogue.topics import FEPTopicCatalogue
 from llm.hermes import (
     _FEP_SYSTEM_PROMPT,

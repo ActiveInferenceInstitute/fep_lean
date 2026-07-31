@@ -81,9 +81,7 @@ def collect_anchors(md_text: str) -> set[str]:
 def is_external(url: str) -> bool:
     url = url.strip()
     return (
-        url.startswith(("http://", "https://", "mailto:", "ftp://", "//"))
-        or url.startswith("#")  # in-page anchor, handled separately
-        or url.startswith("tel:")
+        url.startswith(("http://", "https://", "mailto:", "ftp://", "//", "#", "tel:"))
     )
 
 

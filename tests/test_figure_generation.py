@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from catalogue.topics import FEPTopicCatalogue
 from output.figures import (
     _write_bar_chart,

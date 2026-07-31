@@ -12,7 +12,10 @@ from typing import Any, Literal
 from catalogue.topics import FEPTopicCatalogue
 from gauss.runner import GaussRunner
 from output.figures import write_all_catalogue_figures
-from output.manuscript import write_manuscript_vars, write_unified_formalism_appendix_markdown
+from output.manuscript import (
+    write_manuscript_vars,
+    write_unified_formalism_appendix_markdown,
+)
 from verification.environment import run_validation_checks
 
 log = logging.getLogger(__name__)

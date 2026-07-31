@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from pipeline.core import PipelineResult
 from pipeline.orchestrator import project_root, run_pipeline, run_single_topic
 

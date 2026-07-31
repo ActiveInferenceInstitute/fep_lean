@@ -2,7 +2,14 @@
 
 **Decision date:** 2026-07-31<br>
 **Owner:** fep_lean repository maintainers<br>
-**Decision:** Ruff is a pinned supported gate as of revision 2.
+**Decision:** Ruff is a pinned supported gate as of revision 2, clean at revision 3.
+
+## Revision 3 — 2026-07-31 (final)
+
+Ruff is **clean** — zero findings across `src/`, `tests/`, `scripts/`, `docs/`.
+The staged debt plan is complete. Promotion to a blocking CI gate is now
+automatic: `ruff check` and `ruff format --check` exit non-zero on any new
+finding.
 
 ## Revision 2 — 2026-07-31
 

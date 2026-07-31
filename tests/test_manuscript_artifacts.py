@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import yaml
+
 from catalogue.topics import FEPTopicCatalogue
 from output.manuscript import (
     UNIFIED_FORMALISM_CATALOGUE_FILENAME,

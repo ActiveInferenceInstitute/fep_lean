@@ -15,8 +15,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from catalogue.topics import FEPTopicCatalogue
 from matplotlib.figure import Figure
+
+from catalogue.topics import FEPTopicCatalogue
 
 
 def _save(fig: Figure, path: Path) -> Path:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from catalogue.topics import CatalogueValidationError, FEPTopicCatalogue
 
 PROJ = Path(__file__).resolve().parent.parent

@@ -1,4 +1,3 @@
-# ruff: noqa: RUF001
 """Build display-math LaTeX for each ``theorem`` in catalogue sketches (full-signature form).
 
 ``catalogue_sketches`` calls :func:`build_theorem_latex_from_sketches` at module load. Each
@@ -29,10 +28,7 @@ def _extract_variable_block(body: str) -> str:
         if t.startswith("variable "):
             acc.append(t[len("variable ") :].strip())
         elif acc and (
-            t.startswith("open ")
-            or t.startswith("import ")
-            or t.startswith("namespace ")
-            or t.startswith("/-")
+            t.startswith(("open ", "import ", "namespace ", "/-"))
         ):
             break
     return " ".join(acc) if acc else ""
@@ -253,7 +249,7 @@ def _one_theorem_latex(
 
 def build_theorem_latex_from_sketches(sketches: dict[str, str]) -> dict[str, str]:
     out: dict[str, str] = {}
-    for _tid, body in sketches.items():
+    for body in sketches.values():
         vblock = _extract_variable_block(body)
         names = _theorem_names_in_order(body)
         for name in names:

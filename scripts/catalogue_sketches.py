@@ -1,4 +1,3 @@
-# ruff: noqa: RUF001
 """Lean 4 catalogue bodies for all 50 topics (no leading ``import``; LeanVerifier prepends Mathlib).
 
 Each sketch is typechecked standalone under ``lake env lean`` with the shared preamble.

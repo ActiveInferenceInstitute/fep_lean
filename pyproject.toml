@@ -67,3 +67,13 @@ warn_return_any = true
 warn_unused_configs = true
 mypy_path = ["src"]
 explicit_package_bases = true
+
+[tool.ruff.lint]
+ignore = [
+    "RUF001",  # Ambiguous unicode chars in strings — intentional Lean math notation
+    "RUF003",  # Ambiguous unicode chars in comments — same as RUF001
+    "BLE001",  # Blind-except — intentional fail-closed design: pipeline stages,
+               # environment checks, and Hermes error handling must survive any
+               # exception to produce a structured result rather than crash.
+    "EXE001",  # Shebang-not-executable — scripts are imported, not directly execed.
+]

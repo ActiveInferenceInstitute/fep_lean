@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 from catalogue.topics import FEPTopicCatalogue
 from verification.lean_verifier import LeanVerifier
 

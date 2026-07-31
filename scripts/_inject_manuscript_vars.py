@@ -76,7 +76,7 @@ def main() -> None:
         content = md_file.read_text(encoding="utf-8")
         counter = [0]
 
-        def repl(m: re.Match[str]) -> str:
+        def repl(m: re.Match[str], counter=counter) -> str:
             key = m.group(1).strip()
             if key == "maturity.*":
                 counter[0] += 1

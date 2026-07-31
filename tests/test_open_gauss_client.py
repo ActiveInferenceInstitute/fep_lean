@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from gauss.client import OpenGaussClient
 
 

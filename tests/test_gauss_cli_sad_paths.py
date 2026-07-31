@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from gauss.cli import _require_gauss_from_env, check_gauss_cli
 
 PROJ = Path(__file__).resolve().parent.parent

@@ -34,10 +34,13 @@ import os
 import sqlite3
 import threading
 import time
+import types
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from typing_extensions import Self
 
 log = logging.getLogger(__name__)
 
@@ -173,10 +176,10 @@ class OpenGaussClient:
                 self._conn.close()
                 self._closed = True
 
-    def __enter__(self) -> OpenGaussClient:
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, traceback: types.TracebackType | None) -> None:
         self.close()
 
     # ── Session lifecycle ─────────────────────────────────────────────────────

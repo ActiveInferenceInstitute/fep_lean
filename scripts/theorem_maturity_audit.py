@@ -46,7 +46,7 @@ def load_audit(path: Path = AUDIT_PATH) -> dict[str, Any]:
     except (OSError, yaml.YAMLError) as exc:
         raise ValueError(f"cannot read theorem maturity audit {path}: {exc}") from exc
     if not isinstance(data, dict):
-        raise ValueError("theorem maturity audit must be a YAML object")
+        raise TypeError("theorem maturity audit must be a YAML object")
     return data
 
 

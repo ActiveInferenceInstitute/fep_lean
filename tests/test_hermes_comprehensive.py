@@ -9,6 +9,7 @@ import threading
 from pathlib import Path
 
 import pytest
+
 from llm.hermes import (
     HermesAPIError,
     HermesConfig,

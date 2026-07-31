@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from catalogue.topics import CatalogueValidationError, FEPTopicCatalogue
 from gauss.client import OpenGaussClient
 from verification.lean_verifier import LeanVerifier

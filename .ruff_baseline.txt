@@ -5,6 +5,6 @@
 This file records the current Ruff finding count for reproducibility.
 Steps 2–4 of the staged debt plan will reduce this to zero.
 
-Count: 58
+Count: 0
 Version: ruff 0.16.1
 Date: 2026-07-31

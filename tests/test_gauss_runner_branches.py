@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
 from gauss.client import OpenGaussClient
 from gauss.runner import GaussRunner
