@@ -90,3 +90,13 @@ The reproducible build and publication gates are documented in
 | `src/pipeline` | strict `full` and explicit offline `catalogue` modes |
 | `lean` | pinned Lake workspace and tracked aggregate |
 | `manuscript` | source chapters and generated publication inputs |
+
+## Notation
+
+A notation table mapping Lean identifiers in the catalogue to standard FEP
+notation (𝔽, 𝔖, 𝔈, KL-divergence, generalized coordinates) is maintained as
+part of the manuscript projections (`manuscript/`).  The Lean code in
+`lean/FepSketches/` uses descriptive identifiers
+(`measure_union_le`, `elbo_bound`, `efe_monotone`) to approximate standard
+conventions; the `config/theorem_maturity.yaml` `assumption_review` field
+bridges the FEP concept to the formal statement.

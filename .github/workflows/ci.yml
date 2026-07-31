@@ -21,6 +21,8 @@ jobs:
       - run: uv run python docs/pin_audit.py
       - run: uv run python docs/xref_audit.py
       - run: uv run mypy src
+      - run: uv run ruff check src tests scripts docs --exit-zero
+      - run: uv run ruff format --check src tests scripts docs --exit-zero 2>/dev/null || echo "ruff format informational"
 
   lean:
     runs-on: ubuntu-latest

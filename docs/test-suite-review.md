@@ -46,10 +46,10 @@
 
 - **[PASS]** 90.25% line coverage against 89% `fail_under` — comfortable buffer
 - **[PASS]** All 23 source files covered, none below 81%
-- **[WARN — expected]** Coverage gap in `gauss/runner.py` (81%) — uncovered lines are toolchain-dependent compile-orchestration paths that require live `lake`/`lean`
-- **[WARN — expected]** Coverage gap in `lean_verifier.py` (87%) — uncovered lines are real Lean subprocess calls and Mathlib interaction
-- **[WARN — expected]** Coverage gap in `cli.py` (85%) — CLI help/error-passthrough paths
-- **[NOTE]** Branch coverage ~89.6% cannot be measured via `--cov-branch` alongside `concurrency = ["multiprocessing"]` without a separate data collection run (known pytest-cov limitation)
+- WARN (expected): Coverage gap in `gauss/runner.py` (81%) — uncovered lines are toolchain-dependent compile-orchestration paths that require live `lake`/`lean`
+- WARN (expected): Coverage gap in `lean_verifier.py` (87%) — uncovered lines are real Lean subprocess calls and Mathlib interaction
+- WARN (expected): Coverage gap in `cli.py` (85%) — CLI help/error-passthrough paths
+- NOTE: Branch coverage ~89.6% cannot be measured via `--cov-branch` alongside `concurrency = ["multiprocessing"]` without a separate data collection run (known pytest-cov limitation)
 
 ### Anti-patterns Check
 

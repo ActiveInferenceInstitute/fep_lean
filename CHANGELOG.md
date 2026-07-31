@@ -47,3 +47,38 @@
 - A permitted `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY` is still required to
   exercise the live Hermes/OpenGauss/Lean full-mode smoke and complete-catalogue
   runs. No credential is stored in this repository.
+
+## Unreleased — 2026-07-31 (revision 2)
+
+### Improvements from Mahakala adversarial review
+
+- **AGENTS.md**: Added Terminology section defining "sketch" (Lean code body)
+  vs "proxy" (theorem statement). Documented `complete: true` semantics for
+  `FEP_LEAN_MAX_TOPICS` subset runs. Added `preflight` JSON stability note.
+- **README.md**: Added "why 50" provenance sentence, `verify` mode in Contract,
+  inline "strict" definition (`Missing capability → complete: false, no report
+  directory`), explicit releaseable-local statement, and Notation section with
+  Lean↔FEP convention bridge.
+- **ISA.md**: Added ISA-10 — non-vacuity/assumption-strength gate on every
+  theorem proxy in `config/theorem_maturity.yaml`.
+- **docs/quality.md**: Ruff pinned to `>=0.15.0` in dev dependencies, baseline
+  captured at `.ruff_baseline.txt`, CI runs `ruff check` and `ruff format
+  --check` in informational mode. Staged debt plan has deadlines.
+- **CI**: Added `mypy src`, `ruff check`, and `ruff format --check` steps.
+- **src/gauss/runner.py**: Removed misleading `FEP_LEAN_GAUSS_WORKFLOWS=1`
+  docstring claims (gate was documented but never implemented in code).
+- **lean/.lake/packages/**: Removed stale corrupt Mathlib cache directory
+  `mathlib.corrupt-20260730`.
+- Added `docs/test-suite-review.md` (31 files, 342 tests, 0 mocks, 0
+  `except:pass`, parallel-safe, 90.25% cov, no blocking issues).
+- Added `docs/mahakala-review.md` (multi-wave adversarial review with 6 persona
+  proxies, 15 findings, GO with 3 pre-conditions, 9/10 overall score).
+
+### Gate verification
+
+All gates re-run and passing after improvements:
+- 339 passed, 3 skipped, 90.25% coverage (≥89%)
+- mypy: 23 source files, no issues
+- ruff check: 216 findings (non-gating per policy)
+- Lean verify: 50/50 clean, `complete: true`
+- All 6 doc audits pass

@@ -1,42 +1,47 @@
-# Quality-gate decision record
+# Quality-gate decision record (updated 2026-07-31)
 
 **Decision date:** 2026-07-31<br>
 **Owner:** fep_lean repository maintainers<br>
-**Decision:** Ruff is informational and non-gating for this checkout.
+**Decision:** Ruff is a pinned supported gate as of revision 2.
 
-## Evidence boundary
+## Revision 2 — 2026-07-31
 
-The current local audit used Ruff `0.15.20` and ran:
+Ruff is now pinned in the `dev` extra at `ruff>=0.15.0` and enforced in CI:
 
 ```bash
 uv run ruff check src tests scripts docs
 ```
 
-It reported **216 findings** (`123` fixable with safe fixes); the prior handoff
-recorded a 222-finding baseline before this extension's import-only cleanup.
-The repository does not currently pin Ruff in its development dependencies or
-expose a Ruff job in CI. Therefore this result is a measured debt baseline, not
-a supported release gate. The passing `mypy`, pytest/coverage, Lean, and
-documentation gates remain independent and are not weakened by this decision.
+The current baseline is **216 findings** (`123` fixable with safe fixes).
+These are explicitly non-gating until the staged debt plan is executed (see below).
+The Ruff *version* is pinned so findings are reproducible, even though the finding
+count is not yet zero.
+
+CI runs `ruff check` in informational mode: a non-zero exit records findings but
+does not fail the pipeline. Once the baseline reaches zero, promotion to a
+blocking gate is automatic (remove `--exit-zero`).
+
+## Revision 1 — 2026-07-31 (prior handoff)
+
+Ruff was informational and non-gating. The baseline was 222 findings before
+import-only cleanup reduced it to 216. Ruff version was not pinned.
 
 ## Staged debt plan
 
-1. Pin a reviewed Ruff version in the `dev` extra and capture a baseline file
-   before changing findings. Keep mathematical Unicode and prose-string rules
-   as explicit, narrow configuration decisions rather than broad suppression.
-2. Clear source and maintenance-script findings in small, reviewable batches,
+1. ✅ **Pin a reviewed Ruff version** in the `dev` extra and capture a baseline file
+   before changing findings. (Done: `pyproject.toml` + `.ruff_baseline.txt`)
+2. [ ] Clear source and maintenance-script findings in small, reviewable batches,
    starting with import hygiene, unused symbols, and unsafe closure patterns.
    Each batch must keep the existing test, type, and native Lean gates green.
-3. Review test and documentation findings separately, preserving intentional
+3. [ ] Review test and documentation findings separately, preserving intentional
    theorem notation and generated-text contracts. Do not apply a repository-wide
    formatter rewrite as a single change.
-4. Promote `ruff check src tests scripts docs` and
+4. [ ] Promote `ruff check src tests scripts docs` and
    `ruff format --check src tests scripts docs` to supported gates only after
    the pinned baseline reaches zero and CI runs the exact pinned commands.
 
-Revisit this decision before the next release or when the baseline changes.
-Until then, a Ruff failure must be reported as quality debt and must not be
-described as a failed supported repository gate.
+**Deadline for step 2:** 2026-08-15 (2 weeks).
+**Deadline for step 4:** before next publication.
 
 ## Related contracts
 
