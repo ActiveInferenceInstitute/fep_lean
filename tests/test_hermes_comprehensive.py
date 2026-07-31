@@ -170,6 +170,23 @@ def _free_port() -> int:
 class TestLoadGaussDotenv:
     """Test HermesConfig._load_gauss_dotenv."""
 
+    def setup_method(self) -> None:
+        """Expand allowed dotenv keys for test coverage of arbitrary variables."""
+        from llm.hermes import HermesConfig
+
+        HermesConfig._ALLOWED_DOTENV_KEYS = frozenset(
+            {
+                "FOO_KEY",
+                "BAZ",
+                "EXISTING_VAR",
+                "VALID",
+                "Q1",
+                "Q2",
+                "X",
+            }
+            | HermesConfig._ALLOWED_DOTENV_KEYS
+        )
+
     def test_loads_keys_from_dotenv(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:

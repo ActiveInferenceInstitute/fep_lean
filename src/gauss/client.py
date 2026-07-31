@@ -31,6 +31,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -106,6 +107,9 @@ CREATE TABLE IF NOT EXISTS hermes_cache (
 
 CREATE INDEX IF NOT EXISTS idx_hermes_cache_topic ON hermes_cache(topic_id);
 """
+
+_TOPIC_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+"""Allowed topic_id pattern: alphanumeric with dots, underscores, hyphens."""
 
 
 def _sha256(data: str | bytes) -> str:
@@ -202,6 +206,8 @@ class OpenGaussClient:
         """Open a new formalization session and return its ``session_id``."""
         if not topic_id or not topic_id.strip():
             raise ValueError("topic_id cannot be empty")
+        if not _TOPIC_ID_PATTERN.fullmatch(topic_id.strip()):
+            raise ValueError(f"topic_id contains unsafe characters: {topic_id!r}")
         session_id = f"{topic_id}-{uuid.uuid4().hex[:8]}"
         now = time.time()
         self._conn.execute(

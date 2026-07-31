@@ -199,6 +199,16 @@ class HermesConfig:
     http_referer: str = "https://github.com/docxology/template"
     x_title: str = "FEP-Lean Formalization"
 
+    _ALLOWED_DOTENV_KEYS = frozenset(
+        {
+            "OPENROUTER_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "OPENAI_API_KEY",
+            "GAUSS_DEFAULT_MODEL",
+            "OPENAI_BASE_URL",
+        }
+    )
+
     @classmethod
     def _load_gauss_dotenv(cls) -> None:
         """Load ``~/.gauss/.env`` into ``os.environ`` if it exists.
@@ -206,7 +216,8 @@ class HermesConfig:
         The OpenGauss CLI stores API keys in ``~/.gauss/.env`` (or ``$GAUSS_HOME/.env``).
         Standard Python ``os.environ`` does NOT automatically source shell dotenv
         files, so this method reads the file and injects any ``KEY=VALUE`` pairs
-        that are not already present in the environment.
+        that are not already present in the environment and belong to a restricted
+        allowlist (``_ALLOWED_DOTENV_KEYS``).
 
         Parsing is intentionally simple (no shell expansion, no multiline values)
         because the file format is ``KEY=VALUE`` with optional quoting.
@@ -223,7 +234,7 @@ class HermesConfig:
                 key, _, value = line.partition("=")
                 key = key.strip()
                 value = value.strip().strip("'\"")
-                if key and key not in os.environ:
+                if key and key not in os.environ and key in cls._ALLOWED_DOTENV_KEYS:
                     os.environ[key] = value
                     log.debug("Loaded %s from %s", key, dotenv_path)
         except OSError as exc:
@@ -504,7 +515,7 @@ class HermesExplainer:
                 exc,
             )
             return True
-        except Exception as exc:
+        except (OSError, http.client.HTTPException, urllib.error.URLError) as exc:
             log.warning("Hermes preflight transport error: %s — continuing.", exc)
             return True
         finally:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 import tempfile
@@ -25,6 +26,8 @@ _REQUIRED_REPORT_ARTIFACTS = frozenset(
         "run_manifest.json",
     }
 )
+
+log = logging.getLogger(__name__)
 
 
 def _atomic_text(path: Path, text: str) -> None:
@@ -553,6 +556,13 @@ class Reporter:
         for row in topics:
             topic_id = str(row.get("topic_id", "")).strip()
             if topic_id:
+                # Reject path separators to prevent traversal writes
+                if "/" in topic_id or "\\" in topic_id or ".." in topic_id:
+                    log.warning(
+                        "Skipping topic file write for malformed topic_id: %r",
+                        topic_id,
+                    )
+                    continue
                 _atomic_text(root / "topics" / f"{topic_id}.md", self._topic_md(row))
         _atomic_text(
             root / "summary.json",
