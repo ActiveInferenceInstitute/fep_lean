@@ -50,13 +50,20 @@ uv run python docs/pin_audit.py
 uv run python docs/xref_audit.py
 ```
 
-The last completed audit recorded:
+The latest completed audit recorded:
 
-- `328 passed, 3 skipped`, 89.84% coverage, with 331 collected tests.
+- `339 passed, 3 skipped`, 90.24% coverage, with 342 collected tests.
 - `lake build FepSketches` completed successfully with 8,250 jobs.
 - The native 50-topic sweep completed with `complete: true`,
   `verified_topics: 50`, and no `sorry` results.
 - Catalogue mode completed with 50 catalogue topics and zero verified topics.
+- The theorem-maturity audit now covers all 50 primary theorems and preserves
+  explicit scope/assumption gaps without upgrading their claims.
+- The independent report-receipt checker accepts catalogue bundles as
+  structurally valid but not claim-ready.
+- Ruff is explicitly informational for this checkout; the current 216-finding
+  measurement (following the prior 222-finding baseline), owner, and staged
+  promotion plan are recorded in `docs/quality.md`.
 - `mypy`, lock/dependency checks, aggregate regeneration, and all four
   documentation audits passed.
 - Full-mode preflight failed only for the absent Hermes provider credential;
@@ -93,10 +100,6 @@ The open backlog is intentionally small:
   selected catalogue after credentials are supplied out of band.
 - `FEP-PROV-003`: independently recompute the final complete-run artifact
   hashes and reconcile the verification/run manifests.
-- `FEP-MATH-006`: review theorem meaning, non-vacuity, and assumption strength
-  beyond sorry-free compilation.
-- `FEP-QUAL-007`: decide whether Ruff is a supported gate; the measured
-  baseline is 222 findings and requires a staged policy decision.
 
 No release or mathematical claim should imply that the credentialed full-mode
 path has passed until its acceptance evidence is available.

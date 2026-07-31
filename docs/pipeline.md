@@ -25,3 +25,8 @@ single = run_single_topic("fep-001", mode="full")
 The report contains `summary.json`, stage Markdown, a verification manifest,
 and SHA-256 artifact hashes. The in-memory result remains the source for the
 report, so serialized topic fields must stay aligned with `TopicRunResult`.
+
+After a report exists, run [`verify_report_receipt.py`](../scripts/verify_report_receipt.py)
+to independently recompute its hashes and reconcile the manifests. A receipt
+is claim-ready only when `--require-complete` accepts a non-empty full-mode run;
+catalogue receipts remain offline artifacts with zero verified topics.

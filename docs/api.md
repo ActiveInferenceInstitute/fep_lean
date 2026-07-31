@@ -556,6 +556,13 @@ class Reporter:
         catalogue: FEPTopicCatalogue,
         result: PipelineResult,
     ) -> ReportPaths
+
+def validate_report_receipt(
+    report_root: Path,
+    *,
+    require_complete: bool = False,
+) -> dict[str, Any]:
+    """Read-only hash and manifest reconciliation for one report bundle."""
 ```
 
 Output layout (filenames on disk; `ReportPaths` fields point to these paths):

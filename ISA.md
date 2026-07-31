@@ -128,7 +128,9 @@ The deterministic catalogue path, Python tests, strict type gate, report
 regressions, OpenGauss CLI installation, and exact Lean workspace are locally
 exercised. The pinned Lean 4.29.0/Mathlib v4.29.0 workspace builds
 successfully, and the native 50-topic sweep passes with no compile errors or
-`sorry` results. The CLI setup path is repeatable and `preflight` confirms all
+`sorry` results. The maintained theorem-maturity audit separately records the
+semantic scope and assumption review for every primary theorem without treating
+compilation as a stronger FEP claim. The CLI setup path is repeatable and `preflight` confirms all
 local capabilities except the missing Hermes provider credential.
 
 Full mode remains intentionally blocked at one external boundary:

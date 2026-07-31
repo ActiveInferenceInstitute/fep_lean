@@ -10,6 +10,9 @@ reports.
 ## Source of truth
 
 - `config/topics.yaml` — validated catalogue rows.
+- `config/theorem_maturity.yaml` — maintained semantic review records for the
+  catalogue theorem proxies; `docs/theorem-maturity-audit.md` is generated from
+  this file.
 - `scripts/catalogue_sketches.py` — Lean body source.
 - `scripts/_maint_build_topics_catalogue.py` — YAML regeneration.
 - `scripts/_maint_build_fep_all_lean.py` — tracked aggregate regeneration.

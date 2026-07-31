@@ -38,7 +38,7 @@ from output.manuscript import (
     write_manuscript_vars,
     write_unified_formalism_appendix_markdown,
 )
-from output.reporter import Reporter, ReportPaths
+from output.reporter import Reporter, ReportPaths, validate_report_receipt
 
 # 6. Pipeline
 from _paths import project_root
@@ -70,8 +70,9 @@ __all__ = [
     "build_manuscript_vars",
     "build_unified_formalism_appendix_markdown",
     "write_unified_formalism_appendix_markdown",
-    "Reporter",
     "ReportPaths",
+    "Reporter",
+    "validate_report_receipt",
     # Pipeline
     "FEPPipeline",
     "PipelineResult",

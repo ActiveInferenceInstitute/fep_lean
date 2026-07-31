@@ -4,7 +4,7 @@ Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no 
 
 ## Test census
 
-**Canonical scale**: `uv run pytest tests/ --collect-only -q` → **331** tests in **29** modules (`test_*.py`). Per-file counts match `pytest --collect-only` per module (regenerate with `pytest ... --collect-only` if drift appears).
+**Canonical scale**: `uv run pytest tests/ --collect-only -q` → **342** tests in **30** modules (`test_*.py`). Per-file counts match `pytest --collect-only` per module (regenerate with `pytest ... --collect-only` if drift appears).
 
 | File | Tests | Description |
 |------|------:|-------------|
@@ -36,14 +36,15 @@ Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no 
 | `test_pipeline.py` | 11 | FEPPipeline four recorded stages + orchestrator + workflow kwarg (1 API-key test) |
 | `test_pipeline_exceptions.py` | 3 | Missing catalogue, validation warnings |
 | `test_preflight.py` | 8 | `run_preflight` with present/missing binaries, cli, sad paths |
-| `test_reporter.py` | 19 | Markdown + JSON report generation + `verification_manifest.json` |
+| `test_reporter.py` | 28 | Markdown + JSON report generation, receipt hashes, and `verification_manifest.json` |
 | `test_subpackage_imports.py` | 7 | All subpackages importable standalone |
+| `test_theorem_maturity_audit.py` | 2 | Maintained semantic review coverage and generated projection parity |
 
 **API-key tests**: 2 tests skip when no API key is present; they run automatically when
 `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY` is set. Set `FEP_LEAN_LIVE_TESTS=0` to
 suppress them even when keys exist (e.g. cost-controlled CI or core-only pipeline runs —
 the pipeline scripts set this automatically when `--core-only`/`--no-llm` is active).
-Collected total matches **`pytest --collect-only`** (currently **331**).
+Collected total matches **`pytest --collect-only`** (currently **342**).
 
 Coverage for `output/figures.py` uses worker processes: `[tool.coverage.run] concurrency = ["multiprocessing"]` in `pyproject.toml` so `ProcessPoolExecutor` chart workers are included in the line report.
 
