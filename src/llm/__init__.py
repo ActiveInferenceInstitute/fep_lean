@@ -19,4 +19,4 @@ Public API
 
 from llm.hermes import HermesAPIError, HermesConfig, HermesExplainer, HermesResult
 
-__all__ = ["HermesConfig", "HermesExplainer", "HermesResult", "HermesAPIError"]
+__all__ = ["HermesAPIError", "HermesConfig", "HermesExplainer", "HermesResult"]

@@ -6,7 +6,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-
 from pipeline.core import FEPPipeline, PipelineResult, StepResult, _max_topics_from_env
 
 PROJ = Path(__file__).resolve().parent.parent

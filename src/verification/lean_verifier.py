@@ -47,16 +47,16 @@ VerifyResult fields
 
 from __future__ import annotations
 
+import concurrent.futures
 import logging
+import math
 import os
 import re
 import shutil
+import statistics
 import subprocess
 import tempfile
 import time
-import concurrent.futures
-import math
-import statistics
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -122,12 +122,21 @@ def classify_failure_kind(stderr_out: str, *, timed_out: bool = False) -> Failur
     return "other"
 
 
+import contextlib
+
+from verification._toolchain import (
+    ensure_writable_elan_home as _ensure_elan_home,
+)
+from verification._toolchain import (
+    find_toolchain_bin as _shared_find_toolchain_bin,
+)
 from verification._toolchain import (
     get_elan_home as _get_elan_home,
-    get_elan_toolchains as _get_elan_toolchains,
+)
+from verification._toolchain import (
     get_writable_elan_home as _get_elan_home_override,
-    ensure_writable_elan_home as _ensure_elan_home,
-    find_toolchain_bin as _shared_find_toolchain_bin,
+)
+from verification._toolchain import (
     read_toolchain_name as _read_toolchain_name,
 )
 
@@ -526,10 +535,8 @@ class LeanVerifier:
             )
         finally:
             if tmp_file and tmp_file.exists():
-                try:
+                with contextlib.suppress(OSError):
                     tmp_file.unlink()
-                except OSError:
-                    pass
 
     def verify_batch(
         self, items: list[tuple[str, str]]
@@ -560,7 +567,7 @@ class LeanVerifier:
         if not vals:
             return {"count": 0, "min_s": 0.0, "median_s": 0.0, "p95_s": 0.0}
         n = len(vals)
-        p95_i = min(n - 1, max(0, int(math.ceil(0.95 * n)) - 1))
+        p95_i = min(n - 1, max(0, math.ceil(0.95 * n) - 1))
         return {
             "count": n,
             "min_s": round(vals[0], 4),

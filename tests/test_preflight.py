@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from verification.preflight import _run_version, run_preflight
 
 PROJ = Path(__file__).resolve().parent.parent

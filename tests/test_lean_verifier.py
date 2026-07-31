@@ -18,7 +18,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from verification.lean_verifier import (
     LeanVerifier,
     VerifyResult,
@@ -76,7 +75,7 @@ def test_check_mathlib_built_returns_tuple(verifier: LeanVerifier) -> None:
 
 
 def test_check_mathlib_built_message_is_informative(verifier: LeanVerifier) -> None:
-    ok, msg = verifier.check_mathlib_built()
+    _ok, msg = verifier.check_mathlib_built()
     # Message must mention either "Mathlib" or "lake"
     assert "athlib" in msg or "lake" in msg or "olean" in msg
 
@@ -205,7 +204,7 @@ def test_verify_sketch_with_lake_trivial(verifier: LeanVerifier) -> None:
     """When lake is available and Mathlib is built, verify a trivially true theorem."""
     if not verifier.check_lake_available():
         pytest.skip("lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or uv run fep-lean setup — wraps it) first")
-    mathlib_ok, mathlib_msg = verifier.check_mathlib_built()
+    _mathlib_ok, _mathlib_msg = verifier.check_mathlib_built()
     # Trivial True.intro doesn't actually need Mathlib loaded
     sketch = "theorem fep_lean_trivial_check : True := True.intro"
     r = verifier.verify_sketch("fep-trivial", sketch)

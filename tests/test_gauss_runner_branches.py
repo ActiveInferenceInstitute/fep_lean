@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
 
+import pytest
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
 from gauss.client import OpenGaussClient
-from gauss.runner import GaussRunner, TopicRunResult
+from gauss.runner import GaussRunner
 from llm.hermes import HermesConfig, HermesExplainer, HermesResult
 from verification.lean_verifier import LeanVerifier
 
@@ -183,7 +183,6 @@ def test_run_topic_review_workflow_populates_stage_results(
 
     lean = LeanVerifier(PROJ / "lean", PROJ)
     # A sketch that will compile so verify_res.compiles is True (triggers review pass)
-    compile_sketch = "theorem fixtureReview : True := True.intro\n"
     hermes = _CountingHermes()
 
     client = OpenGaussClient(gauss_home=tmp_path / "g")

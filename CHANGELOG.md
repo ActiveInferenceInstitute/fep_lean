@@ -77,8 +77,8 @@
 ### Gate verification
 
 All gates re-run and passing after improvements:
-- 339 passed, 3 skipped, 90.25% coverage (≥89%)
+- 339 passed, 3 skipped, 90.47% coverage (≥89%)
 - mypy: 23 source files, no issues
-- ruff check: 216 findings (non-gating per policy)
+- ruff check: 58 findings (was 216 — 73% reduction via auto-fix + E741 cleanup)
 - Lean verify: 50/50 clean, `complete: true`
 - All 6 doc audits pass

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import subprocess
 import sys
@@ -11,7 +10,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from catalogue.topics import FEPTopicCatalogue
 
 UNIFIED_FORMALISM_CATALOGUE_FILENAME = "09z_unified_formalism_catalogue.md"

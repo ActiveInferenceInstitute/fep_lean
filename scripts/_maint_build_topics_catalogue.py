@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from catalogue_sketches import LATEX_EQUATIONS, SKETCHES, assert_complete
 
 # Distribution: FEP 14, ActiveInference 11, BayesianMechanics 10, InfoGeometry 8, Thermodynamics 7

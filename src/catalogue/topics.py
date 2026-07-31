@@ -48,7 +48,7 @@ class FEPTopicCatalogue:
         self.source_path = source_path
 
     @classmethod
-    def from_yaml(cls, path: Path | None = None) -> "FEPTopicCatalogue":
+    def from_yaml(cls, path: Path | None = None) -> FEPTopicCatalogue:
         """Load and validate the complete catalogue from YAML.
 
         Validation is deliberately strict because downstream Lean and report

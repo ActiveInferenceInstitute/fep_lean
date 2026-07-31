@@ -10,7 +10,6 @@ import os
 from pathlib import Path
 
 import pytest
-
 from catalogue.topics import FEPTopicCatalogue
 from gauss.client import OpenGaussClient
 from gauss.runner import GaussRunner, TopicRunResult
@@ -69,7 +68,7 @@ def test_run_topic_creates_sqlite_session(runner: GaussRunner, tmp_path: Path) -
 def test_run_topic_no_api_key_hermes_skipped(runner: GaussRunner) -> None:
     topic = TOPICS.topics[0]
     result = runner.run_topic(topic)
-    # No API key → Hermes naturally skips execution and returns failure 
+    # No API key → Hermes naturally skips execution and returns failure
     assert result.hermes_success is False
 
 

@@ -30,7 +30,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 
-def pytest_configure(config: pytest.Config) -> None:  # noqa: ARG001
+def pytest_configure(config: pytest.Config) -> None:
     """Warn (not hard-exit) when gauss / lake / lean are not on PATH.
 
     Individual tests that require these tools use ``pytest.skip`` themselves.

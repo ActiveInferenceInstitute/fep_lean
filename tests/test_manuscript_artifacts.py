@@ -8,7 +8,6 @@ import sys
 from pathlib import Path
 
 import yaml
-
 from catalogue.topics import FEPTopicCatalogue
 from output.manuscript import (
     UNIFIED_FORMALISM_CATALOGUE_FILENAME,
@@ -21,7 +20,6 @@ from output.manuscript import (
     build_manuscript_vars,
     build_typeset_equations_markdown,
     build_unified_formalism_appendix_markdown,
-    write_unified_formalism_appendix_markdown,
     write_manuscript_vars,
     write_unified_formalism_appendix_markdown,
 )
@@ -145,8 +143,7 @@ def test_build_unified_formalism_appendix_markdown_structure() -> None:
 def test_fep_001_latex_equations_from_yaml_matches_data_module() -> None:
     if str(PROJ / "scripts") not in sys.path:
         sys.path.insert(0, str(PROJ / "scripts"))
-    from catalogue_sketches import LATEX_EQUATIONS
-    from catalogue_sketches import THEOREM_LATEX
+    from catalogue_sketches import LATEX_EQUATIONS, THEOREM_LATEX
 
     c = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
     t1 = next(t for t in c.topics if t.id == "fep-001")

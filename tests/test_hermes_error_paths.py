@@ -21,14 +21,13 @@ import logging
 from pathlib import Path
 
 import pytest
-from pytest_httpserver import HTTPServer
-
 from catalogue.topics import FEPTopicCatalogue
 from llm.hermes import (
+    _FREE_MODEL_CHAIN,
     HermesConfig,
     HermesExplainer,
-    _FREE_MODEL_CHAIN,
 )
+from pytest_httpserver import HTTPServer
 
 PROJ = Path(__file__).resolve().parent.parent
 TOPICS = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 import gauss.cli as gauss_cli
+import pytest
 
 PROJ = Path(__file__).resolve().parent.parent
 

@@ -12,19 +12,18 @@ import time
 from pathlib import Path
 
 import pytest
-
 from catalogue.topics import FEPTopicCatalogue
 from llm.hermes import (
+    _FEP_SYSTEM_PROMPT,
+    HermesAPIError,
     HermesConfig,
     HermesExplainer,
     HermesResult,
     _env_positive_int,
     _extract_explanation,
     _extract_lean_block,
-    _FEP_SYSTEM_PROMPT,
-    HermesAPIError,
-    restore_lean_structure,
     _strip_extra_theorems,
+    restore_lean_structure,
 )
 
 PROJ = Path(__file__).resolve().parent.parent
@@ -201,8 +200,8 @@ def test_restore_lean_structure_moves_stray_imports_to_top() -> None:
     refined = "namespace FEP001\nimport Mathlib.Analysis.SpecialFunctions.Exp\ntheorem t : True := trivial\nend FEP001"
     result = restore_lean_structure(refined, _ORIG_SKETCH)
     lines = result.splitlines()
-    import_lines = [i for i, l in enumerate(lines) if l.strip().startswith("import ")]
-    ns_lines = [i for i, l in enumerate(lines) if l.strip().startswith("namespace ")]
+    import_lines = [i for i, line in enumerate(lines) if line.strip().startswith("import ")]
+    ns_lines = [i for i, line in enumerate(lines) if line.strip().startswith("namespace ")]
     assert import_lines, "no import lines found"
     assert ns_lines, "no namespace line found"
     assert max(import_lines) < min(ns_lines), "imports must come before namespace"
@@ -563,8 +562,8 @@ def test_restore_lean_structure_restores_open_statements() -> None:
     assert "open MeasureTheory" in result
     # It should appear inside the namespace (before theorems)
     lines = result.splitlines()
-    ns_idx = next(i for i, l in enumerate(lines) if "namespace FEP001" in l)
-    open_idx = next((i for i, l in enumerate(lines) if "open MeasureTheory" in l), None)
+    ns_idx = next(i for i, line in enumerate(lines) if "namespace FEP001" in line)
+    open_idx = next((i for i, line in enumerate(lines) if "open MeasureTheory" in line), None)
     assert open_idx is not None
     assert open_idx > ns_idx
 
@@ -607,10 +606,10 @@ def test_restore_lean_structure_preserves_variable_declarations() -> None:
         "variable declaration must be re-injected when Hermes drops it"
     )
     lines = result.splitlines()
-    ns_idx = next(i for i, l in enumerate(lines) if "namespace FEP042" in l)
-    open_idx = next(i for i, l in enumerate(lines) if "open MeasureTheory" in l)
-    var_idx = next(i for i, l in enumerate(lines) if l.strip().startswith("variable "))
-    thm_idx = next(i for i, l in enumerate(lines) if "theorem fep042_measure_nonneg" in l)
+    ns_idx = next(i for i, line in enumerate(lines) if "namespace FEP042" in line)
+    open_idx = next(i for i, line in enumerate(lines) if "open MeasureTheory" in line)
+    var_idx = next(i for i, line in enumerate(lines) if line.strip().startswith("variable "))
+    thm_idx = next(i for i, line in enumerate(lines) if "theorem fep042_measure_nonneg" in line)
     assert ns_idx < open_idx < var_idx < thm_idx, (
         f"ordering violated: ns={ns_idx} open={open_idx} var={var_idx} thm={thm_idx}"
     )

@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 import os
-import re
 import shutil
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from gauss.cli import check_gauss_cli
-from verification._toolchain import find_executable, find_toolchain_bin, get_writable_elan_home, subprocess_env
+from verification._toolchain import (
+    find_executable,
+    find_toolchain_bin,
+    get_writable_elan_home,
+    subprocess_env,
+)
 
 EXPECTED_LEAN_TOOLCHAIN = "leanprover/lean4:v4.29.0"
 EXPECTED_MATHLIB_TAG = "v4.29.0"
@@ -140,8 +145,6 @@ def _check_lean_workspace(project_root: Path) -> tuple[bool, str]:
 def _check_python_stack() -> tuple[bool, str]:
     try:
         import matplotlib
-        import numpy
-        import yaml
         matplotlib.use("Agg")
     except Exception as exc:
         return False, str(exc)

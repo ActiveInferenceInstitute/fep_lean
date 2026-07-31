@@ -6,11 +6,9 @@ import http.server
 import os
 import socket
 import threading
-import urllib.error
 from pathlib import Path
 
 import pytest
-
 from llm.hermes import (
     HermesAPIError,
     HermesConfig,
@@ -48,7 +46,7 @@ class _FixedStatusHandler(http.server.BaseHTTPRequestHandler):
     _status: int = 404
     _body: bytes = b"test error response"
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         body = self._body
         self.send_response(self._status)
         self.send_header("Content-Type", "text/plain")
@@ -79,7 +77,7 @@ class _SlowResponseHandler(http.server.BaseHTTPRequestHandler):
     _delay_per_byte: float = 0.5  # 500 ms between bytes
     _total_bytes: int = 64
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length", 0) or 0)
         if length:
             self.rfile.read(length)
@@ -108,7 +106,7 @@ class _TruncatedContentHandler(http.server.BaseHTTPRequestHandler):
     of failure as chunked/streaming drops from upstream APIs.
     """
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length", 0) or 0)
         if length:
             self.rfile.read(length)
@@ -217,7 +215,7 @@ class TestLoadGaussDotenv:
         monkeypatch.setenv("GAUSS_HOME", str(tmp_path))
         dotenv = tmp_path / ".env"
         dotenv.write_text("X=Y\n", encoding="utf-8")
-        
+
         # Genuine read error via filesystem permissions
         dotenv.chmod(0o000)
         HermesConfig._load_gauss_dotenv()  # should not raise

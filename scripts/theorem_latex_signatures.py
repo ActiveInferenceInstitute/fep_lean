@@ -253,7 +253,7 @@ def _one_theorem_latex(
 
 def build_theorem_latex_from_sketches(sketches: dict[str, str]) -> dict[str, str]:
     out: dict[str, str] = {}
-    for tid, body in sketches.items():
+    for _tid, body in sketches.items():
         vblock = _extract_variable_block(body)
         names = _theorem_names_in_order(body)
         for name in names:

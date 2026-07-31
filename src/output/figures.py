@@ -7,18 +7,16 @@ mode reproducible and safe to run in a clean checkout.
 
 from __future__ import annotations
 
-import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.figure import Figure
-
 from catalogue.topics import FEPTopicCatalogue
+from matplotlib.figure import Figure
 
 
 def _save(fig: Figure, path: Path) -> Path:
@@ -43,7 +41,7 @@ def _write_bar_chart(
     ax.set_ylabel("Topics")
     ax.grid(axis="y", alpha=0.25)
     total = sum(nums) or 1
-    for bar, n in zip(bars, nums):
+    for bar, n in zip(bars, nums, strict=False):
         label = f"{n} ({100*n/total:.0f}%)" if show_pct else str(n)
         ax.text(bar.get_x() + bar.get_width() / 2, n, label, ha="center", va="bottom")
     return _save(fig, out)
@@ -81,7 +79,7 @@ def _write_pipeline_dag(out: Path) -> Path:
     names = ["Catalogue", "Validation", "Hermes + Lean", "Artifacts", "Report"]
     xs = range(len(names))
     ax.plot(list(xs), [0] * len(names), "o-", color="#315f8c", linewidth=2)
-    for x, name in zip(xs, names):
+    for x, name in zip(xs, names, strict=False):
         ax.text(x, 0.08, name, ha="center", va="bottom")
     ax.set_xlim(-0.4, len(names) - 0.6)
     ax.set_ylim(-0.25, 0.35)

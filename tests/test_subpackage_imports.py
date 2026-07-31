@@ -14,7 +14,7 @@ def test_root_package_init_importable():
     if added:
         sys.path.insert(0, src_parent)
     try:
-        import src  # noqa: F811
+        import src
         assert src.__version__
         # Spot-check a few re-exported names
         assert hasattr(src, "FEPTopicCatalogue")
@@ -29,31 +29,26 @@ def test_root_package_init_importable():
 
 
 def test_catalogue_imports():
-    from catalogue.topics import FEPTopicCatalogue, TopicEntry
+    from catalogue.topics import FEPTopicCatalogue
     assert FEPTopicCatalogue is not None
 
 def test_verification_imports():
-    from verification.environment import run_validation_checks
-    from verification.lean_verifier import LeanVerifier, VerifyResult
+    from verification.lean_verifier import LeanVerifier
     assert LeanVerifier is not None
 
 def test_gauss_imports():
-    from gauss.cli import check_gauss_cli
-    from gauss.client import OpenGaussClient, SessionRecord
-    from gauss.runner import GaussRunner, TopicRunResult
+    from gauss.client import OpenGaussClient
     assert OpenGaussClient is not None
 
 def test_llm_imports():
-    from llm.hermes import HermesAPIError, HermesConfig, HermesExplainer, HermesResult
+    from llm.hermes import HermesExplainer
     assert HermesExplainer is not None
 
 def test_output_imports():
-    from output.figures import write_all_catalogue_figures
     from output.manuscript import (
         build_manuscript_vars,
         build_typeset_equations_markdown,
         build_unified_formalism_appendix_markdown,
-        write_unified_formalism_appendix_markdown,
         write_manuscript_vars,
         write_typeset_equations_markdown,
         write_unified_formalism_appendix_markdown,
@@ -66,12 +61,11 @@ def test_output_imports():
     assert callable(write_typeset_equations_markdown)
     assert callable(build_unified_formalism_appendix_markdown)
     assert callable(write_unified_formalism_appendix_markdown)
-    from output.reporter import Reporter, ReportPaths
+    from output.reporter import Reporter
     assert Reporter is not None
 
 def test_pipeline_imports():
-    from pipeline.core import FEPPipeline, PipelineResult, StepResult
-    from pipeline.orchestrator import run_pipeline, run_single_topic
+    from pipeline.core import FEPPipeline
     assert FEPPipeline is not None
 
 

@@ -229,7 +229,7 @@ class HermesConfig:
     @classmethod
     def from_settings(
         cls, project_root: Path | str | None = None, *, settings_path: Path | None = None
-    ) -> "HermesConfig":
+    ) -> HermesConfig:
         """Load config from ``config/settings.yaml``, then apply env overrides.
 
         Resolution order (highest → lowest):
@@ -500,7 +500,7 @@ class HermesExplainer:
     # ── Public ────────────────────────────────────────────────────────────────
 
     def explain_topic(
-        self, topic: "TopicEntry", *, preamble: str = ""
+        self, topic: TopicEntry, *, preamble: str = ""
     ) -> HermesResult:
         """Explain ``topic`` and return a refined Lean 4 sketch.
 
@@ -680,7 +680,7 @@ class HermesExplainer:
     # ── Internal ──────────────────────────────────────────────────────────────
 
     def build_messages(
-        self, topic: "TopicEntry", *, preamble: str = ""
+        self, topic: TopicEntry, *, preamble: str = ""
     ) -> list[dict[str, str]]:
         """Construct the conversation messages for the given topic.
 
@@ -938,7 +938,7 @@ def restore_lean_structure(refined: str, original: str) -> str:
     # ── 0. Garbage detection: fall back to original when output is invalid ───
     # C++ `//` comments are not valid Lean4 syntax — indicates LLM hallucination
     _cpp_comment_re = re.compile(r"^\s*//(?!/)")  # // but not ///
-    cpp_lines = [l for l in refined_lines if _cpp_comment_re.match(l)]
+    cpp_lines = [line for line in refined_lines if _cpp_comment_re.match(line)]
     has_theorem = bool(re.search(r"\btheorem[^\S\n]+\w+", refined))
     if cpp_lines or not has_theorem:
         # Conservative by design: safety (no broken hallucinations) over recall (LLM improvements).
@@ -951,10 +951,10 @@ def restore_lean_structure(refined: str, original: str) -> str:
         return original
 
     # ── 1. Collect import lines from original ONLY ───────────────────────────
-    orig_imports: list[str] = [l for l in orig_lines if l.strip().startswith("import ")]
+    orig_imports: list[str] = [line for line in orig_lines if line.strip().startswith("import ")]
 
     # ── 2. Strip all import lines from refined body ──────────────────────────
-    non_import_body: list[str] = [l for l in refined_lines if not l.strip().startswith("import ")]
+    non_import_body: list[str] = [line for line in refined_lines if not line.strip().startswith("import ")]
 
     # ── 3. Build import block: originals only (no LLM additions) ─────────────
     merged_imports = orig_imports  # exact original order, no dedup needed
@@ -981,15 +981,15 @@ def restore_lean_structure(refined: str, original: str) -> str:
 
     # ── 5.5. Restore `open` statements from original that Hermes dropped ────────
     # Only restore opens that appear in the original; never add Hermes-invented ones.
-    orig_open_stmts = [l.rstrip() for l in orig_lines if l.strip().startswith("open ")]
+    orig_open_stmts = [line.rstrip() for line in orig_lines if line.strip().startswith("open ")]
     if orig_open_stmts:
         result_lines = result.splitlines()
-        existing_opens: set[str] = {l.strip() for l in result_lines if l.strip().startswith("open ")}
-        missing_opens = [l for l in orig_open_stmts if l.strip() not in existing_opens]
+        existing_opens: set[str] = {line.strip() for line in result_lines if line.strip().startswith("open ")}
+        missing_opens = [line for line in orig_open_stmts if line.strip() not in existing_opens]
         if missing_opens:
             # Insert them right after the namespace declaration line (or after imports)
             ns_idx = next(
-                (i for i, l in enumerate(result_lines) if re.match(r"^\s*namespace\s+\w+", l)),
+                (i for i, line in enumerate(result_lines) if re.match(r"^\s*namespace\s+\w+", line)),
                 None,
             )
             if ns_idx is not None:
@@ -997,7 +997,7 @@ def restore_lean_structure(refined: str, original: str) -> str:
             else:
                 # No namespace line — prepend after imports
                 last_import = max(
-                    (i for i, l in enumerate(result_lines) if l.strip().startswith("import ")),
+                    (i for i, line in enumerate(result_lines) if line.strip().startswith("import ")),
                     default=-1,
                 )
                 insert_at = last_import + 1
@@ -1014,18 +1014,18 @@ def restore_lean_structure(refined: str, original: str) -> str:
     # compiles=False (this was the lone refined-fail in run_20260420_131713 on
     # fep-042). Mirrors step 5.5 for `open`: only restore declarations that
     # appear in the original; never invent new ones.
-    orig_variable_stmts = [l.rstrip() for l in orig_lines if l.strip().startswith("variable ")]
+    orig_variable_stmts = [line.rstrip() for line in orig_lines if line.strip().startswith("variable ")]
     if orig_variable_stmts:
         result_lines = result.splitlines()
-        existing_vars: set[str] = {l.strip() for l in result_lines if l.strip().startswith("variable ")}
-        missing_vars = [l for l in orig_variable_stmts if l.strip() not in existing_vars]
+        existing_vars: set[str] = {line.strip() for line in result_lines if line.strip().startswith("variable ")}
+        missing_vars = [line for line in orig_variable_stmts if line.strip() not in existing_vars]
         if missing_vars:
             log.info(
                 "restore_lean_structure: re-injecting %d `variable` declaration(s) dropped by Hermes",
                 len(missing_vars),
             )
             ns_idx = next(
-                (i for i, l in enumerate(result_lines) if re.match(r"^\s*namespace\s+\w+", l)),
+                (i for i, line in enumerate(result_lines) if re.match(r"^\s*namespace\s+\w+", line)),
                 None,
             )
             if ns_idx is not None:
@@ -1041,7 +1041,7 @@ def restore_lean_structure(refined: str, original: str) -> str:
                 result_lines[insert_at:insert_at] = missing_vars + [""]
             else:
                 last_import = max(
-                    (i for i, l in enumerate(result_lines) if l.strip().startswith("import ")),
+                    (i for i, line in enumerate(result_lines) if line.strip().startswith("import ")),
                     default=-1,
                 )
                 insert_at = last_import + 1

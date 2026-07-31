@@ -6,7 +6,6 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Any
 
 _DOCTOR_TIMEOUT_S = 120.0
 

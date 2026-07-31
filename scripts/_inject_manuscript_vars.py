@@ -13,9 +13,10 @@ Usage:
 """
 import re
 import sys
-import yaml
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 project_root = Path(__file__).resolve().parents[1]
 vars_path = project_root / "manuscript" / "manuscript_vars.yaml"

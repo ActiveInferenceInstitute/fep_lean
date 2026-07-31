@@ -9,7 +9,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from gauss.client import OpenGaussClient
 
 
@@ -87,7 +86,7 @@ def test_write_bulk_jsonl(client: OpenGaussClient, tmp_path: Path) -> None:
     out = tmp_path / "bulk.jsonl"
     result = client.write_bulk_jsonl(sessions, out)
     assert result.is_file()
-    lines = [l for l in result.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line for line in result.read_text(encoding="utf-8").splitlines() if line.strip()]
     assert len(lines) == 2
     first = json.loads(lines[0])
     assert "session_id" in first
@@ -98,8 +97,8 @@ def test_log_event_writes_to_db_and_file(client: OpenGaussClient) -> None:
     client.log_event("test_event", session_id=sid, extra="data")
     ops_file = client._logs_dir / "operations.jsonl"
     assert ops_file.is_file()
-    lines = [l for l in ops_file.read_text(encoding="utf-8").splitlines() if l.strip()]
-    assert any("test_event" in l for l in lines)
+    lines = [line for line in ops_file.read_text(encoding="utf-8").splitlines() if line.strip()]
+    assert any("test_event" in line for line in lines)
 
 
 def test_get_stats(client: OpenGaussClient) -> None:

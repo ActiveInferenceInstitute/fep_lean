@@ -16,11 +16,9 @@ from __future__ import annotations
 __version__ = "1.0.0"
 
 # 1. Catalogue
+# 6. Pipeline
+from _paths import project_root
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
-
-# 2. Verification
-from verification.environment import run_validation_checks
-from verification.lean_verifier import LeanVerifier, VerifyResult
 
 # 3. Gauss
 from gauss.cli import check_gauss_cli
@@ -39,45 +37,46 @@ from output.manuscript import (
     write_unified_formalism_appendix_markdown,
 )
 from output.reporter import Reporter, ReportPaths, validate_report_receipt
-
-# 6. Pipeline
-from _paths import project_root
 from pipeline.core import FEPPipeline, PipelineResult, StepResult
 from pipeline.orchestrator import run_pipeline, run_single_topic
 
+# 2. Verification
+from verification.environment import run_validation_checks
+from verification.lean_verifier import LeanVerifier, VerifyResult
+
 __all__ = [
+    # Pipeline
+    "FEPPipeline",
     # Catalogue
     "FEPTopicCatalogue",
-    "TopicEntry",
-    # Verification
-    "LeanVerifier",
-    "VerifyResult",
-    "run_validation_checks",
-    # Gauss
-    "OpenGaussClient",
-    "SessionRecord",
     "GaussRunner",
-    "TopicRunResult",
-    "check_gauss_cli",
+    "HermesAPIError",
     # LLM
     "HermesConfig",
     "HermesExplainer",
     "HermesResult",
-    "HermesAPIError",
-    # Output
-    "write_all_catalogue_figures",
-    "write_manuscript_vars",
-    "build_manuscript_vars",
-    "build_unified_formalism_appendix_markdown",
-    "write_unified_formalism_appendix_markdown",
+    # Verification
+    "LeanVerifier",
+    # Gauss
+    "OpenGaussClient",
+    "PipelineResult",
     "ReportPaths",
     "Reporter",
-    "validate_report_receipt",
-    # Pipeline
-    "FEPPipeline",
-    "PipelineResult",
+    "SessionRecord",
     "StepResult",
+    "TopicEntry",
+    "TopicRunResult",
+    "VerifyResult",
+    "build_manuscript_vars",
+    "build_unified_formalism_appendix_markdown",
+    "check_gauss_cli",
     "project_root",
     "run_pipeline",
     "run_single_topic",
+    "run_validation_checks",
+    "validate_report_receipt",
+    # Output
+    "write_all_catalogue_figures",
+    "write_manuscript_vars",
+    "write_unified_formalism_appendix_markdown",
 ]

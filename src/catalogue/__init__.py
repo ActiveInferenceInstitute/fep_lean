@@ -10,4 +10,4 @@ Public API
 
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
 
-__all__ = ["TopicEntry", "FEPTopicCatalogue"]
+__all__ = ["FEPTopicCatalogue", "TopicEntry"]

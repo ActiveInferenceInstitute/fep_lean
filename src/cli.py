@@ -8,8 +8,8 @@ import logging
 import os
 import subprocess
 import time
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from _paths import project_root
 from catalogue.topics import FEPTopicCatalogue

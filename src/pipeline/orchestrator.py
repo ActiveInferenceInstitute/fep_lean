@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Literal
 
 from _paths import project_root
 from catalogue.topics import FEPTopicCatalogue

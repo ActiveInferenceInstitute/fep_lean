@@ -5,7 +5,6 @@ from pathlib import Path
 from verification.environment import (
     _check_catalogue_import,
     _check_dirs,
-    _check_dot_gauss_writable,
     _check_lean_cli,
     _check_lean_workspace,
     _check_mathlib_built,
