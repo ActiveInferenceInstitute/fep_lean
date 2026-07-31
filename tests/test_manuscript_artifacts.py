@@ -205,6 +205,26 @@ def test_latest_verification_manifest_newest(tmp_path: Path) -> None:
     assert "run_new" in str(picked)
 
 
+def test_manuscript_vars_honor_explicit_output_root(tmp_path: Path) -> None:
+    custom = tmp_path / "custom-output" / "reports" / "run_custom"
+    custom.mkdir(parents=True)
+    (custom / "verification_manifest.json").write_text(
+        json.dumps(
+            {
+                "verify_lean_ran": True,
+                "topics_with_result": 1,
+                "compiles_true": 1,
+                "compiles_false": 0,
+                "results": [{"topic_id": "fep-001", "compiles": True}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    c = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
+    values = build_manuscript_vars(c, PROJ, output_root=tmp_path / "custom-output")
+    assert values["verify"]["topics_with_result"] == 1
+
+
 def test_verify_block_from_manifest_json(tmp_path: Path) -> None:
     p = tmp_path / "verification_manifest.json"
     p.write_text(

@@ -6,6 +6,7 @@ No direct execution.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -346,6 +347,37 @@ def test_index_md_splits_lean_directly_vs_post_fallback(tmp_path: Path) -> None:
     assert "1/2" in text
     assert "2/2" in text
     assert "Final Lean compiled" in text
+
+
+def test_index_and_summary_use_selected_topics_and_hash_nested_artifacts(tmp_path: Path) -> None:
+    rows = [{
+        "topic_id": "fep-001",
+        "success": False,
+        "hermes_success": False,
+        "lean_compiles": False,
+    }]
+    result = _result_with_gauss(rows)
+    result.catalogue_topics = 1
+    rep = Reporter(tmp_path, run_id="test_selected_topics")
+    paths = rep.generate(TOPICS, result)
+    index = paths.index_md.read_text(encoding="utf-8")
+    assert "**Total Topics:** 1" in index
+    assert "**Catalogue Topics:** 50" in index
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    hashes = summary["artifact_hashes"]
+    assert "topics/fep-001.md" in hashes
+    assert hashes["topics/fep-001.md"]
+    root = paths.summary_json.parent.resolve()
+    for relative, digest in hashes.items():
+        artifact = (root / relative).resolve()
+        assert root in artifact.parents
+        assert artifact.is_file()
+        assert hashlib.sha256(artifact.read_bytes()).hexdigest() == digest
+    assert "summary.json" not in hashes
+    run_manifest = json.loads((root / "run_manifest.json").read_text(encoding="utf-8"))
+    assert run_manifest["catalogue_topics"] == 1
+    assert run_manifest["complete"] is False
+    assert len(run_manifest["topics"]) == 1
 
 
 def test_summary_json_includes_topics_payload(tmp_path: Path) -> None:

@@ -135,6 +135,15 @@ def test_get_cached_hermes_missing_returns_none(client: OpenGaussClient) -> None
     assert client.get_cached_hermes("nonexistent-key-xyz") is None
 
 
+def test_get_cached_hermes_ignores_malformed_payload(client: OpenGaussClient) -> None:
+    client._conn.execute(
+        "INSERT INTO hermes_cache (cache_key, topic_id, stage, model, hermes_result, lean_sketch_hash, created_at) VALUES (?,?,?,?,?,?,?)",
+        ("bad-key", "fep-001", "verify", "fixture", "not-json", "hash", 0.0),
+    )
+    client._conn.commit()
+    assert client.get_cached_hermes("bad-key") is None
+
+
 def test_prune_hermes_cache_removes_old(client: OpenGaussClient) -> None:
     import time as _time
     payload = json.dumps({"success": True, "model_used": "fixture"})

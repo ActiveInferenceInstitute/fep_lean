@@ -1,6 +1,6 @@
 # Tests
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 ```bash
 uv run pytest tests/ -q --cov=src --cov-fail-under=89

@@ -16,11 +16,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 
 from catalogue.topics import FEPTopicCatalogue
 
 
-def _save(fig: plt.Figure, path: Path) -> Path:
+def _save(fig: Figure, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
     fig.savefig(path, dpi=150, format="png", metadata={"Software": "fep_lean"})

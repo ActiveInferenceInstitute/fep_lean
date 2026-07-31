@@ -1,6 +1,6 @@
 # FEP Lean Agents — `config/` (project root)
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 ## Purpose
 
@@ -21,7 +21,7 @@ Shipped defaults match [`settings.yaml`](settings.yaml); if this section lags, *
 | Key | Default | Description |
 |-----|---------|-------------|
 | `name` | `fep_lean` | Project identifier |
-| `version` | `0.7.1` | Semantic version |
+| `version` | `1.0.0` | Semantic version |
 | `description` | (see YAML) | Human description |
 
 ### `gauss`
@@ -90,7 +90,7 @@ topics:
 | `BayesianMechanics` | 10 | LinearAlgebra.Matrix.Transpose, Data.Finset.Basic |
 | `Thermodynamics` | 7 | Analysis.SpecialFunctions.Log.Basic, Analysis.SpecialFunctions.Exp |
 
-### Maturity Distribution (April 2026)
+### Maturity Distribution (July 2026)
 
 | Status | Count |
 |--------|------:|

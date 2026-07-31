@@ -1,6 +1,6 @@
 # Authorship Guide — Adding Topics to the fep_lean Catalogue
 
-**Version**: v0.7.1 | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Last Updated**: July 2026
 
 This guide walks through adding a new formalization topic to the 50-topic FEP
 catalogue, from writing the natural language statement through verifying the
@@ -63,7 +63,7 @@ Each catalogue entry is a `TopicEntry` dataclass defined in
 | `Thermodynamics` | Non-equilibrium Thermodynamics and entropy |
 
 **ID assignment:** New topics follow `fep-NNN` where NNN is the next integer
-after the current maximum.  As of v0.7.1 the catalogue contains `fep-001` through
+after the current maximum.  As of v1.0.0 the catalogue contains `fep-001` through
 `fep-050`; the next topic should be `fep-051`.
 
 ---

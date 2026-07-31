@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from gauss.cli import check_gauss_cli
-from verification._toolchain import find_toolchain_bin, get_writable_elan_home, subprocess_env
+from verification._toolchain import find_executable, find_toolchain_bin, get_writable_elan_home, subprocess_env
 
 EXPECTED_LEAN_TOOLCHAIN = "leanprover/lean4:v4.29.0"
 EXPECTED_MATHLIB_TAG = "v4.29.0"
@@ -71,25 +71,34 @@ def _check_toolchain_pin(project_root: Path) -> tuple[bool, str]:
 
 def _check_mathlib_built(project_root: Path) -> tuple[bool, str]:
     """Check the existing Mathlib build without downloading or compiling."""
-    build_root = project_root / "lean" / ".lake" / "build" / "lib" / "lean"
-    root_olean = build_root / "Mathlib.olean"
-    if not root_olean.is_file():
-        return False, f"Mathlib build artifact missing: {root_olean}"
-    required = [build_root / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean"]
-    missing = [str(p) for p in required if not p.is_file()]
-    if missing:
-        return False, f"Mathlib build is incomplete; missing {missing[0]}"
-    return True, f"Mathlib build present ({root_olean})"
+    lean_root = project_root / "lean"
+    build_roots = [
+        lean_root / ".lake" / "build" / "lib" / "lean",
+        # ``lake exe cache get`` materializes Mathlib's oleans in the
+        # dependency workspace, while the project workspace contains the
+        # FepSketches oleans that consume them.
+        lean_root / ".lake" / "packages" / "mathlib" / ".lake" / "build" / "lib" / "lean",
+    ]
+    for build_root in build_roots:
+        root_olean = build_root / "Mathlib.olean"
+        required = build_root / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean"
+        if root_olean.is_file() and required.is_file():
+            return True, f"Mathlib build present ({root_olean})"
+    expected = build_roots[-1] / "Mathlib.olean"
+    return False, f"Mathlib build artifact missing: {expected}"
 
 
 def _check_lake(project_root: Path) -> tuple[bool, str]:
     lake_dir = project_root / "lean"
-    explicit = os.environ.get("FEP_LEAN_LAKE_EXE", "")
-    lake = explicit if explicit and Path(explicit).is_file() else shutil.which("lake")
+    lake = find_executable("lake", lake_dir)
     if not lake:
         return False, "lake executable is unavailable"
     ok, line = _version_line(lake, lake_dir)
-    return (ok, line if ok else f"lake invocation failed: {line}")
+    if not ok:
+        return False, f"lake invocation failed: {line}"
+    if "Lean version 4.29.0" not in line:
+        return False, f"wrong Lake toolchain: {line}; expected Lean 4.29.0"
+    return True, line
 
 
 def _check_gauss_config(project_root: Path) -> tuple[bool, str]:

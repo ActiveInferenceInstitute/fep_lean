@@ -1,6 +1,6 @@
 # Public API Reference — fep_lean
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 This document lists the public API signatures exposed under `src/`. Signatures are maintained by hand and spot-checked against the running code; the `pin_audit.py` / `xref_audit.py` gates do not cover this file, so treat the source modules as authoritative when they disagree.
 
@@ -17,7 +17,7 @@ class TopicEntry:
     title: str           # Short human title
     area: str            # One of 5 valid areas
     mathlib: str         # Comma-separated Mathlib4 module names
-    mathlib_status: str  # "real" | "partial" | "aspirational" (loader default if omitted: "partial"; all 50 shipped rows are "real" in v0.7.1)
+    mathlib_status: str  # "real" | "partial" | "aspirational" (loader default if omitted: "partial"; all 50 shipped rows are "real" in v1.0.0)
     nl: str              # Natural language mathematical statement
     lean_sketch: str     # Lean4 theorem sketch
 ```

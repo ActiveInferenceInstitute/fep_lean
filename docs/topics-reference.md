@@ -1,8 +1,8 @@
 # Topics Reference — FEP Lean formalization topics
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
-Full reference aligned with `config/topics.yaml` (50 topics as of April 2026). Per-topic sections below may not list every id; regenerate or extend this file when the catalogue grows.
+Full reference aligned with `config/topics.yaml` (50 topics as of July 2026). Per-topic sections below may not list every id; regenerate or extend this file when the catalogue grows.
 
 > **Compilation status**: All 50 sketches compile cleanly under Lean v4.29.0 + Mathlib v4.29.0 on a green sweep. Run `uv run python scripts/03_lean_verify_only.py` for per-topic stdout; full JSON aggregates live in `output/reports/run_*/verification_manifest.json` when a pipeline run emits them.
 >

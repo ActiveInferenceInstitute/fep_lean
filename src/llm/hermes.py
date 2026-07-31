@@ -455,9 +455,13 @@ class HermesExplainer:
             {"role": "user", "content": "ping"},
         ]
         original_max = self._cfg.max_tokens
+        original_reasoning_max = self._cfg.reasoning_max_tokens
         original_timeout = self._cfg.timeout_s
+        original_reasoning_timeout = self._cfg.reasoning_timeout_s
         self._cfg.max_tokens = 1
+        self._cfg.reasoning_max_tokens = 1
         self._cfg.timeout_s = min(30, original_timeout)
+        self._cfg.reasoning_timeout_s = min(30, original_reasoning_timeout)
         try:
             self._call_api(probe_messages, self._cfg.model)
             log.info(
@@ -489,7 +493,9 @@ class HermesExplainer:
             return True
         finally:
             self._cfg.max_tokens = original_max
+            self._cfg.reasoning_max_tokens = original_reasoning_max
             self._cfg.timeout_s = original_timeout
+            self._cfg.reasoning_timeout_s = original_reasoning_timeout
 
     # ── Public ────────────────────────────────────────────────────────────────
 
@@ -811,7 +817,14 @@ class HermesExplainer:
                     status_code=None,
                     transient=True,
                 ) from exc
-        return json.loads(result["raw"])
+        parsed = json.loads(result["raw"])
+        if not isinstance(parsed, dict):
+            raise HermesAPIError(
+                "API response must be a JSON object",
+                status_code=None,
+                transient=False,
+            )
+        return parsed
 
     def _parse_response(
         self,

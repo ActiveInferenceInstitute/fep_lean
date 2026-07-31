@@ -1,6 +1,6 @@
 # Cold start and cleanup — fep_lean
 
-**Version**: v0.7.1 | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Last Updated**: July 2026
 
 Use this when you want the **next** `./run.sh` or `scripts/02_run_analysis.py --project fep_lean` pass to behave like a **fresh** end-to-end run: no stale reports, no old `latest` symlink, no cached test metadata under the project tree.
 

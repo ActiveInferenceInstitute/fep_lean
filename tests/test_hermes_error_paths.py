@@ -121,6 +121,35 @@ def test_preflight_tolerates_5xx(httpserver: HTTPServer) -> None:
     assert cfg.enabled is True
 
 
+def test_preflight_bounds_reasoning_model_and_restores_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    cfg = HermesConfig(
+        model="moonshotai/kimi-k2.6",
+        api_key="sk-test",
+        max_tokens=100,
+        timeout_s=60,
+        reasoning_max_tokens=999,
+        reasoning_timeout_s=90,
+    )
+    seen: list[tuple[int, int, int, int]] = []
+    exp = HermesExplainer(cfg)
+
+    def fake_call(_messages, _model):
+        seen.append(
+            (
+                cfg.max_tokens,
+                cfg.reasoning_max_tokens,
+                cfg.timeout_s,
+                cfg.reasoning_timeout_s,
+            )
+        )
+        return {"choices": []}
+
+    monkeypatch.setattr(exp, "_call_api", fake_call)
+    assert exp.preflight() is True
+    assert seen == [(1, 1, 30, 30)]
+    assert (cfg.max_tokens, cfg.reasoning_max_tokens, cfg.timeout_s, cfg.reasoning_timeout_s) == (100, 999, 60, 90)
+
+
 # ── fallback_models ──────────────────────────────────────────────────────────
 
 

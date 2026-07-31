@@ -103,9 +103,6 @@ CREATE TABLE IF NOT EXISTS hermes_cache (
 CREATE INDEX IF NOT EXISTS idx_hermes_cache_topic ON hermes_cache(topic_id);
 """
 
-_GAUSS_HOME_DEFAULT = os.environ.get("GAUSS_HOME", str(Path.home() / ".gauss"))
-
-
 def _sha256(data: str | bytes) -> str:
     if isinstance(data, str):
         data = data.encode()
@@ -127,7 +124,7 @@ class SessionRecord:
     created_at: float
     closed_at: float | None
     duration_s: float | None
-    turns: list[dict] = field(default_factory=list)
+    turns: list[dict[str, Any]] = field(default_factory=list)
 
 
 class OpenGaussClient:
@@ -150,7 +147,8 @@ class OpenGaussClient:
     """
 
     def __init__(self, gauss_home: str | Path | None = None) -> None:
-        self._home = Path(gauss_home or _GAUSS_HOME_DEFAULT).expanduser().resolve()
+        default_home = os.environ.get("GAUSS_HOME", str(Path.home() / ".gauss"))
+        self._home = Path(gauss_home or default_home).expanduser().resolve()
         self._home.mkdir(parents=True, exist_ok=True)
         self._artifacts_dir = self._home / "fep_artifacts"
         self._logs_dir = self._home / "fep_logs"
@@ -158,6 +156,7 @@ class OpenGaussClient:
         self._logs_dir.mkdir(exist_ok=True)
         self._db_path = self._home / "fep_lean_state.db"
         self._lock = threading.RLock()
+        self._closed = False
         self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         try:
@@ -171,7 +170,9 @@ class OpenGaussClient:
     def close(self) -> None:
         """Close the SQLite connection and release the client resources."""
         with self._lock:
-            self._conn.close()
+            if not self._closed:
+                self._conn.close()
+                self._closed = True
 
     def __enter__(self) -> "OpenGaussClient":
         return self
@@ -263,6 +264,27 @@ class OpenGaussClient:
             lean_compiles=lean_compiles,
         )
 
+    def close_open_session(self, session_id: str, *, error: str = "") -> None:
+        """Fail an open session during unexpected runner cleanup.
+
+        Normal topic paths call :meth:`close_session` with their final status.
+        This narrow helper is idempotent and will not rewrite an already
+        finalized success or failure when an exception is raised during result
+        assembly.
+        """
+        row = self._conn.execute(
+            "SELECT status FROM sessions WHERE session_id=?", (session_id,)
+        ).fetchone()
+        if row is not None and row["status"] == "open":
+            self.close_session(
+                session_id,
+                status="error",
+                hermes_success=False,
+                lean_compiles=-1,
+            )
+            if error:
+                self.log_event("session_cleanup_error", session_id=session_id, error=error)
+
     # ── Export ────────────────────────────────────────────────────────────────
 
     def export_session(self, session_id: str) -> dict[str, Any]:
@@ -308,8 +330,8 @@ class OpenGaussClient:
         # Publish the file first, then register the exact published path.  If
         # registration fails, remove the file so the database and filesystem
         # cannot diverge.
-        tmp.write_text(content, encoding="utf-8")
         try:
+            tmp.write_text(content, encoding="utf-8")
             os.replace(tmp, out)
             with self._lock:
                 self._conn.execute(
@@ -388,7 +410,15 @@ class OpenGaussClient:
         ).fetchone()
         if row is None:
             return None
-        return json.loads(row["hermes_result"])
+        try:
+            value = json.loads(row["hermes_result"])
+        except (TypeError, json.JSONDecodeError) as exc:
+            log.warning("Ignoring malformed Hermes cache entry %s: %s", cache_key, exc)
+            return None
+        if not isinstance(value, dict):
+            log.warning("Ignoring non-object Hermes cache entry %s", cache_key)
+            return None
+        return value
 
     def set_cached_hermes(
         self,
@@ -421,12 +451,9 @@ class OpenGaussClient:
         self._conn.commit()
         return cursor.rowcount
 
-    def close(self) -> None:
-        """Close the underlying SQLite connection."""
-        self._conn.close()
-
-    def __enter__(self) -> "OpenGaussClient":
-        return self
-
-    def __exit__(self, *_: object) -> None:
-        self.close()
+    def __del__(self) -> None:
+        """Best-effort last-resort cleanup for callers that forget ``close``."""
+        try:
+            self.close()
+        except Exception:
+            pass

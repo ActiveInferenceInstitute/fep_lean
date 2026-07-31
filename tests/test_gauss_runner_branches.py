@@ -86,6 +86,22 @@ def test_run_topics_batch_catches_runner_exception(tmp_path: Path) -> None:
     assert "Unhandled runner exception" in out[0].error
 
 
+def test_run_topic_closes_session_after_unexpected_error(tmp_path: Path) -> None:
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    hermes = HermesExplainer(HermesConfig(enabled=False))
+    client = OpenGaussClient(gauss_home=tmp_path / "g")
+    runner = GaussRunner(lean, hermes, client, PROJ)
+
+    def explode(*_args, **_kwargs):
+        raise RuntimeError("injected failure after session creation")
+
+    runner._record_hermes_turns = explode  # type: ignore[method-assign]
+    with pytest.raises(RuntimeError, match="injected failure"):
+        runner.run_topic(_topic())
+    rows = client._conn.execute("SELECT status FROM sessions").fetchall()
+    assert [row["status"] for row in rows] == ["error"]
+
+
 # ── Explicit workflow selection tests ────────────────────────────────────────
 
 def test_workflow_draft_preserves_requested_stage(tmp_path: Path) -> None:

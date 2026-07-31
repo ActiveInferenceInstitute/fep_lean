@@ -1,6 +1,6 @@
 # fep_lean/src/catalogue/
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 Data-model layer for the FEP theorem catalogue. Loads
 [`config/topics.yaml`](../../config/topics.yaml) into frozen `TopicEntry` rows

@@ -1,6 +1,6 @@
 # fep_lean/src/
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 This directory contains the six Python subpackages that drive the FEP Lean
 pipeline. The layer runs end-to-end per-topic formalisation sessions (LLM

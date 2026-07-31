@@ -13,6 +13,8 @@ from pipeline.core import FEPPipeline, PipelineMode, PipelineResult
 
 log = logging.getLogger(__name__)
 
+__all__ = ["project_root", "run_pipeline", "run_single_topic"]
+
 
 def run_pipeline(*, mode: PipelineMode = "full", interactive: bool = False, area_filter: str | None = None, topic_filter: list[str] | None = None, workflow: str = "verify", output_root: Path | None = None) -> PipelineResult:
     """Run the strict pipeline and report only complete runs."""

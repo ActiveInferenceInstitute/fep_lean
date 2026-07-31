@@ -75,7 +75,7 @@ class Reporter:
         self.project_root = Path(project_root)
         self.output_root = Path(output_root) if output_root is not None else self.project_root / "output"
         self.reports_dir = self.output_root / "reports"
-        self.run_id = run_id or f"run_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.run_id = run_id or f"run_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
 
     @staticmethod
     def build_verification_manifest(results: Iterable[Any]) -> dict[str, Any]:
@@ -124,8 +124,14 @@ class Reporter:
             "catalogue_topics": int(summary.get("catalogue_topics", len(catalogue.topics))),
             "verified_topics": int(summary.get("verified_topics", 0)),
             "capabilities": summary.get("capabilities", {}),
-            "verification_source": "hermes_refined" if topics else "none",
-            "lean_clean": int(summary.get("verified_topics", 0)) == int(summary.get("catalogue_topics", len(catalogue.topics))) and summary.get("mode") == "full",
+            "verification_source": "hermes_refined" if any(
+                row.get("verification_source") == "hermes_refined" or row.get("hermes_success")
+                for row in topics
+            ) else "none",
+            "lean_clean": bool(summary.get("complete", False))
+            and int(summary.get("verified_topics", 0))
+            == int(summary.get("catalogue_topics", len(catalogue.topics)))
+            and summary.get("mode") == "full",
             "failure_reason": summary.get("failure_reason", ""),
             "source_digest": source_digest,
             "config_digest": config_digest,
@@ -146,7 +152,15 @@ class Reporter:
         manifest = self.build_verification_manifest(topics)
         _atomic_text(root / "verification_manifest.json", json.dumps(manifest, indent=2, sort_keys=True) + "\n")
         _atomic_text(root / "run_manifest.json", json.dumps(run_manifest, indent=2, sort_keys=True, default=str) + "\n")
-        hashes = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in root.iterdir() if p.is_file()}
+        # ``summary.json`` contains this map, so hashing it would create a
+        # self-referential value.  Hash every other report artifact, including
+        # nested per-topic files, and make the exclusion explicit in the key
+        # name's surrounding schema rather than publishing a stale digest.
+        hashes = {
+            p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted(root.rglob("*"))
+            if p.is_file() and p.name != "summary.json"
+        }
         summary["artifact_hashes"] = hashes
         _atomic_text(root / "summary.json", json.dumps(summary, indent=2, sort_keys=True, default=str) + "\n")
         return ReportPaths(root, root / "index.md", root / "summary.json", root / "hermes.md", root / "lean.md", root / "validation.md", root / "verification_manifest.json", root / "run_manifest.json")
@@ -169,7 +183,8 @@ class Reporter:
         rows = self._topic_rows(result)
         direct = sum(bool(row.get("hermes_lean_compiles")) for row in rows)
         final = sum(bool(row.get("lean_compiles")) and not bool(row.get("lean_has_sorry")) for row in rows)
-        lines = [f"# fep_lean run `{self.run_id}`", "", f"**Status:** `{getattr(result, 'status', 'unknown')}`", f"**Mode:** `{getattr(result, 'mode', 'full')}`", f"**Total Topics:** {len(catalogue.topics)}", f"**Verified topics:** {getattr(result, 'verified_topics', 0)}", f"**Hermes-refined Lean compiled directly:** {direct}/{len(rows) or 0}", f"**Final Lean compiled:** {final}/{len(rows) or 0}", "", "## Stages", "", "| Stage | Status | Duration |", "| --- | --- | ---: |"]
+        selected_topics = int(getattr(result, "catalogue_topics", 0) or len(rows) or len(catalogue.topics))
+        lines = [f"# fep_lean run `{self.run_id}`", "", f"**Status:** `{getattr(result, 'status', 'unknown')}`", f"**Mode:** `{getattr(result, 'mode', 'full')}`", f"**Total Topics:** {selected_topics}", f"**Catalogue Topics:** {len(catalogue.topics)}", f"**Verified topics:** {getattr(result, 'verified_topics', 0)}", f"**Hermes-refined Lean compiled directly:** {direct}/{len(rows) or 0}", f"**Final Lean compiled:** {final}/{len(rows) or 0}", "", "## Stages", "", "| Stage | Status | Duration |", "| --- | --- | ---: |"]
         for stage in getattr(result, "stages", []):
             lines.append(f"| {stage.name} | {stage.status} | {stage.duration_s:.2f}s |")
         lines.extend(["", "## Metrics", "", "```json", json.dumps(stats, indent=2, default=str), "```", ""])
@@ -228,7 +243,8 @@ class Reporter:
         return "# Lean results\n\n```json\n" + json.dumps(stats, indent=2, default=str) + "\n```\n"
 
     def _validation_md(self, result: Any) -> str:
-        validation = next((s.payload for s in getattr(result, "stages", []) if s.name == "Environment Validation"), {}) or {}
+        payload: Any = next((s.payload for s in getattr(result, "stages", []) if s.name == "Environment Validation"), {})
+        validation: dict[str, Any] = payload if isinstance(payload, dict) else {}
         lines = ["# Environment validation", "", f"Status: `{validation.get('status', 'not-run')}`", ""]
         for check in validation.get("checks", []):
             lines.append(f"- `{check.get('name', '')}`: `{check.get('ok', False)}` — {check.get('message', '')}")

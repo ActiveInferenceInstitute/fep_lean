@@ -1,6 +1,6 @@
 # Reporter — fep_lean Output Generation
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 ## Overview
 

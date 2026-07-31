@@ -12,4 +12,4 @@ from cli import main
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(["run", *sys.argv[1:]]))
+    raise SystemExit(main(["verify", *sys.argv[1:]]))

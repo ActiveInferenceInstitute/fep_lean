@@ -4,6 +4,7 @@ The workspace pins `leanprover/lean4:v4.29.0` and Mathlib `v4.29.0`.
 
 ```bash
 uv run fep-lean setup
+uv run fep-lean verify
 cd lean
 lake build
 lake build FepSketches

@@ -136,7 +136,7 @@ def _get_elan_bin() -> Path:
     return _get_elan_home() / "bin"
 
 
-def _subprocess_env() -> dict:
+def _subprocess_env() -> dict[str, str]:
     """Build an environment dict for lean/lake sub-processes.
 
     Delegates to ``verification._toolchain.subprocess_env`` but uses the
@@ -227,7 +227,7 @@ class VerifyResult:
             return "compiles_with_sorry"
         return "compiles_clean"
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, object]:
         """Return serializable dict for reports and JSONL export."""
         return {
             "topic_id": self.topic_id,
@@ -384,8 +384,10 @@ class LeanVerifier:
                 False,
                 "Mathlib not yet downloaded — run: cd lean && lake exe cache get",
             )
-        mathlib_pkg = self._lean_dir / ".lake" / "build" / "lib" / "lean"
-        mathlib_root_olean = mathlib_pkg / "Mathlib.olean"
+        # Lake's dependency cache is built inside Mathlib's own package
+        # workspace; the project workspace only contains FepSketches oleans.
+        mathlib_build = mathlib_pkg / ".lake" / "build" / "lib" / "lean"
+        mathlib_root_olean = mathlib_build / "Mathlib.olean"
         if not mathlib_root_olean.is_file():
             return (
                 False,
@@ -396,11 +398,11 @@ class LeanVerifier:
         # sketches universally depend on. If any is missing, the cache is
         # partial / corrupted and a 50-topic batch will fail in opaque ways.
         required_leaves = (
-            mathlib_pkg / "Mathlib" / "Data" / "Real" / "Basic.olean",
-            mathlib_pkg / "Mathlib" / "Algebra" / "Order" / "Ring" / "Basic.olean",
-            mathlib_pkg / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean",
+            mathlib_build / "Mathlib" / "Data" / "Real" / "Basic.olean",
+            mathlib_build / "Mathlib" / "Algebra" / "Order" / "Ring" / "Basic.olean",
+            mathlib_build / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean",
         )
-        missing = [str(p.relative_to(mathlib_pkg)) for p in required_leaves if not p.is_file()]
+        missing = [str(p.relative_to(mathlib_build)) for p in required_leaves if not p.is_file()]
         if missing:
             return (
                 False,
@@ -588,7 +590,7 @@ class LeanVerifier:
         )
         return preamble + lean_code
 
-    def _run_lake_lean(self, lean_file: Path) -> subprocess.CompletedProcess:
+    def _run_lake_lean(self, lean_file: Path) -> subprocess.CompletedProcess[str]:
         """Run ``lake env lean <file>`` in the lakefile directory.
 
         Uses ``_subprocess_env()`` which sets ``ELAN_HOME`` to a writable
@@ -596,6 +598,8 @@ class LeanVerifier:
         bypassing the elan proxy's settings.toml write requirement.
         """
         env = _subprocess_env()
+        if self._lake_exe is None:
+            raise RuntimeError("lake executable is unavailable")
         return subprocess.run(
             [self._lake_exe, "env", "lean", str(lean_file)],
             capture_output=True,

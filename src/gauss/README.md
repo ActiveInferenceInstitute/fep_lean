@@ -1,6 +1,6 @@
 # fep_lean/src/gauss/
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 OpenGauss integration layer: CLI wrapper, SQLite session client, and the
 per-topic orchestrator that drives one theorem through the LLM and the Lean

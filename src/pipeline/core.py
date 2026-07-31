@@ -202,16 +202,23 @@ class FEPPipeline:
 
     def _run_gauss(self, workflow: str) -> dict[str, Any]:
         runner = GaussRunner.create_default(self.project_root, require_cli=True)
-        if not getattr(runner.hermes, "is_live", False):
-            raise RuntimeError("Hermes is not live; full mode requires configured credentials")
-        runner.hermes.preflight()
-        results = runner.run_topics_batch(self._topics_to_run, workflow=workflow)
-        return {"results": results, "topics": [result.as_dict() for result in results]}
+        try:
+            if not getattr(runner.hermes, "is_live", False):
+                raise RuntimeError("Hermes is not live; full mode requires configured credentials")
+            runner.hermes.preflight()
+            results = runner.run_topics_batch(self._topics_to_run, workflow=workflow)
+            return {"results": results, "topics": [result.as_dict() for result in results]}
+        finally:
+            runner.close()
 
     def _write_artifacts(self) -> dict[str, str]:
         if self._catalogue is None:
             raise RuntimeError("catalogue is not loaded")
-        vars_path = write_manuscript_vars(self.project_root, self._catalogue)
+        vars_path = write_manuscript_vars(
+            self.project_root,
+            self._catalogue,
+            output_root=self.output_root,
+        )
         appendix_path = write_unified_formalism_appendix_markdown(self.project_root, self._catalogue)
         figures = write_all_catalogue_figures(self._catalogue, self.project_root, output_root=self.output_root)
         return {"vars_file": str(vars_path), "appendix": str(appendix_path), "figures": str(len(figures))}

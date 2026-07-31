@@ -158,9 +158,27 @@ class GaussRunner:
         if pruned:
             log.debug("Pruned %d stale Hermes cache entries (ttl=%.1fh)", pruned, ttl)
         self._prefetch_executor: ThreadPoolExecutor | None = None
-        self._prefetch_future: Future | None = None
+        self._prefetch_future: Future[HermesResult] | None = None
         self._prefetch_hermes: HermesExplainer | None = None
         self._prefetch_next_topic: "TopicEntry | None" = None
+        self._closed = False
+
+    def close(self) -> None:
+        """Release the prefetch worker and SQLite client resources."""
+        if self._closed:
+            return
+        executor = self._prefetch_executor
+        self._clear_prefetch_state()
+        if executor is not None:
+            executor.shutdown(wait=True)
+        self.client.close()
+        self._closed = True
+
+    def __enter__(self) -> "GaussRunner":
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+        self.close()
 
     def _clear_prefetch_state(self) -> None:
         self._prefetch_executor = None
@@ -306,6 +324,21 @@ class GaussRunner:
     def run_topic(
         self, topic: "TopicEntry", *, workflow: str = "verify"
     ) -> TopicRunResult:
+        """Run one topic and finalize any session left open by an exception."""
+        self._active_session_id: str | None = None
+        try:
+            return self._run_topic(topic, workflow=workflow)
+        except Exception as exc:
+            if self._active_session_id:
+                self.client.close_open_session(
+                    self._active_session_id,
+                    error=f"{type(exc).__name__}: {exc}",
+                )
+            raise
+
+    def _run_topic(
+        self, topic: "TopicEntry", *, workflow: str = "verify"
+    ) -> TopicRunResult:
         """Run the full Hermes + Lean workflow for a single topic.
 
         Parameters
@@ -334,6 +367,7 @@ class GaussRunner:
             topic.area,
             lean_sketch,
         )
+        self._active_session_id = session_id
         self.client.log_event("evaluation_started", session_id=session_id, workflow=workflow)
 
         # ── Hermes call with cache (prefetch result from prior topic's verify phase) ─
