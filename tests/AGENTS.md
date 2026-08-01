@@ -4,7 +4,7 @@ Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no 
 
 ## Test census
 
-**Canonical scale**: `uv run pytest tests/ --collect-only -q` → **343** tests in **31** test files (`test_*.py`). Per-file counts match `pytest --collect-only` per module (regenerate with `pytest ... --collect-only` if drift appears).
+**Canonical scale**: `uv run pytest tests/ --collect-only -q` → **350** tests in **31** test files (`test_*.py`). Per-file counts match `pytest --collect-only` per module (regenerate with `pytest ... --collect-only` if drift appears).
 
 | File | Tests | Description |
 |------|------:|-------------|
@@ -28,7 +28,7 @@ Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no 
 | `test_lean_verifier.py` | 24 | VerifyResult, wrap-code, verify_sketch, verify_batch |
 | `test_lean_verifier_sad_paths.py` | 15 | OSError, timeout, missing lake/lean paths |
 | `test_maint_fep_all_generator.py` | 7 | `scripts/_maint_build_fep_all_lean.py` generator invariants (SSOT for materialized `fep_all.lean`) |
-| `test_manuscript_artifacts.py` | 22 | `manuscript_vars.yaml` + full topic catalogue markdown |
+| `test_manuscript_artifacts.py` | 24 | `manuscript_vars.yaml` + full topic catalogue markdown |
 | `test_open_gauss_client.py` | 16 | SQLite session store CRUD, hermes_cache round-trip, prune, export, stats |
 | `test_orchestrator.py` | 6 | End-to-end pipeline on the project tree (1 API-key test) |
 | `test_orchestrator_exceptions.py` | 1 | PermissionError from Reporter |
@@ -36,7 +36,7 @@ Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no 
 | `test_pipeline.py` | 11 | FEPPipeline four recorded stages + orchestrator + workflow kwarg (1 API-key test) |
 | `test_pipeline_exceptions.py` | 3 | Missing catalogue, validation warnings |
 | `test_preflight.py` | 8 | `run_preflight` with present/missing binaries, cli, sad paths |
-| `test_reporter.py` | 28 | Markdown + JSON report generation, receipt hashes, and `verification_manifest.json` |
+| `test_reporter.py` | 31 | Markdown + JSON report generation, receipt hashes, and `verification_manifest.json` |
 | `test_subpackage_imports.py` | 7 | All subpackages importable standalone |
 | `test_theorem_maturity_audit.py` | 2 | Maintained semantic review coverage and generated projection parity |
 

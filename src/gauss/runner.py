@@ -65,9 +65,39 @@ def _prefetch_enabled() -> bool:
     return v in ("1", "true", "yes", "on")
 
 
-def _hermes_cache_key(topic_id: str, lean_sketch: str, model: str, stage: str) -> str:
-    """SHA-256 of the inputs that determine a unique Hermes response."""
-    raw = f"{topic_id}:{lean_sketch}:{model}:{stage}"
+def _toolchain_salt(project_root: Path) -> str:
+    """Return a stable short hash of the pinned Lean toolchain + Mathlib rev.
+
+    Folded into the Hermes cache key so a toolchain/Mathlib bump invalidates
+    cached refined sketches that may no longer compile against the new
+    milestone.
+    """
+    parts: list[str] = []
+    toolchain = Path(project_root) / "lean" / "lean-toolchain"
+    if toolchain.is_file():
+        parts.append(toolchain.read_text(encoding="utf-8").strip())
+    manifest = Path(project_root) / "lean" / "lake-manifest.json"
+    if manifest.is_file():
+        try:
+            data = _json.loads(manifest.read_text(encoding="utf-8"))
+            for package in data.get("packages", []):
+                if package.get("name") == "mathlib":
+                    parts.append(str(package.get("inputRev", "")))
+                    break
+        except (OSError, ValueError, TypeError):
+            pass
+    return _hashlib.sha256("|".join(parts).encode()).hexdigest()[:12]
+
+
+def _hermes_cache_key(
+    topic_id: str, lean_sketch: str, model: str, stage: str, salt: str = ""
+) -> str:
+    """SHA-256 of the inputs that determine a unique Hermes response.
+
+    ``salt`` is the pinned-toolchain digest (see :func:`_toolchain_salt`) so
+    cached responses are invalidated when the Lean/Mathlib milestone changes.
+    """
+    raw = f"{topic_id}:{lean_sketch}:{model}:{stage}:{salt}"
     return _hashlib.sha256(raw.encode()).hexdigest()
 
 
@@ -161,6 +191,8 @@ class GaussRunner:
         self.hermes = hermes
         self.client = client
         self.project_root = project_root
+        # Toolchain-aware salt invalidates the Hermes cache on Lean/Mathlib bumps.
+        self._cache_salt = _toolchain_salt(project_root)
         # Prune stale Hermes cache entries on startup
         ttl = getattr(self.hermes._cfg, "cache_ttl_hours", 24.0)
         pruned = self.client.prune_hermes_cache(ttl_hours=ttl)
@@ -349,7 +381,7 @@ class GaussRunner:
         if nt.id == current_topic.id:
             return
         lean_next = getattr(nt, "lean_sketch", "") or ""
-        nk = _hermes_cache_key(nt.id, lean_next, model, workflow)
+        nk = _hermes_cache_key(nt.id, lean_next, model, workflow, salt=self._cache_salt)
         if self.client.get_cached_hermes(nk) is not None:
             return
         log.debug("Prefetch Hermes for %s while verifying %s", nt.id, current_topic.id)
@@ -392,7 +424,9 @@ class GaussRunner:
         preamble = _WORKFLOW_PREAMBLES.get(workflow, "")
         lean_sketch = getattr(topic, "lean_sketch", "") or ""
         model = self.hermes._cfg.model
-        cache_key = _hermes_cache_key(topic.id, lean_sketch, model, workflow)
+        cache_key = _hermes_cache_key(
+            topic.id, lean_sketch, model, workflow, salt=self._cache_salt
+        )
         stage_results: list[dict[str, Any]] = []
 
         t0 = time.time()
@@ -526,7 +560,7 @@ class GaussRunner:
                 f"Errors: {verify_res.errors or 'none'}."
             )
             review_cache_key = _hermes_cache_key(
-                topic.id, refined, model, "review_commentary"
+                topic.id, refined, model, "review_commentary", salt=self._cache_salt
             )
             review_cached = self.client.get_cached_hermes(review_cache_key)
             if review_cached is not None:

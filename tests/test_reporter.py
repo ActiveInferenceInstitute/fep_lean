@@ -839,3 +839,68 @@ def test_build_verification_manifest_helper_shape() -> None:
     sorry_rows = [row for row in payload["results"] if row["lean_has_sorry"]]
     assert len(sorry_rows) == 1
     assert sorry_rows[0]["topic_id"] == "fep-003"
+
+
+def test_summary_json_carries_run_id(tmp_path: Path) -> None:
+    """summary.json must carry the run_id so manuscripts can render it."""
+    rep = Reporter(tmp_path, run_id="run_id_carrier")
+    paths = rep.generate(TOPICS, _minimal_result(tmp_path))
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    assert summary["run_id"] == "run_id_carrier"
+
+
+def test_validate_receipt_detects_source_drift(tmp_path: Path) -> None:
+    """Supplying project_root must flag a stored digest that no longer matches
+    the live source tree."""
+    rows = [
+        {
+            "topic_id": "fep-001",
+            "success": True,
+            "hermes_success": True,
+            "lean_compiles": True,
+            "lean_has_sorry": False,
+            "verification_source": "hermes_refined",
+        }
+    ]
+    result = _result_with_gauss(rows)
+    result.complete = True
+    result.catalogue_topics = 1
+    result.verified_topics = 1
+    rep = Reporter(tmp_path, run_id="run_drift_receipt")
+    paths = rep.generate(TOPICS, result)
+
+    # Validation without a project root stays clean (no live-tree comparison).
+    base = validate_report_receipt(paths.root, require_complete=True)
+    assert base["valid"] is True
+
+    # Point at a project root with a source file that no longer matches,
+    # e.g. a touched file inside a tmp copy. Simplest real drift: add a source
+    # directory with an extra file and pass a fake project_root copy.
+    drift_root = tmp_path / "drift_project"
+    drift_root.mkdir()
+    (drift_root / "src").mkdir()
+    (drift_root / "src" / "extra_module.py").write_text("# drift\n", encoding="utf-8")
+
+    drifted = validate_report_receipt(
+        paths.root, require_complete=True, project_root=drift_root
+    )
+    assert drifted["valid"] is False
+    assert any("source_digest" in error for error in drifted["errors"])
+
+
+def test_reporter_skips_traversal_topic_write(tmp_path: Path) -> None:
+    """A crafted topic_id with path separators must not escape the run root."""
+    rows = [
+        {
+            "topic_id": "../../escape",
+            "success": True,
+            "hermes_success": True,
+            "lean_compiles": True,
+            "lean_has_sorry": False,
+            "verification_source": "hermes_refined",
+        }
+    ]
+    rep = Reporter(tmp_path, run_id="run_traversal")
+    paths = rep.generate(TOPICS, _result_with_gauss(rows))
+    assert not (paths.root / "topics" / ".." / ".." / "escape.md").exists()
+    assert not (paths.root.parents[1] / "escape.md").exists()

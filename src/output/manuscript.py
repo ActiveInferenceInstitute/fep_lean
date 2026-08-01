@@ -54,7 +54,17 @@ def _get_latest_verification_manifest(
     reports_root = (
         Path(output_root) if output_root is not None else Path(project_root) / "output"
     )
-    candidates = list((reports_root / "reports").glob("*/verification_manifest.json"))
+    candidates = []
+    for manifest in (reports_root / "reports").glob("*/verification_manifest.json"):
+        summary_path = manifest.parent / "summary.json"
+        # Only complete runs carry an authoritative verification manifest;
+        # a crashed or partial run must not be served as the current block.
+        try:
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if summary.get("complete") is True:
+            candidates.append(manifest)
     return max(candidates, key=lambda p: p.stat().st_mtime) if candidates else None
 
 
@@ -186,10 +196,18 @@ def _hermes_block_from_summary(path: Path | None) -> dict[str, Any]:
 def _count_test_cases(project_root: Path) -> int:
     cache = Path(project_root) / "output" / ".cache" / "tests_collected.json"
     tests = list((Path(project_root) / "tests").glob("test_*.py"))
+    root = Path(project_root)
+    # Invalidate on configuration that changes collection, not just test files.
+    invalidators = [
+        root / "tests" / "conftest.py",
+        root / "pyproject.toml",
+    ]
+    invalidation_sources = tests + [p for p in invalidators if p.is_file()]
     if (
         cache.is_file()
-        and tests
-        and cache.stat().st_mtime >= max(p.stat().st_mtime for p in tests)
+        and invalidation_sources
+        and cache.stat().st_mtime
+        >= max(p.stat().st_mtime for p in invalidation_sources)
     ):
         try:
             return int(
@@ -197,6 +215,7 @@ def _count_test_cases(project_root: Path) -> int:
             )
         except (OSError, ValueError, TypeError):
             pass
+    proc: subprocess.CompletedProcess[str] | None = None
     try:
         proc = subprocess.run(
             [sys.executable, "-m", "pytest", "tests", "--collect-only", "-q"],
@@ -211,7 +230,11 @@ def _count_test_cases(project_root: Path) -> int:
         if match:
             count = int(match.group(1))
     except (OSError, subprocess.SubprocessError):
-        count = len(tests)
+        count = 0
+    # Do not cache a failed collection (returncode != 0 or count == 0): a
+    # transient import error would otherwise pin tests.collected to 0.
+    if proc is None or proc.returncode != 0 or count == 0 or not tests:
+        return count or len(tests)
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(
         json.dumps({"collected": count, "source_files": len(tests)}), encoding="utf-8"

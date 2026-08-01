@@ -198,6 +198,9 @@ def test_latest_verification_manifest_newest(tmp_path: Path) -> None:
     new.mkdir(parents=True)
     (old / "verification_manifest.json").write_text("{}", encoding="utf-8")
     (new / "verification_manifest.json").write_text("{}", encoding="utf-8")
+    # Only complete runs are candidates: give both a complete summary.json.
+    (old / "summary.json").write_text(json.dumps({"complete": True}), encoding="utf-8")
+    (new / "summary.json").write_text(json.dumps({"complete": True}), encoding="utf-8")
     import os
     import time
 
@@ -207,9 +210,42 @@ def test_latest_verification_manifest_newest(tmp_path: Path) -> None:
     assert "run_new" in str(picked)
 
 
+def test_latest_verification_manifest_ignores_incomplete_runs(tmp_path: Path) -> None:
+    """A crashed/partial run (no complete summary) must never be served as the
+    current verification block."""
+    base = tmp_path / "output" / "reports"
+    incomplete = base / "run_partial"
+    complete_run = base / "run_complete"
+    incomplete.mkdir(parents=True)
+    complete_run.mkdir(parents=True)
+    # The incomplete run is NEWER, but lacks a complete summary.
+    (incomplete / "verification_manifest.json").write_text(
+        json.dumps({"compiles_true": 9}), encoding="utf-8"
+    )
+    (incomplete / "summary.json").write_text(
+        json.dumps({"complete": False}), encoding="utf-8"
+    )
+    (complete_run / "verification_manifest.json").write_text(
+        json.dumps({"compiles_true": 3}), encoding="utf-8"
+    )
+    (complete_run / "summary.json").write_text(
+        json.dumps({"complete": True}), encoding="utf-8"
+    )
+    import os
+    import time
+
+    os.utime(incomplete / "summary.json", (time.time() + 10, time.time() + 10))
+    picked = _get_latest_verification_manifest(tmp_path)
+    assert picked is not None
+    assert "run_complete" in str(picked)
+
+
 def test_manuscript_vars_honor_explicit_output_root(tmp_path: Path) -> None:
     custom = tmp_path / "custom-output" / "reports" / "run_custom"
     custom.mkdir(parents=True)
+    (custom / "summary.json").write_text(
+        json.dumps({"complete": True}), encoding="utf-8"
+    )
     (custom / "verification_manifest.json").write_text(
         json.dumps(
             {
@@ -435,6 +471,7 @@ def test_build_manuscript_vars_exposes_hermes_block(tmp_path: Path) -> None:
         json.dumps(
             {
                 "run_id": "test_hermes_block",
+                "complete": True,
                 "topics": [
                     {
                         "topic_id": "fep-001",

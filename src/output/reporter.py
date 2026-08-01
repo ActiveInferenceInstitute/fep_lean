@@ -72,7 +72,10 @@ def _repository_digest(
 
 
 def validate_report_receipt(
-    report_root: Path, *, require_complete: bool = False
+    report_root: Path,
+    *,
+    require_complete: bool = False,
+    project_root: Path | None = None,
 ) -> dict[str, Any]:
     """Independently validate a generated report bundle.
 
@@ -81,6 +84,11 @@ def validate_report_receipt(
     recomputes every listed artifact hash, rejects path traversal, and
     reconciles the summary, run manifest, and verification manifest.  It does
     not execute Lean, Hermes, OpenGauss, or any other external process.
+
+    When ``project_root`` is supplied, the stored ``source_digest`` /
+    ``config_digest`` values are recomputed against the live source tree and
+    drift is reported as an error, closing the provenance gap between a receipt
+    and the tree it claims to represent.
 
     ``claim_ready`` is stricter than ``valid``: it is true only for a complete,
     non-empty full-mode receipt whose selected topics all have clean final Lean
@@ -378,6 +386,36 @@ def validate_report_receipt(
     ):
         errors.append("run manifest reports a verification source without topic rows")
 
+    # Recompute source/config digests against the live tree if a project root
+    # was supplied, closing the provenance gap between receipt and source.
+    if project_root is not None and summary is not None:
+        live_root = Path(project_root)
+        recomputed_source = _repository_digest(
+            live_root,
+            ("src", "scripts"),
+            ("lean/FepSketches/fep_all.lean",),
+        )
+        recomputed_config = _repository_digest(
+            live_root,
+            (),
+            (
+                "config/settings.yaml",
+                "config/topics.yaml",
+                "manuscript/config.yaml",
+                "lean/lean-toolchain",
+                "lean/lakefile.lean",
+            ),
+        )
+        for name, stored, recomputed in (
+            ("source_digest", summary.get("source_digest"), recomputed_source),
+            ("config_digest", summary.get("config_digest"), recomputed_config),
+        ):
+            if stored != recomputed:
+                errors.append(
+                    f"summary {name} does not match the live source tree "
+                    f"(stored {stored}, live {recomputed})"
+                )
+
     claim_ready = (
         not errors
         and mode == "full"
@@ -484,6 +522,7 @@ class Reporter:
         topics = self._topic_rows(result)
         summary = result.as_dict() if hasattr(result, "as_dict") else dict(result)
         summary["topics"] = topics
+        summary["run_id"] = self.run_id
         summary["catalogue"] = catalogue.summary()
         source_digest = _repository_digest(
             self.project_root,
