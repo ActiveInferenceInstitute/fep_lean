@@ -80,4 +80,5 @@ See [`AGENTS.md`](AGENTS.md) for the full wiring (Hermes + LeanVerifier +
 SQLite) and the per-stage workflow preambles (`verify`, `draft`, `prove`,
 `review`) used to condition the Hermes prompt.
 
-**See also:** monorepo Cursor skill [`../../../.cursor/skills/gauss/SKILL.md`](../../../.cursor/skills/gauss/SKILL.md) (math-inc CLI vs this package vs Huawei DB).
+**Authority:** this package and its CLI documentation are the repository-local
+contract; no `.cursor/skills/gauss/` skill is bundled in this checkout.

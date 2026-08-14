@@ -1,8 +1,12 @@
 ## Quantitative Execution Metrics {#sec:quantitative_execution_metrics}
 
-![Pipeline stage wall-clock for run `{{verify.run_id}}` (`FEP_LEAN_GAUSS_WORKFLOWS=1`). The four recorded stages — Load Catalogue, Environment Validation, Gauss Sessions, and Manuscript Artifacts — total {{verify.duration_seconds}} s across {{total_topics}} topics; Gauss Sessions dominates because it sequences Hermes LLM queries and per-topic `lake env lean` calls, while the surrounding stages are I/O-bound and complete in well under a second each on a warm workspace. Within Gauss Sessions a typical topic decomposes into a Hermes turn (mean ≈{{hermes.mean_topic_s}} s on the recorded run; primary model `{{hermes.primary_model}}` is a reasoning model, whose per-topic latency is driven by reasoning-token budget rather than output length), a warm-cache `lake env lean` compile (order 1–2 s), and a sub-second SQLite write. Exact per-topic traces are recorded in `output/reports/{{verify.run_id}}/summary.json`.](../output/figures/pipeline_timing.png){#fig:pipeline_timing width=90%}
+The recorded four stages — Load Catalogue, Environment Validation, Gauss
+Sessions, and Manuscript Artifacts — total {{verify.duration_seconds}} s across
+{{total_topics}} topics. Exact per-topic traces, rather than an ungenerated
+chart, are authoritative in
+`output/reports/{{verify.run_id}}/summary.json`.{#fig:pipeline_timing}
 
-![Theorem count by topic area. FEP leads with {{areas.FEP.count}} theorems; Thermodynamics contributes {{areas.Thermodynamics.count}}. Area sizes reflect the maturity of Lean 4 / Mathlib4 infrastructure in each sub-field.](../output/figures/area_distribution.png){#fig:area_distribution width=80%}
+![Theorem count by topic area. FEP leads with {{areas.FEP.count}} theorems; Thermodynamics contributes {{areas.Thermodynamics.count}}. Area sizes reflect the maturity of Lean 4 / Mathlib4 infrastructure in each sub-field.](../output/figures/topics_by_area.png){#fig:area_distribution width=80%}
 
 ### Aggregate Catalogue Metrics {#sec:aggregate_metrics}
 
@@ -77,7 +81,7 @@ Under the zero-`sorry` policy enforced by `scripts/catalogue_sketches.py`, all {
 
 The catalogue-derived rate is **`{{compile_rate.total}}`** (every `real`-tagged sketch is sorry-free in YAML); the empirical compile rate from a native `lake env lean` sweep populates into `manuscript_vars.yaml` once the verifier path runs (see §\ref{sec:lean_timing_distribution}). Any failed topic IDs surface through `compile_rate.failures` and `verify.failed_topic_ids` in the regenerated vars, which is where per-topic regressions should be tracked rather than by hand-editing prose.
 
-![Maturity heatmap: area (rows) vs maturity level (columns). All {{total_topics}} topics are `real` under current policy, producing a uniform heatmap. The visualization is designed to surface heterogeneity as future topics at `partial` or `aspirational` maturity are added.](../output/figures/maturity_heatmap.png){#fig:maturity_heatmap width=80%}
+![Maturity heatmap: area (rows) vs maturity level (columns). All {{total_topics}} topics are `real` under current policy, producing a uniform heatmap. The visualization is designed to surface heterogeneity as future topics at `partial` or `aspirational` maturity are added.](../output/figures/area_maturity.png){#fig:maturity_heatmap width=80%}
 
 ### Hermes LLM Performance {#sec:hermes_performance}
 
@@ -139,9 +143,16 @@ A full Gauss run (`{{verify.run_id}}`, ~{{verify.duration_min}} min, `FEP_LEAN_G
 
 **Interpretation:** All prior errors were attributable exclusively to LLM refinement artifacts, not to the underlying mathematics — confirmed by the `{{compile_rate.total}}` catalogue baseline maintained throughout. The `restore_lean_structure` pipeline (see `src/llm/hermes.py`) and GaussRunner baseline fallback together eliminate the compile gap, yielding a fully reproducible `{{compile_rate.total}}` Hermes-assisted pipeline result.
 
-![Hermes-assisted compilation outcomes, prior baseline vs. the current run `{{verify.run_id}}`. The prior fixture recorded 39 clean / 1 sorry / 10 errors; the current run records {{verify.compiles_true}} clean / {{verify.sorry_count}} sorry / {{verify.compiles_false}} errors across the same {{total_topics}} topics. The delta reflects pipeline-side changes (the `restore_lean_structure` post-processing stage and the `GaussRunner` baseline fallback in `src/gauss/runner.py`) rather than edits to the shipped catalogue sketches.](../output/figures/verification_comparison.png){#fig:verification_comparison width=90%}
+The prior fixture recorded 39 clean / 1 sorry / 10 errors; run
+`{{verify.run_id}}` records {{verify.compiles_true}} clean,
+{{verify.sorry_count}} sorry, and {{verify.compiles_false}} errors across the
+same {{total_topics}} topics. The run manifest is authoritative; the catalogue
+figure generator does not emit a comparison chart.{#fig:verification_comparison}
 
-![Error taxonomy for the prior-run Hermes-refined compile failures (all resolved in `{{verify.run_id}}`). The dominant category — API/type mismatch (6 cases) — was addressed via YAML sketch improvements and baseline fallback. The remaining categories were resolved by `restore_lean_structure` enhancements.](../output/figures/error_taxonomy.png){#fig:error_taxonomy width=85%}
+The prior-run Hermes-refined failures were dominated by API/type mismatches;
+run `{{verify.run_id}}` records their resolution in its verification manifest.
+No error-taxonomy image is emitted by the canonical catalogue figure
+generator.{#fig:error_taxonomy}
 
 ### Baseline Comparison: Hermes-Assisted vs Manual Drafting {#sec:baseline_comparison}
 
@@ -154,7 +165,7 @@ A lightweight internal comparison — not a controlled experiment — contrasted
 
 The caveat is selection bias: the {{total_topics}}-topic catalogue was curated to fit Mathlib4's current coverage, so both Hermes and a human expert achieve high compile rates on this distribution. The interesting claim is relative, not absolute: *on a fixed catalogue at `mathlib_status: real`, Hermes-assisted drafting matches or exceeds manual drafting on first-pass compile rate while producing substantially shorter proofs.*
 
-![Proof maturity distribution (donut). All {{total_topics}} topics are sorry-free (`mathlib_status: real`). The uniform distribution is a deliberate design constraint: the shipped catalogue admits no placeholder proofs.](../output/figures/sorry_distribution.png){#fig:sorry_distribution width=60%}
+![Proof maturity distribution (donut). All {{total_topics}} topics are sorry-free (`mathlib_status: real`). The uniform distribution is a deliberate design constraint: the shipped catalogue admits no placeholder proofs.](../output/figures/status_distribution.png){#fig:sorry_distribution width=60%}
 
 ## Maturity Migration Pathways {#sec:maturity_migration_pathways}
 
@@ -203,4 +214,3 @@ Several Mathlib4 modules serve as critical infrastructure across multiple formal
 *Cross-area dependency on shared Mathlib4 modules. `MeasureTheory.Measure.MeasureSpace` is the most widely-used component, reflecting the centrality of measure-theoretic probability in FEP formulations.*
 
 This dependency structure suggests that improvements to `MeasureTheory.Measure.MeasureSpace` would have the highest marginal impact on the maturity of FEP formalizations across the board.
-

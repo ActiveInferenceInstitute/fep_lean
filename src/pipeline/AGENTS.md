@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Coordinates the 4-stage FEP formalisation pipeline that connects [`catalogue/`](../catalogue/AGENTS.md) → [`verification/`](../verification/AGENTS.md) → [`gauss/`](../gauss/AGENTS.md) (which internally delegates to [`llm/`](../llm/AGENTS.md) and [`verification/lean_verifier.py`](../verification/lean_verifier.py)) → [`output/`](../output/AGENTS.md), executing topological dependencies in order. Run reporting (`Reporter.generate`) runs in the enclosing `orchestrator.run_pipeline` after `FEPPipeline.run()` returns. Two entry points are exposed for scripts: `run_pipeline()` (everything) and `run_single_topic()` (verify one target).
+Coordinates the 4-stage FEP formalisation pipeline that connects [`catalogue/`](../catalogue/AGENTS.md) → [`verification/`](../verification/AGENTS.md) → [`gauss/`](../gauss/AGENTS.md) (which internally delegates to [`llm/`](../llm/AGENTS.md) and [`verification/lean_verifier.py`](../verification/lean_verifier.py)) → [`output/`](../../output/), executing topological dependencies in order. Run reporting (`Reporter.generate`) runs in the enclosing `orchestrator.run_pipeline` after `FEPPipeline.run()` returns. Two entry points are exposed for scripts: `run_pipeline()` (everything) and `run_single_topic()` (verify one target).
 
 ## Files
 

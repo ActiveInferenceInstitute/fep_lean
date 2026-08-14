@@ -52,7 +52,7 @@ A common LLM-facing pitfall is arity drift: `HermesExplainer` sometimes suggests
 
 ### Coverage Map and Dependency Graph {#sec:coverage_map_and_dependency_graph}
 
-![Ecosystem maturity of the {{total_topics}}-topic catalogue against the pinned Mathlib4 `{{mathlib_tag}}` release. Every topic currently carries `mathlib_status: real`, i.e. its sketch compiles `sorry`-free under `lake env lean`; the `partial` and `aspirational` staging tiers are reserved for future rows that would require still-absent Mathlib infrastructure (native SDEs, Fokker–Planck operators, general-measure KL, Riemannian metric tooling). The catalogue draws on `MeasureTheory`, `Analysis.SpecialFunctions`, `Analysis.InnerProductSpace`, `LinearAlgebra.Matrix`, and `Topology.MetricSpace`.](../output/figures/mathlib_coverage.png){#fig:mathlib_coverage width=80%}
+![Ecosystem maturity of the {{total_topics}}-topic catalogue against the pinned Mathlib4 `{{mathlib_tag}}` release. Every topic currently carries `mathlib_status: real`, i.e. its sketch compiles `sorry`-free under `lake env lean`; the `partial` and `aspirational` staging tiers are reserved for future rows that would require still-absent Mathlib infrastructure (native SDEs, Fokker–Planck operators, general-measure KL, Riemannian metric tooling). The catalogue draws on `MeasureTheory`, `Analysis.SpecialFunctions`, `Analysis.InnerProductSpace`, `LinearAlgebra.Matrix`, and `Topology.MetricSpace`.](../output/figures/area_maturity.png){#fig:mathlib_coverage width=80%}
 
 The {{total_topics}}-topic FEP formalization induces a dense dependency graph within Mathlib4. The tables below map the five formalization areas against the verified infrastructure they rely on.
 
