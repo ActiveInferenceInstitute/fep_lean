@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import subprocess
 import sys
@@ -11,7 +10,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from catalogue.topics import FEPTopicCatalogue
 
 UNIFIED_FORMALISM_CATALOGUE_FILENAME = "09z_unified_formalism_catalogue.md"
@@ -47,7 +45,12 @@ def _get_latest_verification_manifest(project_root: Path) -> Path | None:
 
 
 def _verify_block_from_manifest(path: Path | None) -> dict[str, Any]:
-    base = {"manifest_present": False, "verify_lean_ran": False, "topics_with_result": 0, "compiles_true": 0, "compiles_false": 0}
+    base: dict[str, Any] = {
+        "manifest_present": False, "verify_lean_ran": False, "topics_with_result": 0,
+        "compiles_true": 0, "compiles_false": 0, "sorry_count": 0,
+        "failed_topic_ids": "", "mean_topic_s": 0.0,
+        "duration_seconds": 0.0, "duration_min": 0.0, "run_id": "",
+    }
     if path is None or not path.is_file():
         return base
     base["manifest_present"] = True
@@ -62,11 +65,28 @@ def _verify_block_from_manifest(path: Path | None) -> dict[str, Any]:
     base["topics_with_result"] = int(data.get("topics_with_result", len(results))) if str(data.get("topics_with_result", len(results))).isdigit() else len(results)
     base["compiles_true"] = int(data.get("compiles_true", sum(bool(r.get("compiles")) for r in results if isinstance(r, dict))))
     base["compiles_false"] = int(data.get("compiles_false", max(0, len(results) - base["compiles_true"])))
+    # Additional tokens referenced by manuscript/*.md: run identity, timing,
+    # sorry accounting, and failure identification.
+    base["sorry_count"] = sum(1 for r in results if isinstance(r, dict) and r.get("has_sorry"))
+    base["failed_topic_ids"] = ", ".join(
+        str(r.get("topic_id", "?"))
+        for r in results
+        if isinstance(r, dict) and not r.get("compiles")
+    )
+    durations = [
+        float(r.get("duration_s", 0.0) or 0.0)
+        for r in results
+        if isinstance(r, dict)
+    ]
+    base["mean_topic_s"] = round(sum(durations) / len(durations), 1) if durations else 0.0
+    base["duration_seconds"] = round(sum(durations), 1)
+    base["duration_min"] = round(sum(durations) / 60.0, 1)
+    base["run_id"] = str(data.get("run_id", "")) or (path.parent.name if path else "")
     return base
 
 
 def _hermes_block_from_summary(path: Path | None) -> dict[str, Any]:
-    keys: dict[str, Any] = {"summary_present": False, "run_id": "", "processed": 0, "success_count": 0, "cache_hits": 0, "tokens_total": 0, "tokens_mean": 0, "hermes_lean_compiles_count": 0, "primary_model": "", "models_used": "", "model_fallback_count": 0, "network_retry_count": 0, "chain_advance_reasons": {}, "chain_advance_reasons_summary": "none"}
+    keys: dict[str, Any] = {"summary_present": False, "run_id": "", "processed": 0, "success_count": 0, "cache_hits": 0, "tokens_total": 0, "tokens_mean": 0, "hermes_lean_compiles_count": 0, "primary_model": "", "models_used": "", "model_fallback_count": 0, "network_retry_count": 0, "chain_advance_reasons": {}, "chain_advance_reasons_summary": "none", "mean_topic_s": 0.0}
     if path is None or not path.is_file():
         return keys
     try:
@@ -91,9 +111,15 @@ def _hermes_block_from_summary(path: Path | None) -> dict[str, Any]:
     run_id = str(data.get("run_id", ""))
     if run_id and not run_id.startswith("run_"):
         run_id = "run_" + run_id
+    topic_durations = [
+        float(r.get("duration_s", 0.0) or 0.0)
+        for r in rows
+        if isinstance(r, dict) and float(r.get("duration_s", 0.0) or 0.0) > 0
+    ]
     keys.update({
         "summary_present": True,
         "run_id": run_id,
+        "mean_topic_s": round(sum(topic_durations) / len(topic_durations), 1) if topic_durations else 0.0,
         "processed": len(rows),
         "success_count": sum(bool(r.get("hermes_success")) for r in rows if isinstance(r, dict)),
         "cache_hits": sum(bool(r.get("cache_hit")) for r in rows if isinstance(r, dict)),
@@ -139,7 +165,13 @@ def build_manuscript_vars(catalogue: FEPTopicCatalogue, project_root: Path) -> d
         topics[topic.id] = {"title": topic.title, "area": topic.area, "maturity": topic.mathlib_status, "maturity_icon": icons.get(topic.mathlib_status, "?"), "mathlib_status": topic.mathlib_status, "lean_chars": topic.lean_chars, "nl_statement": topic.nl, "lean_sketch": topic.lean_sketch, "latex_equations": list(topic.latex_equations)}
     manifest = _get_latest_verification_manifest(project_root)
     summary_path = manifest.parent / "summary.json" if manifest else None
-    return {**summary, "total_areas": len(summary["areas"]), "topic_ids": [t.id for t in catalogue.topics], "topics": topics, **_read_toolchain_vars(project_root), "verify": _verify_block_from_manifest(manifest), "hermes": _hermes_block_from_summary(summary_path), "tests": {"collected": _count_test_cases(project_root)}}
+    verify = _verify_block_from_manifest(manifest)
+    compile_rate = {
+        "total": verify["compiles_true"],
+        "sorry": verify["sorry_count"],
+        "error": verify["compiles_false"],
+    }
+    return {**summary, "total_areas": len(summary["areas"]), "topic_ids": [t.id for t in catalogue.topics], "topics": topics, **_read_toolchain_vars(project_root), "verify": verify, "compile_rate": compile_rate, "hermes": _hermes_block_from_summary(summary_path), "tests": {"collected": _count_test_cases(project_root)}}
 
 
 def build_lean_catalogue_markdown(catalogue: FEPTopicCatalogue) -> str:
