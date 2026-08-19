@@ -47,19 +47,36 @@ VerifyResult fields
 
 from __future__ import annotations
 
+import concurrent.futures
+import contextlib
 import logging
+import math
 import os
 import re
 import shutil
+import statistics
 import subprocess
 import tempfile
 import time
-import concurrent.futures
-import math
-import statistics
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
+
+from verification._toolchain import (
+    ensure_writable_elan_home as _ensure_elan_home,
+)
+from verification._toolchain import (
+    find_toolchain_bin as _shared_find_toolchain_bin,
+)
+from verification._toolchain import (
+    get_elan_home as _get_elan_home,
+)
+from verification._toolchain import (
+    get_writable_elan_home as _get_elan_home_override,
+)
+from verification._toolchain import (
+    read_toolchain_name as _read_toolchain_name,
+)
 
 log = logging.getLogger(__name__)
 
@@ -122,14 +139,6 @@ def classify_failure_kind(stderr_out: str, *, timed_out: bool = False) -> Failur
     return "other"
 
 
-from verification._toolchain import (
-    get_elan_home as _get_elan_home,
-    get_elan_toolchains as _get_elan_toolchains,
-    get_writable_elan_home as _get_elan_home_override,
-    ensure_writable_elan_home as _ensure_elan_home,
-    find_toolchain_bin as _shared_find_toolchain_bin,
-    read_toolchain_name as _read_toolchain_name,
-)
 
 
 def _get_elan_bin() -> Path:
@@ -384,7 +393,10 @@ class LeanVerifier:
                 False,
                 "Mathlib not yet downloaded — run: cd lean && lake exe cache get",
             )
-        mathlib_pkg = self._lean_dir / ".lake" / "build" / "lib" / "lean"
+        # Mathlib is a Lake dependency: its .olean artifacts live inside the
+        # dependency package itself (``.lake/packages/mathlib/.lake/build/lib/lean``),
+        # not in the workspace's own build directory.
+        mathlib_pkg = mathlib_pkg / ".lake" / "build" / "lib" / "lean"
         mathlib_root_olean = mathlib_pkg / "Mathlib.olean"
         if not mathlib_root_olean.is_file():
             return (
@@ -524,10 +536,8 @@ class LeanVerifier:
             )
         finally:
             if tmp_file and tmp_file.exists():
-                try:
+                with contextlib.suppress(OSError):
                     tmp_file.unlink()
-                except OSError:
-                    pass
 
     def verify_batch(
         self, items: list[tuple[str, str]]

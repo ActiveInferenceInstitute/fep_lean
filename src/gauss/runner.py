@@ -20,9 +20,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from gauss.cli import check_gauss_cli
+from gauss.client import OpenGaussClient
 from llm.hermes import HermesConfig, HermesExplainer, HermesResult, restore_lean_structure
 from verification.lean_verifier import LeanVerifier, VerifyResult
-from gauss.client import OpenGaussClient
 
 if TYPE_CHECKING:
     from catalogue.topics import TopicEntry
@@ -160,7 +160,7 @@ class GaussRunner:
         self._prefetch_executor: ThreadPoolExecutor | None = None
         self._prefetch_future: Future | None = None
         self._prefetch_hermes: HermesExplainer | None = None
-        self._prefetch_next_topic: "TopicEntry | None" = None
+        self._prefetch_next_topic: TopicEntry | None = None
 
     def _clear_prefetch_state(self) -> None:
         self._prefetch_executor = None
@@ -170,7 +170,7 @@ class GaussRunner:
 
     def run_topics_batch(
         self,
-        topics: list["TopicEntry"],
+        topics: list[TopicEntry],
         *,
         max_topics: int | None = None,
         workflow: str = "verify",
@@ -225,7 +225,7 @@ class GaussRunner:
 
     def _run_topics_batch_prefetch(
         self,
-        subset: list["TopicEntry"],
+        subset: list[TopicEntry],
         *,
         workflow: str,
     ) -> list[TopicRunResult]:
@@ -278,7 +278,7 @@ class GaussRunner:
 
     def _start_prefetch_next_hermes(
         self,
-        current_topic: "TopicEntry",
+        current_topic: TopicEntry,
         workflow: str,
         preamble: str,
         model: str,
@@ -304,7 +304,7 @@ class GaussRunner:
         )
 
     def run_topic(
-        self, topic: "TopicEntry", *, workflow: str = "verify"
+        self, topic: TopicEntry, *, workflow: str = "verify"
     ) -> TopicRunResult:
         """Run the full Hermes + Lean workflow for a single topic.
 
@@ -540,7 +540,7 @@ class GaussRunner:
     def _record_hermes_turns(
         self,
         session_id: str,
-        topic: "TopicEntry",
+        topic: TopicEntry,
         res: HermesResult,
         *,
         preamble: str = "",
@@ -575,7 +575,7 @@ class GaussRunner:
 
     def _build_artifact_payload(
         self,
-        topic: "TopicEntry",
+        topic: TopicEntry,
         hermes_res: HermesResult,
         verify_res: VerifyResult,
     ) -> dict[str, Any]:
@@ -595,7 +595,7 @@ class GaussRunner:
     @classmethod
     def create_default(
         cls, project_root: Path, *, require_cli: bool = False
-    ) -> "GaussRunner":
+    ) -> GaussRunner:
         """Convenience constructor using defaults for the FEP project.
 
         If ``require_cli`` is True and `gauss` is missing, raises RuntimeError.

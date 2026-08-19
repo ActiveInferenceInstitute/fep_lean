@@ -26,6 +26,7 @@ Public API:
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import logging
@@ -160,10 +161,8 @@ class OpenGaussClient:
         self._lock = threading.RLock()
         self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
-        try:
+        with contextlib.suppress(sqlite3.Error):
             self._conn.execute("PRAGMA busy_timeout = 30000")
-        except sqlite3.Error:
-            pass
         self._conn.executescript(_SCHEMA_SQL)
         self._conn.commit()
         log.debug("OpenGaussClient ready: db=%s", self._db_path)
@@ -173,7 +172,7 @@ class OpenGaussClient:
         with self._lock:
             self._conn.close()
 
-    def __enter__(self) -> "OpenGaussClient":
+    def __enter__(self) -> OpenGaussClient:
         return self
 
     def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
@@ -421,12 +420,3 @@ class OpenGaussClient:
         self._conn.commit()
         return cursor.rowcount
 
-    def close(self) -> None:
-        """Close the underlying SQLite connection."""
-        self._conn.close()
-
-    def __enter__(self) -> "OpenGaussClient":
-        return self
-
-    def __exit__(self, *_: object) -> None:
-        self.close()

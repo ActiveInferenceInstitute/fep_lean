@@ -8,12 +8,13 @@ import logging
 import os
 import shutil
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
-from _paths import project_root
 from pipeline.orchestrator import run_pipeline, run_single_topic
 from verification.environment import run_validation_checks
+
+from _paths import project_root
 
 
 def _configure_logging(verbose: bool) -> None:

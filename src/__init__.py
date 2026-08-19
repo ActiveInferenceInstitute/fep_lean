@@ -18,10 +18,6 @@ __version__ = "1.0.0"
 # 1. Catalogue
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
 
-# 2. Verification
-from verification.environment import run_validation_checks
-from verification.lean_verifier import LeanVerifier, VerifyResult
-
 # 3. Gauss
 from gauss.cli import check_gauss_cli
 from gauss.client import OpenGaussClient, SessionRecord
@@ -39,11 +35,15 @@ from output.manuscript import (
     write_unified_formalism_appendix_markdown,
 )
 from output.reporter import Reporter, ReportPaths
+from pipeline.core import FEPPipeline, PipelineResult, StepResult
+from pipeline.orchestrator import run_pipeline, run_single_topic
+
+# 2. Verification
+from verification.environment import run_validation_checks
+from verification.lean_verifier import LeanVerifier, VerifyResult
 
 # 6. Pipeline
 from _paths import project_root
-from pipeline.core import FEPPipeline, PipelineResult, StepResult
-from pipeline.orchestrator import run_pipeline, run_single_topic
 
 __all__ = [
     # Catalogue

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Literal
 
-from _paths import project_root
 from catalogue.topics import FEPTopicCatalogue
 from output.reporter import Reporter
 from pipeline.core import FEPPipeline, PipelineMode, PipelineResult
+
+from _paths import project_root
 
 log = logging.getLogger(__name__)
 

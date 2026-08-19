@@ -10,7 +10,7 @@ from output.manuscript import (
     write_typeset_equations_markdown,
     write_unified_formalism_appendix_markdown,
 )
-from output.reporter import ReportPaths, Reporter
+from output.reporter import Reporter, ReportPaths
 
 __all__ = [
     "ReportPaths",

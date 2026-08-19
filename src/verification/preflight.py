@@ -7,8 +7,9 @@ import json
 import os
 from pathlib import Path
 
-from _paths import project_root
 from verification.environment import run_validation_checks
+
+from _paths import project_root
 
 
 def _run_version(cmd: list[str], cwd: Path | None = None) -> tuple[int, str]:

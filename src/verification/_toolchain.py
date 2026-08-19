@@ -7,6 +7,7 @@ module provides the common primitives so the resolution logic is defined once.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import tempfile
 from pathlib import Path
@@ -36,10 +37,8 @@ def get_writable_elan_home() -> str:
 
 def ensure_writable_elan_home() -> None:
     """Create the writable ELAN_HOME directory if it doesn't exist."""
-    try:
+    with contextlib.suppress(OSError):
         Path(get_writable_elan_home()).mkdir(parents=True, exist_ok=True)
-    except OSError:
-        pass
 
 
 def read_toolchain_name(lean_dir: Path) -> str | None:

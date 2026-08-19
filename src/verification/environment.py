@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import os
-import re
 import shutil
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from gauss.cli import check_gauss_cli
 from verification._toolchain import find_toolchain_bin, get_writable_elan_home, subprocess_env
@@ -71,7 +71,12 @@ def _check_toolchain_pin(project_root: Path) -> tuple[bool, str]:
 
 def _check_mathlib_built(project_root: Path) -> tuple[bool, str]:
     """Check the existing Mathlib build without downloading or compiling."""
-    build_root = project_root / "lean" / ".lake" / "build" / "lib" / "lean"
+    # Mathlib is a Lake dependency: its .olean artifacts live inside the
+    # dependency package tree, not in the workspace's own build directory.
+    build_root = (
+        project_root / "lean" / ".lake" / "packages" / "mathlib"
+        / ".lake" / "build" / "lib" / "lean"
+    )
     root_olean = build_root / "Mathlib.olean"
     if not root_olean.is_file():
         return False, f"Mathlib build artifact missing: {root_olean}"
@@ -85,10 +90,36 @@ def _check_mathlib_built(project_root: Path) -> tuple[bool, str]:
 def _check_lake(project_root: Path) -> tuple[bool, str]:
     lake_dir = project_root / "lean"
     explicit = os.environ.get("FEP_LEAN_LAKE_EXE", "")
-    lake = explicit if explicit and Path(explicit).is_file() else shutil.which("lake")
+    env = _lean_subprocess_env()
+    # Prefer the direct toolchain binary over the elan proxy: the proxy can
+    # hang on ``--version`` when its isolated ELAN_HOME has no settings.toml
+    # default toolchain (observed: homebrew elan proxy never returns), while
+    # the resolved toolchain ``lake`` answers immediately.
+    toolchain = find_toolchain_bin(lake_dir)
+    lake = None
+    if explicit and Path(explicit).is_file():
+        lake = explicit
+    elif toolchain and (toolchain / "lake").is_file():
+        lake = str(toolchain / "lake")
+    else:
+        lake = shutil.which("lake")
     if not lake:
         return False, "lake executable is unavailable"
-    ok, line = _version_line(lake, lake_dir)
+    try:
+        proc = subprocess.run(
+            [lake, "--version"],
+            cwd=lake_dir,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, f"lake invocation failed: {exc}"
+    output = (proc.stdout or proc.stderr or "").strip().splitlines()
+    line = output[0] if output else "no version output"
+    ok = proc.returncode == 0 and "Lean version" in (proc.stdout or "")
     return (ok, line if ok else f"lake invocation failed: {line}")
 
 
@@ -131,8 +162,6 @@ def _check_lean_workspace(project_root: Path) -> tuple[bool, str]:
 def _check_python_stack() -> tuple[bool, str]:
     try:
         import matplotlib
-        import numpy
-        import yaml
         matplotlib.use("Agg")
     except Exception as exc:
         return False, str(exc)

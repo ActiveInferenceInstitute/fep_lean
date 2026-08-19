@@ -159,7 +159,7 @@ class FEPPipeline:
             return PipelineResult("error", mode=mode, total_duration=time.perf_counter() - started, stages=stages, failure_reason=catalogue_stage.error or "catalogue load failed")
 
         validation_stage, validation = stage("Environment Validation", lambda: run_validation_checks(self.project_root, mode=mode))
-        if validation_stage.status != "ok" or not validation.get("status") == "ok":
+        if validation_stage.status != "ok" or validation.get("status") != "ok":
             reason = validation_stage.error or f"{validation.get('failed_count', 0)} required capability checks failed"
             result = PipelineResult("error", mode=mode, complete=False, total_duration=time.perf_counter() - started, stages=stages, catalogue_topics=len(self._topics_to_run), capabilities={c["name"]: bool(c["ok"]) for c in validation.get("checks", [])} if isinstance(validation, dict) else {}, failure_reason=reason)
             return result

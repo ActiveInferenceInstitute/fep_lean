@@ -7,16 +7,14 @@ mode reproducible and safe to run in a clean checkout.
 
 from __future__ import annotations
 
-import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-
 from catalogue.topics import FEPTopicCatalogue
 
 

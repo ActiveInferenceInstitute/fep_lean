@@ -6,9 +6,10 @@ import hashlib
 import json
 import os
 import tempfile
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from catalogue.topics import FEPTopicCatalogue
 
