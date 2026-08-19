@@ -11,12 +11,16 @@ uv run python -c "import sys; sys.path.insert(0, 'src'); from catalogue.topics i
 ```
 
 For ad-hoc shell sessions (when not going through `uv run`), set `PYTHONPATH`
-to cover the project `src/`, the repo root, and the monorepo `infrastructure/`
-package so that imports resolve both ways:
+to the project `src/` directory so flat imports (`from catalogue.topics import
+...`) resolve:
 
 ```bash
-export PYTHONPATH=projects/fep_lean/src:.:infrastructure
+export PYTHONPATH=src
 ```
+
+(Only if this tree lives inside the template monorepo checkout — e.g. under
+`projects/fep_lean/` — use the monorepo form
+`export PYTHONPATH=projects/fep_lean/src:.:infrastructure` instead.)
 
 ### Namespace convention for Lean sketches
 

@@ -1027,10 +1027,8 @@ def restore_lean_structure(refined: str, original: str) -> str:
     # ── 4. Reconstruct: imports → blank → body ───────────────────────────────
     body = "\n".join(non_import_body).strip()
 
-    if merged_imports:
-        result = "\n".join(merged_imports) + "\n\n" + body
-    else:
-        result = refined  # no imports in either; leave unchanged
+    # No imports in either: leave unchanged.
+    result = "\n".join(merged_imports) + "\n\n" + body if merged_imports else refined
 
     # ── 5. Restore namespace wrapper if stripped ─────────────────────────────
     ns_match = re.search(r"^namespace\s+(\w+)", original, re.MULTILINE)

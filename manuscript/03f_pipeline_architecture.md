@@ -98,7 +98,7 @@ PYTHONPATH=projects/fep_lean/src:.:infrastructure \
 | Mean time per topic | ≈{{hermes.mean_topic_s}} s mean across the recorded run (LLM-dominated: Hermes HTTP + ~1–2 s `lake env lean`; reasoning models such as `{{hermes.primary_model}}` push this into the minutes-per-topic range, while non-reasoning chat models historically median ≈25 s. See §\ref{sec:execution_metrics_the_definitive_run}) |
 | Primary model | {{hermes.primary_model}} (full distribution: {{hermes.models_used}}; OpenRouter chain advances: {{hermes.model_fallback_count}}/{{hermes.processed}}; reasons: {{hermes.chain_advance_reasons_summary}} — see §\ref{sec:three_classes_of_fallback}) |
 | Same-model network retries | {{hermes.network_retry_count}} (HTTP 429 / transient transport, bounded by `HERMES_429_MAX_RETRIES`+`HERMES_NETWORK_MAX_RETRIES`; see §\ref{sec:three_classes_of_fallback}) |
-| Lean baseline-fallback invocations | {{hermes.fallback_count}} (Hermes-refined Lean compiled directly: {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}}; see §\ref{sec:three_classes_of_fallback}) |
+| Hermes-refined Lean compiled directly | {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}} (a refined sketch that fails `lake env lean` is recorded as a topic failure — no baseline substitution; see §\ref{sec:three_classes_of_fallback}) |
 | Mean tokens per topic | {{hermes.tokens_mean}} tokens (bounded by `HermesConfig.max_tokens=16384`; run `{{hermes.run_id}}`) |
 | {{total_topics}}-topic total tokens | {{hermes.tokens_total}} (run `{{hermes.run_id}}`) |
 

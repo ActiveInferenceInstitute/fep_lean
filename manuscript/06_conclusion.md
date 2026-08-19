@@ -81,7 +81,7 @@ Patterns observed while maintaining the catalogue at the pinned release:
 
 ### LLM-ITP Synergy
 
-The Hermes LLM layer (primary model `{{hermes.primary_model}}` via OpenRouter, with `z-ai/glm-5.1` retained in the fallback chain — see §\ref{sec:three_classes_of_fallback} for the three orthogonal failure-mode classes that drive `network_retry_count`, `model_fallback_count`, and the Lean baseline-fallback) achieved a **{{hermes.success_count}}/{{hermes.processed}} API success rate** in the recorded full batch (`run_id: {{verify.run_id}}`), with token counts on the order of 10³ per topic (exact totals are in `summary.json` and provider logs). Hermes-refined sketches consistently improved tactic clarity over baseline `SKETCHES` bodies, particularly for:
+The Hermes LLM layer (primary model `{{hermes.primary_model}}` via OpenRouter, with `z-ai/glm-5.1` retained in the fallback chain — see §\ref{sec:three_classes_of_fallback} for the three orthogonal failure-mode classes that drive `network_retry_count`, `model_fallback_count`, and the Lean verification outcome) achieved a **{{hermes.success_count}}/{{hermes.processed}} API success rate** in the recorded full batch (`run_id: {{verify.run_id}}`), with token counts on the order of 10³ per topic (exact totals are in `summary.json` and provider logs). Hermes-refined sketches consistently improved tactic clarity over baseline `SKETCHES` bodies, particularly for:
 
 - **Measure-theoretic topics**: Hermes correctly identifies which `MeasureTheory` open namespace to use and suggests `exact?` / `apply?` alternatives when the primary tactic fails.
 - **Algebraic identity topics**: Hermes prefers `ring` and `norm_num` over manual arithmetic rewrites, reducing proof length.

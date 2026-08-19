@@ -44,7 +44,7 @@ The per-area catalogue sizes match §\ref{sec:foundational_dynamics_free_energy_
 | Hermes mean tokens / topic | {{hermes.tokens_mean}} (total {{hermes.tokens_total}} across {{hermes.processed}} topics) |
 | Hermes cache hits | {{hermes.cache_hits}}/{{hermes.processed}} |
 | Hermes-refined Lean compiled directly | {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}} |
-| Hermes baseline-fallback invocations (Lean: refined didn't compile, baseline did) | {{hermes.fallback_count}} |
+| Hermes-refined Lean compiled directly | {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}} |
 | OpenRouter model-chain advances (final model ≠ primary) | {{hermes.model_fallback_count}}/{{hermes.processed}} |
 | Mathlib4 tag | **`{{mathlib_tag}}`** (see `lean/lakefile.lean`; manifest lists resolved revision) |
 | Lean toolchain | **`{{lean_toolchain}}`** (`lean/lean-toolchain`) |
@@ -62,9 +62,9 @@ The per-area catalogue sizes match §\ref{sec:foundational_dynamics_free_energy_
 
 - **Same-model network retries (`hermes.network_retry_count`):** {{hermes.network_retry_count}} 429/transport retry events summed across all {{hermes.processed}} topics — these are bounded-backoff retries that *did not* advance the OpenRouter chain.
 - **Cross-model chain advances (`hermes.model_fallback_count`):** {{hermes.model_fallback_count}}/{{hermes.processed}} topics finalised on a model other than the configured primary `{{hermes.primary_model}}`.  Reason breakdown: {{hermes.chain_advance_reasons_summary}}.
-- **Lean baseline-sketch fallback (`hermes.fallback_count`):** {{hermes.fallback_count}} topics where the Hermes-refined sketch failed `lake env lean` and the catalogue baseline was used instead (`hermes_lean_compiles_count`: {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}}).
+- **Hermes-refined Lean (`hermes.hermes_lean_compiles_count`):** {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}} Hermes-refined sketches compiled directly; a refined sketch that fails `lake env lean` is recorded as a topic failure (no baseline substitution is performed).
 
-The three counters move independently — for example, a primary-model timeout that recovers via the chain advances `model_fallback_count` and increments `chain_advance_reasons.wall_clock_timeout`, but leaves `network_retry_count` and `fallback_count` unchanged.
+The three counters move independently — for example, a primary-model timeout that recovers via the chain advances `model_fallback_count` and increments `chain_advance_reasons.wall_clock_timeout`, but leaves `network_retry_count` and `hermes_lean_compiles_count` unchanged.
 
 ### Maturity Distribution by Area {#sec:maturity_distribution}
 
@@ -91,7 +91,7 @@ Hermes is the generation-and-critique layer over OpenRouter, with the configured
 |------------|----------------------|
 | API success rate | {{hermes.success_count}}/{{hermes.processed}} |
 | Mean latency per topic | ≈{{hermes.mean_topic_s}} s for the recorded run; reasoning models in the chain push this into the minutes-per-topic range, while non-reasoning chat models historically median ≈8 s |
-| Lean baseline-fallback invocations | {{hermes.fallback_count}} (Hermes-refined Lean compiled directly: {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}}) |
+| Hermes-refined Lean compiled directly | {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}} |
 | OpenRouter chain advances (`model_fallback_count`) | {{hermes.model_fallback_count}}/{{hermes.processed}} — reasons: {{hermes.chain_advance_reasons_summary}} |
 | Same-model network retries (`network_retry_count`) | {{hermes.network_retry_count}} (bounded by `HERMES_429_MAX_RETRIES`+`HERMES_NETWORK_MAX_RETRIES`) |
 | JSON schema violations | 0 (strict validator + repair pass) |
@@ -125,7 +125,7 @@ When debugging a failing row, use **`FEP_LEAN_VERIFY_VERBOSE=1`** with **`script
 
 ### Live Verification Error Taxonomy: Hermes-Assisted Run {#sec:live_verification_error_taxonomy}
 
-A full Gauss run (`{{verify.run_id}}`, ~{{verify.duration_min}} min, `FEP_LEAN_GAUSS_WORKFLOWS=1`) with `{{hermes.primary_model}}` as primary model achieved {{hermes.success_count}}/{{hermes.processed}} Hermes API successes and **{{compile_rate.total}} clean native compiles** ({{verify.sorry_count}} sorry, {{verify.compiles_false}} errors), with {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}} Hermes-refined sketches compiling directly and {{hermes.fallback_count}} resolving via the baseline-sketch fallback path. This represents the complete resolution of the error categories identified in the prior run (`run_20260418_223546`, 39 clean + 1 sorry + 10 errors). The resolution pathway involved three complementary improvements to `src/llm/hermes.py` and `src/gauss/runner.py`:
+A full Gauss run (`{{verify.run_id}}`, ~{{verify.duration_min}} min, `FEP_LEAN_GAUSS_WORKFLOWS=1`) with `{{hermes.primary_model}}` as primary model achieved {{hermes.success_count}}/{{hermes.processed}} Hermes API successes and **{{compile_rate.total}} clean native compiles** ({{verify.sorry_count}} sorry, {{verify.compiles_false}} errors), with {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}} Hermes-refined sketches compiling directly (refined sketches that fail `lake env lean` are recorded as topic failures — no baseline substitution). This represents the complete resolution of the error categories identified in the prior run (`run_20260418_223546`, 39 clean + 1 sorry + 10 errors). The resolution pathway involved three complementary improvements to `src/llm/hermes.py` and `src/gauss/runner.py`:
 
 1. **`restore_lean_structure` post-processor enhancements** — Added garbage detection (C++ `//` comments → fallback to original), open-statement restoration (re-inserting `open X` directives Hermes drops), extra-theorem stripping (`_strip_extra_theorems` state machine), and completeness check (if no original theorem names survive stripping → return original).
 2. **YAML sketch improvements** — Updated `config/topics.yaml` for fep-001, fep-014, and fep-027 to use `open MeasureTheory` with short-form Mathlib names matching the pinned Lean `{{lean_toolchain}}` / Mathlib4 `{{mathlib_tag}}` API signatures.
