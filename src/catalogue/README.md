@@ -1,6 +1,6 @@
 # fep_lean/src/catalogue/
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 Data-model layer for the FEP theorem catalogue. Loads
 [`config/topics.yaml`](../../config/topics.yaml) into frozen `TopicEntry` rows
@@ -35,9 +35,11 @@ In-memory view of `config/topics.yaml`.
 ```python
 from catalogue.topics import FEPTopicCatalogue
 
-cat = FEPTopicCatalogue.from_yaml()   # uses project-root / config / topics.yaml
+cat = FEPTopicCatalogue.from_yaml()  # uses project-root / config / topics.yaml
 assert len(cat.topics) == 50
-summary = cat.summary()               # {'total_topics': 50, 'areas': {...}, 'maturity': {...}, 'area_maturity': {...}}
+summary = (
+    cat.summary()
+)  # {'total_topics': 50, 'areas': {...}, 'maturity': {...}, 'area_maturity': {...}}
 ```
 
 `from_yaml(path=None)` resolves `path` explicitly when given, else walks two

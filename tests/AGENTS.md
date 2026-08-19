@@ -4,45 +4,47 @@ Pytest suite for `src/`. Tests call the `gauss`, `lake` and `lean` binaries (no 
 
 ## Test census
 
-**Canonical scale**: `uv run pytest tests/ --collect-only -q` → **347** tests in **29** modules (`test_*.py`). Per-file counts match `pytest --collect-only` per module (regenerate with `pytest ... --collect-only` if drift appears).
+**Canonical scale**: `uv run pytest tests/ --collect-only -q` → **350** tests in **31** test files (`test_*.py`). Per-file counts match `pytest --collect-only` per module (regenerate with `pytest ... --collect-only` if drift appears).
 
 | File | Tests | Description |
 |------|------:|-------------|
 | `test_catalogue_sketches_compile.py` | 1 | Opt-in full-catalogue `verify_batch` (`FEP_LEAN_CATALOGUE_COMPILE_TEST=1`) |
 | `test_catalogue_sketches_ssot.py` | 2 | `topics.yaml` `lean_sketch` matches `catalogue_sketches.SKETCHES` |
+| `test_cli.py` | 14 | Canonical CLI parsing, setup, dispatch, and failure boundaries |
 | `test_edge_cases.py` | 19 | Input validation, wrap-code, empty catalogues |
-| `test_environment_checks.py` | 1 | 13-check validation against the project tree |
-| `test_environment_sad_paths.py` | 22 | Sad path coverage for `verification.environment` |
+| `test_environment_checks.py` | 2 | Mode-aware validation against the project tree |
+| `test_environment_sad_paths.py` | 12 | Sad path coverage for `verification.environment` |
 | `test_fep_all_lean_ssot.py` | 3 | `fep_all.lean` namespaces vs `topics.yaml`; no stray `sorry` |
 | `test_fep_topics.py` | 6 | Catalogue load/summary invariants |
 | `test_figure_generation.py` | 10 | Figure generation (process pool + serial `FEP_LEAN_FIGURES_MP=0`) |
-| `test_gauss_cli.py` | 4 | `gauss doctor` happy path |
-| `test_gauss_cli_sad_paths.py` | 7 | Missing/broken `gauss` binary, fallback path |
+| `test_gauss_cli.py` | 1 | `gauss doctor` happy path |
+| `test_gauss_cli_sad_paths.py` | 5 | Missing/broken `gauss` binary, fallback path |
 | `test_gauss_runner.py` | 11 | Per-topic session orchestration (1 API-key test) |
-| `test_gauss_runner_branches.py` | 9 | FixedHermes / BoomClient / review-workflow controlled branches |
+| `test_gauss_runner_branches.py` | 10 | FixedHermes / BoomClient / review-workflow controlled branches |
 | `test_gauss_runner_prefetch.py` | 5 | `FEP_LEAN_PREFETCH` batch path vs serial; no API key |
 | `test_hermes_comprehensive.py` | 41 | Dotenv, key affinity, `_call_api` (loopback servers), `_parse_response` (1 API-key test) |
-| `test_hermes_error_paths.py` | 9 | `preflight()` 200/403 + `fallback_models` chain via `pytest-httpserver` (no direct execution) |
+| `test_hermes_error_paths.py` | 10 | `preflight()` 200/403 + `fallback_models` chain via `pytest-httpserver` (no direct execution) |
 | `test_hermes_explainer.py` | 41 | Config, cache TTL, cache_hit field, preamble, extract, system prompt, restore_lean_structure, _strip_extra_theorems (1 API-key test) |
 | `test_lean_verifier.py` | 24 | VerifyResult, wrap-code, verify_sketch, verify_batch |
 | `test_lean_verifier_sad_paths.py` | 15 | OSError, timeout, missing lake/lean paths |
 | `test_maint_fep_all_generator.py` | 7 | `scripts/_maint_build_fep_all_lean.py` generator invariants (SSOT for materialized `fep_all.lean`) |
-| `test_manuscript_artifacts.py` | 21 | `manuscript_vars.yaml` + full topic catalogue markdown |
-| `test_open_gauss_client.py` | 15 | SQLite session store CRUD, hermes_cache round-trip, prune, export, stats |
+| `test_manuscript_artifacts.py` | 24 | `manuscript_vars.yaml` + full topic catalogue markdown |
+| `test_open_gauss_client.py` | 16 | SQLite session store CRUD, hermes_cache round-trip, prune, export, stats |
 | `test_orchestrator.py` | 6 | End-to-end pipeline on the project tree (1 API-key test) |
 | `test_orchestrator_exceptions.py` | 1 | PermissionError from Reporter |
-| `test_orchestrator_sad_paths.py` | 5 | Unknown topics, corrupt YAML, broken env |
-| `test_pipeline.py` | 26 | FEPPipeline four recorded stages + orchestrator + workflow kwarg (1 API-key test) |
+| `test_orchestrator_sad_paths.py` | 3 | Unknown topics, corrupt YAML, broken env |
+| `test_pipeline.py` | 11 | FEPPipeline four recorded stages + orchestrator + workflow kwarg (1 API-key test) |
 | `test_pipeline_exceptions.py` | 3 | Missing catalogue, validation warnings |
 | `test_preflight.py` | 8 | `run_preflight` with present/missing binaries, cli, sad paths |
-| `test_reporter.py` | 18 | Markdown + JSON report generation + `verification_manifest.json` |
+| `test_reporter.py` | 31 | Markdown + JSON report generation, receipt hashes, and `verification_manifest.json` |
 | `test_subpackage_imports.py` | 7 | All subpackages importable standalone |
+| `test_theorem_maturity_audit.py` | 2 | Maintained semantic review coverage and generated projection parity |
 
-**API-key tests**: 4 tests skip when no API key is present; they run automatically when
+**API-key tests**: 2 tests skip when no API key is present; they run automatically when
 `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY` is set. Set `FEP_LEAN_LIVE_TESTS=0` to
 suppress them even when keys exist (e.g. cost-controlled CI or core-only pipeline runs —
 the pipeline scripts set this automatically when `--core-only`/`--no-llm` is active).
-Collected total matches **`pytest --collect-only`** (currently **347**).
+Collected total matches **`pytest --collect-only`** (currently **342**).
 
 Coverage for `output/figures.py` uses worker processes: `[tool.coverage.run] concurrency = ["multiprocessing"]` in `pyproject.toml` so `ProcessPoolExecutor` chart workers are included in the line report.
 
@@ -65,7 +67,7 @@ uv run pytest tests/ -q --timeout=900 --cov=src --cov-fail-under=89
 # uv run pytest tests/ -n auto --dist loadfile -q  # may still race .lake if lean tests run on multiple workers
 ```
 
-## API-Key Tests (4 tests, `@pytest.mark.skipif`)
+## API-Key Tests (2 tests, `@pytest.mark.skipif`)
 
 These tests skip when no API key is detected. They run automatically on machines with
 `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY` set, unless `FEP_LEAN_LIVE_TESTS=0`
@@ -73,15 +75,13 @@ explicitly suppresses them:
 
 1. `test_run_topic_with_real_hermes` — end-to-end GaussRunner: OpenRouter call → SQLite → LeanVerifier
 2. `test_hermes_explain_topic_real_api_call` — HTTP round-trip through `_call_api` → `_parse_response` → `HermesResult` (wall-clock budget: **720 s** — covers reasoning-model timeout 300 s + 2 retry/fallback cycles)
-3. `test_run_single_topic_ok` — full orchestrator with live Hermes + Reporter output files
-4. `test_pipeline_full_hermes_single_topic` — FEPPipeline with live Gauss Sessions stage
 
 Note: `test_call_api_http_error` and `test_call_api_url_error` are **not** API-key tests —
 they use loopback `HTTPServer` (404 response) and a refused-port socket; both always run.
 
 ### Coverage note
 
-The 4 live API tests contribute ~3% line coverage in `src/llm/hermes.py` and related modules. Skipping them (no key, or `FEP_LEAN_LIVE_TESTS=0`) drops total coverage to ~88%, below the 90% gate. The pipeline therefore requires an API key to be present so these tests run and coverage is met.
+The 2 live API tests contribute additional line coverage in `src/llm/hermes.py` and related modules. They are intentionally not required for the local 89% gate; a full workflow claim still requires a real provider key and a passing live smoke run.
 
 ## Requirements
 

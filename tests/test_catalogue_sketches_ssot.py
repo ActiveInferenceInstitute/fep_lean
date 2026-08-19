@@ -58,4 +58,6 @@ def test_yaml_latex_equations_matches_sketches_module() -> None:
     for t in cat.topics:
         want = expected.get(t.id)
         assert want is not None, f"{t.id}: missing in LATEX_EQUATIONS"
-        assert list(t.latex_equations) == want, f"{t.id}: topics.yaml latex_equations != LATEX_EQUATIONS"
+        assert list(t.latex_equations) == want, (
+            f"{t.id}: topics.yaml latex_equations != LATEX_EQUATIONS"
+        )

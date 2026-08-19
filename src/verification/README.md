@@ -1,6 +1,6 @@
 # fep_lean/src/verification/
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 Lean 4 / Lake compilation checks and toolchain-environment validation for
 `fep_lean`. Depends only on `gauss.cli.check_gauss_cli` plus the stdlib; does

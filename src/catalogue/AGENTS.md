@@ -1,6 +1,6 @@
 # fep_lean/src/catalogue/ — FEP Topic Catalogue Data Model
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 ## Purpose
 
@@ -22,6 +22,7 @@ Loads the canonical YAML-backed catalogue of FEP theorems (`config/topics.yaml`)
 
 ```python
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
+
 # or via the backward-compat shim at the package root
 from fep_lean import FEPTopicCatalogue, TopicEntry
 ```

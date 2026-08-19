@@ -15,16 +15,16 @@ import pytest
 
 from catalogue.topics import FEPTopicCatalogue
 from llm.hermes import (
+    _FEP_SYSTEM_PROMPT,
+    HermesAPIError,
     HermesConfig,
     HermesExplainer,
     HermesResult,
     _env_positive_int,
     _extract_explanation,
     _extract_lean_block,
-    _FEP_SYSTEM_PROMPT,
-    HermesAPIError,
-    restore_lean_structure,
     _strip_extra_theorems,
+    restore_lean_structure,
 )
 
 PROJ = Path(__file__).resolve().parent.parent
@@ -38,9 +38,8 @@ _HAS_API_KEY = bool(
 # Set FEP_LEAN_LIVE_TESTS=0 in CI to skip expensive API calls even when keys exist.
 # Set FEP_LEAN_LIVE_TESTS=1 to force-run even without a key (will fail at API level).
 _FEP_LEAN_LIVE_VAR = os.environ.get("FEP_LEAN_LIVE_TESTS", "").lower()
-_LIVE_TESTS_ENABLED = (
-    _FEP_LEAN_LIVE_VAR in ("1", "true", "yes")
-    or (_HAS_API_KEY and _FEP_LEAN_LIVE_VAR not in ("0", "false", "no"))
+_LIVE_TESTS_ENABLED = _FEP_LEAN_LIVE_VAR in ("1", "true", "yes") or (
+    _HAS_API_KEY and _FEP_LEAN_LIVE_VAR not in ("0", "false", "no")
 )
 
 
@@ -50,7 +49,9 @@ def test_hermes_config_defaults() -> None:
     assert cfg.model
 
 
-def test_hermes_config_from_settings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_hermes_config_from_settings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.delenv("HERMES_MODEL", raising=False)
     monkeypatch.setenv("GAUSS_HOME", str(tmp_path))
     (tmp_path / "config").mkdir()
@@ -178,6 +179,7 @@ theorem fep001_measure_mono {μ : MeasureTheory.Measure α} {s t : Set α} (h : 
 end FEP001
 """
 
+
 def test_restore_lean_structure_restores_missing_imports() -> None:
     """LLM dropped both imports — they should be restored."""
     refined = "namespace FEP001\n\ntheorem fep001_measure_mono {μ : MeasureTheory.Measure α} {s t : Set α} (h : s ⊆ t) : μ s ≤ μ t :=\n  MeasureTheory.measure_mono h\n\nend FEP001"
@@ -201,8 +203,12 @@ def test_restore_lean_structure_moves_stray_imports_to_top() -> None:
     refined = "namespace FEP001\nimport Mathlib.Analysis.SpecialFunctions.Exp\ntheorem t : True := trivial\nend FEP001"
     result = restore_lean_structure(refined, _ORIG_SKETCH)
     lines = result.splitlines()
-    import_lines = [i for i, l in enumerate(lines) if l.strip().startswith("import ")]
-    ns_lines = [i for i, l in enumerate(lines) if l.strip().startswith("namespace ")]
+    import_lines = [
+        i for i, line in enumerate(lines) if line.strip().startswith("import ")
+    ]
+    ns_lines = [
+        i for i, line in enumerate(lines) if line.strip().startswith("namespace ")
+    ]
     assert import_lines, "no import lines found"
     assert ns_lines, "no namespace line found"
     assert max(import_lines) < min(ns_lines), "imports must come before namespace"
@@ -281,7 +287,9 @@ def test_hermes_try_fetch_raw_retries_429(monkeypatch: pytest.MonkeyPatch) -> No
         if n["c"] == 1:
             raise HermesAPIError("HTTP 429", status_code=429)
         return {
-            "choices": [{"message": {"content": "```lean\ntheorem x : True := trivial\n```"}}],
+            "choices": [
+                {"message": {"content": "```lean\ntheorem x : True := trivial\n```"}}
+            ],
             "usage": {},
         }
 
@@ -358,10 +366,17 @@ def test_build_messages_preamble_prepended() -> None:
     user_msg = next(m["content"] for m in msgs if m["role"] == "user")
     assert user_msg.startswith(preamble)
     # Original theorem content still present
-    assert FIRST_TOPIC.id in user_msg or FIRST_TOPIC.title in user_msg or FIRST_TOPIC.nl[:20] in user_msg
+    assert (
+        FIRST_TOPIC.id in user_msg
+        or FIRST_TOPIC.title in user_msg
+        or FIRST_TOPIC.nl[:20] in user_msg
+    )
 
 
-@pytest.mark.skipif(not (_HAS_API_KEY and _LIVE_TESTS_ENABLED), reason="No API key found (set OPENROUTER_API_KEY or ANTHROPIC_API_KEY); or suppressed via FEP_LEAN_LIVE_TESTS=0")
+@pytest.mark.skipif(
+    not (_HAS_API_KEY and _LIVE_TESTS_ENABLED),
+    reason="No API key found (set OPENROUTER_API_KEY or ANTHROPIC_API_KEY); or suppressed via FEP_LEAN_LIVE_TESTS=0",
+)
 def test_hermes_explain_topic_real_api_call() -> None:
     """Real HTTP round-trip: HermesExplainer.explain_topic → OpenRouter API.
 
@@ -417,7 +432,9 @@ def test_hermes_explain_topic_real_api_call() -> None:
         # Allow model-not-found or rate-limit as non-fatal
         assert result.error
     # Should not take forever: reasoning timeout (300s) + 2 retry/fallback cycles
-    assert elapsed < 720  # 12 min ceiling; set FEP_LEAN_LIVE_TESTS=0 to skip in pipeline
+    assert (
+        elapsed < 720
+    )  # 12 min ceiling; set FEP_LEAN_LIVE_TESTS=0 to skip in pipeline
 
 
 # ── _strip_extra_theorems tests ───────────────────────────────────────────────
@@ -512,6 +529,7 @@ def test_strip_extra_theorems_sketch_with_doc_comments_preserved() -> None:
 
 # ── restore_lean_structure garbage detection tests ────────────────────────────
 
+
 def test_restore_lean_structure_falls_back_on_cpp_comments() -> None:
     """C++ // comments in refined sketch → fall back to original."""
     garbage = (
@@ -563,8 +581,10 @@ def test_restore_lean_structure_restores_open_statements() -> None:
     assert "open MeasureTheory" in result
     # It should appear inside the namespace (before theorems)
     lines = result.splitlines()
-    ns_idx = next(i for i, l in enumerate(lines) if "namespace FEP001" in l)
-    open_idx = next((i for i, l in enumerate(lines) if "open MeasureTheory" in l), None)
+    ns_idx = next(i for i, line in enumerate(lines) if "namespace FEP001" in line)
+    open_idx = next(
+        (i for i, line in enumerate(lines) if "open MeasureTheory" in line), None
+    )
     assert open_idx is not None
     assert open_idx > ns_idx
 
@@ -607,10 +627,14 @@ def test_restore_lean_structure_preserves_variable_declarations() -> None:
         "variable declaration must be re-injected when Hermes drops it"
     )
     lines = result.splitlines()
-    ns_idx = next(i for i, l in enumerate(lines) if "namespace FEP042" in l)
-    open_idx = next(i for i, l in enumerate(lines) if "open MeasureTheory" in l)
-    var_idx = next(i for i, l in enumerate(lines) if l.strip().startswith("variable "))
-    thm_idx = next(i for i, l in enumerate(lines) if "theorem fep042_measure_nonneg" in l)
+    ns_idx = next(i for i, line in enumerate(lines) if "namespace FEP042" in line)
+    open_idx = next(i for i, line in enumerate(lines) if "open MeasureTheory" in line)
+    var_idx = next(
+        i for i, line in enumerate(lines) if line.strip().startswith("variable ")
+    )
+    thm_idx = next(
+        i for i, line in enumerate(lines) if "theorem fep042_measure_nonneg" in line
+    )
     assert ns_idx < open_idx < var_idx < thm_idx, (
         f"ordering violated: ns={ns_idx} open={open_idx} var={var_idx} thm={thm_idx}"
     )
@@ -628,7 +652,9 @@ def test_restore_lean_structure_does_not_duplicate_variable_when_present() -> No
         "theorem fep042_ok (μ : MeasureTheory.Measure α) : True := trivial\n"
         "end FEP042\n"
     )
-    result = restore_lean_structure(original_with_variable.strip(), original_with_variable)
+    result = restore_lean_structure(
+        original_with_variable.strip(), original_with_variable
+    )
     assert result.count("variable {α : Type*} [MeasurableSpace α]") == 1
 
 

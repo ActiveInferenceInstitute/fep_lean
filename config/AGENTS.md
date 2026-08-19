@@ -1,10 +1,12 @@
 # FEP Lean Agents — `config/` (project root)
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 ## Purpose
 
-The `config/` directory contains the two YAML configuration files that drive the entire `fep_lean` pipeline. These are the sole source of truth for project settings and topic definitions.
+The `config/` directory contains the YAML configuration files that drive the
+`fep_lean` pipeline and its maintained theorem review. Runtime settings and
+catalogue bodies remain separate from the semantic audit.
 
 ## Files
 
@@ -12,6 +14,7 @@ The `config/` directory contains the two YAML configuration files that drive the
 |------|-------------|
 | `settings.yaml` | All runtime configuration: GAUSS_HOME, model, Hermes AI layer |
 | `topics.yaml` | 50 FEP/AI/IG/BM/TD topic definitions (id, area, mathlib, mathlib_status, nl, lean_sketch, `latex_equations` — one string per `theorem` in the sketch) |
+| `theorem_maturity.yaml` | Maintained semantic review of each topic's primary theorem; rendered to `docs/theorem-maturity-audit.md` |
 
 ## `settings.yaml` — Key Sections
 
@@ -21,7 +24,7 @@ Shipped defaults match [`settings.yaml`](settings.yaml); if this section lags, *
 | Key | Default | Description |
 |-----|---------|-------------|
 | `name` | `fep_lean` | Project identifier |
-| `version` | `0.7.1` | Semantic version |
+| `version` | `1.0.0` | Semantic version |
 | `description` | (see YAML) | Human description |
 
 ### `gauss`
@@ -90,7 +93,7 @@ topics:
 | `BayesianMechanics` | 10 | LinearAlgebra.Matrix.Transpose, Data.Finset.Basic |
 | `Thermodynamics` | 7 | Analysis.SpecialFunctions.Log.Basic, Analysis.SpecialFunctions.Exp |
 
-### Maturity Distribution (April 2026)
+### Maturity Distribution (July 2026)
 
 | Status | Count |
 |--------|------:|

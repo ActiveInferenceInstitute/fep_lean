@@ -1,6 +1,6 @@
 # Reporter — fep_lean Output Generation
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 ## Overview
 
@@ -98,6 +98,23 @@ Shape follows `PipelineResult.as_dict()` plus fields the reporter may add when s
   "lean_stats": {"total_processed": 0, "compiles_clean": 0, ...}
 }
 ```
+
+### Independent receipt check
+
+`summary.json` records the artifact hash map, while the two manifests carry
+the selected-topic and verification rows. To verify a bundle independently of
+the process that produced it, run:
+
+```bash
+uv run python scripts/verify_report_receipt.py output/reports/run_...
+uv run python scripts/verify_report_receipt.py output/reports/run_... --require-complete
+```
+
+The checker is read-only. It recomputes each listed SHA-256 digest, rejects
+absolute or traversal paths, and reconciles mode, completion, selected-topic
+counts, topic IDs, clean verification flags, and the run/toolchain digests.
+Only the second command can accept a receipt as claim-ready evidence, and only
+for a non-empty complete `full` run.
 
 ---
 

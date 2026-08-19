@@ -20,5 +20,5 @@ def project_root() -> Path:
     instead — useful for testing with tmp_path fixtures.
     """
     if env_dir := os.environ.get("PROJECT_DIR"):
-        return Path(env_dir)
+        return Path(env_dir).resolve()
     return _THIS_DIR.parent

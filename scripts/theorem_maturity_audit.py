@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""Validate and render the maintained semantic theorem-maturity audit."""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+if str(ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(ROOT / "scripts"))
+
+AUDIT_PATH = ROOT / "config" / "theorem_maturity.yaml"
+OUTPUT_PATH = ROOT / "docs" / "theorem-maturity-audit.md"
+EXPECTED_IDS = tuple(f"fep-{index:03d}" for index in range(1, 51))
+REQUIRED_FIELDS = (
+    "id",
+    "primary_theorem",
+    "invariant",
+    "assumption_review",
+    "non_vacuity",
+    "acceptance_probe",
+    "disposition",
+)
+ALLOWED_DISPOSITIONS = {
+    "proxy",
+    "conditional_proxy",
+    "structural_proxy",
+    "scope_gap",
+    "assumption_gap",
+}
+
+
+def load_audit(path: Path = AUDIT_PATH) -> dict[str, Any]:
+    """Load the maintained audit data without writing any files."""
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise ValueError(f"cannot read theorem maturity audit {path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise TypeError("theorem maturity audit must be a YAML object")
+    return data
+
+
+def _theorem_names(body: str) -> set[str]:
+    return set(re.findall(r"^\s*theorem\s+([A-Za-z0-9_]+)\s*", body, re.MULTILINE))
+
+
+def _source_sketches() -> dict[str, str]:
+    from catalogue_sketches import SKETCHES
+
+    return SKETCHES
+
+
+def validate_audit(root: Path = ROOT) -> dict[str, Any]:
+    """Validate coverage, required review fields, and theorem-name parity."""
+    path = root / "config" / "theorem_maturity.yaml"
+    data = load_audit(path)
+    errors: list[str] = []
+    if data.get("schema_version") != 1:
+        errors.append("schema_version must be 1")
+    if not str(data.get("review_date", "")).strip():
+        errors.append("review_date is required")
+    for field in ("native_evidence", "status_policy"):
+        if not str(data.get(field, "")).strip():
+            errors.append(f"{field} is required")
+
+    from catalogue.topics import FEPTopicCatalogue
+
+    try:
+        catalogue = FEPTopicCatalogue.from_yaml(root / "config" / "topics.yaml")
+    except Exception as exc:
+        errors.append(f"catalogue validation failed: {exc}")
+        catalogue = None
+
+    raw_topics = data.get("topics")
+    if not isinstance(raw_topics, list):
+        errors.append("topics must be a list")
+        raw_topics = []
+    rows = [row for row in raw_topics if isinstance(row, dict)]
+    if len(rows) != len(raw_topics):
+        errors.append("every audit topic must be an object")
+    ids = [str(row.get("id", "")) for row in rows]
+    if ids != list(EXPECTED_IDS):
+        errors.append(
+            "audit topic IDs must be exactly fep-001 through fep-050 in order"
+        )
+    if catalogue is not None and ids != [topic.id for topic in catalogue.topics]:
+        errors.append("audit topic IDs do not match config/topics.yaml")
+
+    sketches = _source_sketches()
+    for row in rows:
+        topic_id = str(row.get("id", "<missing>"))
+        missing = [
+            field for field in REQUIRED_FIELDS if not str(row.get(field, "")).strip()
+        ]
+        if missing:
+            errors.append(f"{topic_id}: missing review fields: {', '.join(missing)}")
+        disposition = row.get("disposition")
+        if disposition not in ALLOWED_DISPOSITIONS:
+            errors.append(f"{topic_id}: unsupported disposition {disposition!r}")
+        theorem = str(row.get("primary_theorem", ""))
+        body = sketches.get(topic_id, "")
+        if not body:
+            errors.append(f"{topic_id}: missing source sketch")
+        elif theorem not in _theorem_names(body):
+            errors.append(
+                f"{topic_id}: primary theorem {theorem!r} is not in the source sketch"
+            )
+        probe = str(row.get("acceptance_probe", ""))
+        if "native Lean compile" not in probe:
+            errors.append(
+                f"{topic_id}: acceptance_probe must name a native Lean compile"
+            )
+
+    if errors:
+        raise ValueError("theorem maturity audit failed:\n- " + "\n- ".join(errors))
+    return {
+        "schema_version": data["schema_version"],
+        "review_date": data["review_date"],
+        "native_evidence": data["native_evidence"],
+        "status_policy": data["status_policy"],
+        "topics": rows,
+    }
+
+
+def _cell(value: object) -> str:
+    return str(value).replace("|", "\\|").replace("\n", " ").strip()
+
+
+def render_markdown(data: dict[str, Any]) -> str:
+    """Render the checked-in Markdown projection from validated audit data."""
+    lines = [
+        "# Theorem maturity audit",
+        "",
+        "<!-- AUTO-GENERATED by scripts/theorem_maturity_audit.py; edit config/theorem_maturity.yaml. -->",
+        "",
+        "This audit reviews the semantic reach of each catalogue row beyond",
+        "sorry-free compilation. It is deliberately separate from",
+        "`mathlib_status`: `real` records that the declared Lean/Mathlib sketch",
+        "is a native compilation target, not that the FEP-facing prose has been",
+        "fully formalized.",
+        "",
+        f"**Review date:** `{data['review_date']}`<br>",
+        f"**Native evidence boundary:** {data['native_evidence']}",
+        "",
+        "A `scope_gap` or `assumption_gap` is an honest follow-up boundary, not a",
+        "compiler failure. No catalogue row was relabelled by this review.",
+        "",
+        "## Status-change policy",
+        "",
+        data["status_policy"],
+        "A status change must update the catalogue source, regenerate YAML and the",
+        "aggregate, rerun the native Lean probe, and retain the receipt in",
+        "`CHANGELOG.md`.",
+        "",
+        "## Dispositions",
+        "",
+        "- `proxy`: useful foundational formal fact, with a narrower scope than the prose.",
+        "- `conditional_proxy`: meaningful conditional fact whose hypotheses are explicit.",
+        "- `structural_proxy`: type, set, metric, or algebra closure fact used as an anchor.",
+        "- `scope_gap`: the theorem compiles but omits a named FEP or physical invariant.",
+        "- `assumption_gap`: the stated assumptions are vacuous or encode the conclusion.",
+        "",
+        "## Topic review",
+        "",
+        "| ID | Primary theorem | Intended invariant | Assumption review | Non-vacuity review | Acceptance probe | Disposition |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for row in data["topics"]:
+        lines.append(
+            "| "
+            + " | ".join(
+                _cell(row[field])
+                for field in (
+                    "id",
+                    "primary_theorem",
+                    "invariant",
+                    "assumption_review",
+                    "non_vacuity",
+                    "acceptance_probe",
+                    "disposition",
+                )
+            )
+            + " |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Source links",
+            "",
+            "- [Maintained audit data](../config/theorem_maturity.yaml)",
+            "- [Catalogue metadata](../config/topics.yaml)",
+            "- [Lean body source](../scripts/catalogue_sketches.py)",
+            "- [Native verification command](cli-reference.md)",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--write", action="store_true", help="write the generated Markdown projection"
+    )
+    args = parser.parse_args(argv)
+    data = validate_audit()
+    if args.write:
+        OUTPUT_PATH.write_text(render_markdown(data), encoding="utf-8")
+        print(f"Wrote {OUTPUT_PATH}")
+    else:
+        print(f"OK: {len(data['topics'])} theorem-maturity rows validated")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

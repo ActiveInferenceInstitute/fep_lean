@@ -12,7 +12,12 @@ from pathlib import Path
 from typing import Any
 
 from gauss.cli import check_gauss_cli
-from verification._toolchain import find_toolchain_bin, get_writable_elan_home, subprocess_env
+from verification._toolchain import (
+    find_executable,
+    find_toolchain_bin,
+    get_writable_elan_home,
+    subprocess_env,
+)
 
 EXPECTED_LEAN_TOOLCHAIN = "leanprover/lean4:v4.29.0"
 EXPECTED_MATHLIB_TAG = "v4.29.0"
@@ -34,7 +39,15 @@ def _find_toolchain_lean(lean_dir: Path | None = None) -> str | None:
 
 def _version_line(exe: str, cwd: Path | None = None) -> tuple[bool, str]:
     try:
-        proc = subprocess.run([exe, "--version"], cwd=cwd, env=_lean_subprocess_env(), capture_output=True, text=True, timeout=5, check=False)
+        proc = subprocess.run(
+            [exe, "--version"],
+            cwd=cwd,
+            env=_lean_subprocess_env(),
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return False, str(exc)
     output = (proc.stdout or proc.stderr or "").strip().splitlines()
@@ -44,7 +57,11 @@ def _version_line(exe: str, cwd: Path | None = None) -> tuple[bool, str]:
 def _check_lean_cli(project_root: Path | None = None) -> tuple[bool, str]:
     lean_dir = project_root / "lean" if project_root else None
     explicit = os.environ.get("FEP_LEAN_LEAN_EXE", "")
-    lean = explicit if explicit and Path(explicit).is_file() else _find_toolchain_lean(lean_dir) or shutil.which("lean")
+    lean = (
+        explicit
+        if explicit and Path(explicit).is_file()
+        else _find_toolchain_lean(lean_dir) or shutil.which("lean")
+    )
     if not lean:
         return False, "lean executable is unavailable"
     ok, line = _version_line(lean, lean_dir)
@@ -61,7 +78,10 @@ def _check_toolchain_pin(project_root: Path) -> tuple[bool, str]:
         return False, "lean/lean-toolchain is missing"
     actual = path.read_text(encoding="utf-8").strip()
     if actual != EXPECTED_LEAN_TOOLCHAIN:
-        return False, f"toolchain pin {actual!r} does not equal {EXPECTED_LEAN_TOOLCHAIN!r}"
+        return (
+            False,
+            f"toolchain pin {actual!r} does not equal {EXPECTED_LEAN_TOOLCHAIN!r}",
+        )
     lakefile = project_root / "lean" / "lakefile.lean"
     text = lakefile.read_text(encoding="utf-8") if lakefile.is_file() else ""
     if EXPECTED_MATHLIB_TAG not in text:
@@ -71,56 +91,43 @@ def _check_toolchain_pin(project_root: Path) -> tuple[bool, str]:
 
 def _check_mathlib_built(project_root: Path) -> tuple[bool, str]:
     """Check the existing Mathlib build without downloading or compiling."""
-    # Mathlib is a Lake dependency: its .olean artifacts live inside the
-    # dependency package tree, not in the workspace's own build directory.
-    build_root = (
-        project_root / "lean" / ".lake" / "packages" / "mathlib"
-        / ".lake" / "build" / "lib" / "lean"
-    )
-    root_olean = build_root / "Mathlib.olean"
-    if not root_olean.is_file():
-        return False, f"Mathlib build artifact missing: {root_olean}"
-    required = [build_root / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean"]
-    missing = [str(p) for p in required if not p.is_file()]
-    if missing:
-        return False, f"Mathlib build is incomplete; missing {missing[0]}"
-    return True, f"Mathlib build present ({root_olean})"
+    lean_root = project_root / "lean"
+    build_roots = [
+        lean_root / ".lake" / "build" / "lib" / "lean",
+        # ``lake exe cache get`` materializes Mathlib's oleans in the
+        # dependency workspace, while the project workspace contains the
+        # FepSketches oleans that consume them.
+        lean_root
+        / ".lake"
+        / "packages"
+        / "mathlib"
+        / ".lake"
+        / "build"
+        / "lib"
+        / "lean",
+    ]
+    for build_root in build_roots:
+        root_olean = build_root / "Mathlib.olean"
+        required = (
+            build_root / "Mathlib" / "MeasureTheory" / "Measure" / "MeasureSpace.olean"
+        )
+        if root_olean.is_file() and required.is_file():
+            return True, f"Mathlib build present ({root_olean})"
+    expected = build_roots[-1] / "Mathlib.olean"
+    return False, f"Mathlib build artifact missing: {expected}"
 
 
 def _check_lake(project_root: Path) -> tuple[bool, str]:
     lake_dir = project_root / "lean"
-    explicit = os.environ.get("FEP_LEAN_LAKE_EXE", "")
-    env = _lean_subprocess_env()
-    # Prefer the direct toolchain binary over the elan proxy: the proxy can
-    # hang on ``--version`` when its isolated ELAN_HOME has no settings.toml
-    # default toolchain (observed: homebrew elan proxy never returns), while
-    # the resolved toolchain ``lake`` answers immediately.
-    toolchain = find_toolchain_bin(lake_dir)
-    lake = None
-    if explicit and Path(explicit).is_file():
-        lake = explicit
-    elif toolchain and (toolchain / "lake").is_file():
-        lake = str(toolchain / "lake")
-    else:
-        lake = shutil.which("lake")
+    lake = find_executable("lake", lake_dir)
     if not lake:
         return False, "lake executable is unavailable"
-    try:
-        proc = subprocess.run(
-            [lake, "--version"],
-            cwd=lake_dir,
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        return False, f"lake invocation failed: {exc}"
-    output = (proc.stdout or proc.stderr or "").strip().splitlines()
-    line = output[0] if output else "no version output"
-    ok = proc.returncode == 0 and "Lean version" in (proc.stdout or "")
-    return (ok, line if ok else f"lake invocation failed: {line}")
+    ok, line = _version_line(lake, lake_dir)
+    if not ok:
+        return False, f"lake invocation failed: {line}"
+    if "Lean version 4.29.0" not in line:
+        return False, f"wrong Lake toolchain: {line}; expected Lean 4.29.0"
+    return True, line
 
 
 def _check_gauss_config(project_root: Path) -> tuple[bool, str]:
@@ -137,6 +144,7 @@ def _check_gauss_config(project_root: Path) -> tuple[bool, str]:
 def _check_topics_yaml(project_root: Path) -> tuple[bool, str]:
     try:
         from catalogue.topics import FEPTopicCatalogue
+
         catalogue = FEPTopicCatalogue.from_yaml(project_root / "config" / "topics.yaml")
     except Exception as exc:
         return False, str(exc)
@@ -146,7 +154,10 @@ def _check_topics_yaml(project_root: Path) -> tuple[bool, str]:
 def _check_dirs(project_root: Path) -> tuple[bool, str]:
     required = ("manuscript", "config", "src", "lean", "scripts", "tests")
     missing = [rel for rel in required if not (project_root / rel).is_dir()]
-    return (not missing, f"missing {', '.join(missing)}" if missing else "project layout present")
+    return (
+        not missing,
+        f"missing {', '.join(missing)}" if missing else "project layout present",
+    )
 
 
 def _check_lean_workspace(project_root: Path) -> tuple[bool, str]:
@@ -162,10 +173,14 @@ def _check_lean_workspace(project_root: Path) -> tuple[bool, str]:
 def _check_python_stack() -> tuple[bool, str]:
     try:
         import matplotlib
+
         matplotlib.use("Agg")
     except Exception as exc:
         return False, str(exc)
-    return True, f"Python {sys.version_info.major}.{sys.version_info.minor}; scientific stack present"
+    return (
+        True,
+        f"Python {sys.version_info.major}.{sys.version_info.minor}; scientific stack present",
+    )
 
 
 def _check_output_writable(project_root: Path) -> tuple[bool, str]:
@@ -180,7 +195,10 @@ def _check_output_writable(project_root: Path) -> tuple[bool, str]:
 
 def _check_file(project_root: Path, relative: str) -> tuple[bool, str]:
     path = project_root / relative
-    return (path.is_file(), f"{relative} present" if path.is_file() else f"{relative} missing")
+    return (
+        path.is_file(),
+        f"{relative} present" if path.is_file() else f"{relative} missing",
+    )
 
 
 def _check_references_bib(project_root: Path) -> tuple[bool, str]:
@@ -221,13 +239,22 @@ def run_validation_checks(project_root: Path, *, mode: str = "full") -> dict[str
             ok, message = fn()
         except Exception as exc:
             ok, message = False, f"{type(exc).__name__}: {exc}"
-        checks.append({"name": name, "ok": ok, "message": message, "duration_s": round(time.perf_counter() - started, 4)})
+        checks.append(
+            {
+                "name": name,
+                "ok": ok,
+                "message": message,
+                "duration_s": round(time.perf_counter() - started, 4),
+            }
+        )
 
     run("topics_yaml", lambda: _check_topics_yaml(project_root))
     run("project_layout", lambda: _check_dirs(project_root))
     run("python_scientific_stack", _check_python_stack)
     run("output_writable", lambda: _check_output_writable(project_root))
-    run("manuscript_config", lambda: _check_file(project_root, "manuscript/config.yaml"))
+    run(
+        "manuscript_config", lambda: _check_file(project_root, "manuscript/config.yaml")
+    )
     run("catalogue_loader", lambda: _check_topics_yaml(project_root))
     run("references_bib", lambda: _check_references_bib(project_root))
     if mode == "full":
@@ -238,9 +265,30 @@ def run_validation_checks(project_root: Path, *, mode: str = "full") -> dict[str
         run("lake_cli", lambda: _check_lake(project_root))
         run("lean_workspace", lambda: _check_lean_workspace(project_root))
         run("mathlib_built", lambda: _check_mathlib_built(project_root))
-        if not os.environ.get("OPENROUTER_API_KEY") and not os.environ.get("ANTHROPIC_API_KEY"):
-            checks.append({"name": "hermes_credentials", "ok": False, "message": "OPENROUTER_API_KEY or ANTHROPIC_API_KEY is required for full mode", "duration_s": 0.0})
+        if not os.environ.get("OPENROUTER_API_KEY") and not os.environ.get(
+            "ANTHROPIC_API_KEY"
+        ):
+            checks.append(
+                {
+                    "name": "hermes_credentials",
+                    "ok": False,
+                    "message": "OPENROUTER_API_KEY or ANTHROPIC_API_KEY is required for full mode",
+                    "duration_s": 0.0,
+                }
+            )
         else:
-            checks.append({"name": "hermes_credentials", "ok": True, "message": "Hermes credentials configured", "duration_s": 0.0})
+            checks.append(
+                {
+                    "name": "hermes_credentials",
+                    "ok": True,
+                    "message": "Hermes credentials configured",
+                    "duration_s": 0.0,
+                }
+            )
     failed = [check for check in checks if not check["ok"]]
-    return {"status": "ok" if not failed else "error", "mode": mode, "checks": checks, "failed_count": len(failed)}
+    return {
+        "status": "ok" if not failed else "error",
+        "mode": mode,
+        "checks": checks,
+        "failed_count": len(failed),
+    }

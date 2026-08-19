@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import CatalogueValidationError, FEPTopicCatalogue, TopicEntry
+from catalogue.topics import CatalogueValidationError, FEPTopicCatalogue
 from gauss.client import OpenGaussClient
 from verification.lean_verifier import LeanVerifier
 
@@ -133,7 +133,9 @@ def test_step_result_creation() -> None:
 def test_step_result_with_error() -> None:
     from pipeline.core import StepResult
 
-    sr = StepResult(name="Test", status="error", message="fail", duration_s=0.0, error="boom")
+    sr = StepResult(
+        name="Test", status="error", message="fail", duration_s=0.0, error="boom"
+    )
     assert sr.error == "boom"
     assert sr.status == "error"
 

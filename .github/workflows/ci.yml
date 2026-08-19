@@ -20,6 +20,9 @@ jobs:
       - run: uv run python docs/md_hygiene.py --strict
       - run: uv run python docs/pin_audit.py
       - run: uv run python docs/xref_audit.py
+      - run: uv run mypy src
+      - run: uv run ruff check src tests scripts docs
+      - run: uv run ruff format --check src tests scripts docs || echo "ruff format — 55 files need formatting (non-blocking)"
 
   lean:
     runs-on: ubuntu-latest

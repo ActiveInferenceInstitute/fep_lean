@@ -15,7 +15,9 @@ def _require_gauss_from_env() -> bool:
     return v in ("1", "true", "yes", "on")
 
 
-def check_gauss_cli(project_root: Path | None, *, require: bool | None = None) -> tuple[bool, str]:
+def check_gauss_cli(
+    project_root: Path | None, *, require: bool | None = None
+) -> tuple[bool, str]:
     """Run ``gauss doctor`` when the CLI exists.
 
     If ``gauss`` is missing: fails only when ``require`` is True or the
@@ -26,7 +28,11 @@ def check_gauss_cli(project_root: Path | None, *, require: bool | None = None) -
 
     exe = shutil.which("gauss")
     if not exe:
-        return (False, "gauss: executable is unavailable") if require else (True, "gauss: not configured")
+        return (
+            (False, "gauss: executable is unavailable")
+            if require
+            else (True, "gauss: not configured")
+        )
 
     try:
         proc = subprocess.run(

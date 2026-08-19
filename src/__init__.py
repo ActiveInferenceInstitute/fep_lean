@@ -16,6 +16,8 @@ from __future__ import annotations
 __version__ = "1.0.0"
 
 # 1. Catalogue
+# 6. Pipeline
+from _paths import project_root
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
 
 # 3. Gauss
@@ -34,7 +36,7 @@ from output.manuscript import (
     write_manuscript_vars,
     write_unified_formalism_appendix_markdown,
 )
-from output.reporter import Reporter, ReportPaths
+from output.reporter import Reporter, ReportPaths, validate_report_receipt
 from pipeline.core import FEPPipeline, PipelineResult, StepResult
 from pipeline.orchestrator import run_pipeline, run_single_topic
 
@@ -42,41 +44,39 @@ from pipeline.orchestrator import run_pipeline, run_single_topic
 from verification.environment import run_validation_checks
 from verification.lean_verifier import LeanVerifier, VerifyResult
 
-# 6. Pipeline
-from _paths import project_root
-
 __all__ = [
+    # Pipeline
+    "FEPPipeline",
     # Catalogue
     "FEPTopicCatalogue",
-    "TopicEntry",
-    # Verification
-    "LeanVerifier",
-    "VerifyResult",
-    "run_validation_checks",
-    # Gauss
-    "OpenGaussClient",
-    "SessionRecord",
     "GaussRunner",
-    "TopicRunResult",
-    "check_gauss_cli",
+    "HermesAPIError",
     # LLM
     "HermesConfig",
     "HermesExplainer",
     "HermesResult",
-    "HermesAPIError",
-    # Output
-    "write_all_catalogue_figures",
-    "write_manuscript_vars",
+    # Verification
+    "LeanVerifier",
+    # Gauss
+    "OpenGaussClient",
+    "PipelineResult",
+    "ReportPaths",
+    "Reporter",
+    "SessionRecord",
+    "StepResult",
+    "TopicEntry",
+    "TopicRunResult",
+    "VerifyResult",
     "build_manuscript_vars",
     "build_unified_formalism_appendix_markdown",
-    "write_unified_formalism_appendix_markdown",
-    "Reporter",
-    "ReportPaths",
-    # Pipeline
-    "FEPPipeline",
-    "PipelineResult",
-    "StepResult",
+    "check_gauss_cli",
     "project_root",
     "run_pipeline",
     "run_single_topic",
+    "run_validation_checks",
+    "validate_report_receipt",
+    # Output
+    "write_all_catalogue_figures",
+    "write_manuscript_vars",
+    "write_unified_formalism_appendix_markdown",
 ]

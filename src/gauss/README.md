@@ -1,6 +1,6 @@
 # fep_lean/src/gauss/
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 OpenGauss integration layer: CLI wrapper, SQLite session client, and the
 per-topic orchestrator that drives one theorem through the LLM and the Lean
@@ -80,4 +80,5 @@ See [`AGENTS.md`](AGENTS.md) for the full wiring (Hermes + LeanVerifier +
 SQLite) and the per-stage workflow preambles (`verify`, `draft`, `prove`,
 `review`) used to condition the Hermes prompt.
 
-**See also:** monorepo Cursor skill [`../../../.cursor/skills/gauss/SKILL.md`](../../../.cursor/skills/gauss/SKILL.md) (math-inc CLI vs this package vs Huawei DB).
+**Authority:** this package and its CLI documentation are the repository-local
+contract; no `.cursor/skills/gauss/` skill is bundled in this checkout.

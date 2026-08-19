@@ -20,6 +20,9 @@ dev = [
     "pytest-timeout>=2.0",
     "pytest-xdist>=3.5.0",
     "pytest-httpserver>=1.0.8",
+    "mypy>=1.13.0",
+    "types-PyYAML>=6.0.12",
+    "ruff>=0.15.0",
 ]
 
 [project.scripts]
@@ -50,15 +53,28 @@ filterwarnings = [
 [tool.coverage.run]
 source = ["src"]
 omit = ["tests/*", "src/__init__.py"]
-# Figure generation uses ``ProcessPoolExecutor`` (spawn); trace worker processes.
+# Figure generation uses ProcessPoolExecutor (spawn); trace worker processes.
+# Branch coverage: see docs/coverage-branch.md.
 concurrency = ["multiprocessing"]
 
 [tool.coverage.report]
-# Line coverage ~90%; combined line+branch ~89.6% with current Hermes/network branches.
+# Line coverage ~91%; combined line+branch ~89.6% with current Hermes/network branches.
 fail_under = 89
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+mypy_path = ["src"]
+explicit_package_bases = true
+
+[tool.ruff.lint]
+ignore = [
+    "RUF001",  # Ambiguous unicode chars in strings — intentional Lean math notation
+    "RUF003",  # Ambiguous unicode chars in comments — same as RUF001
+    "BLE001",  # Blind-except — intentional fail-closed design: pipeline stages,
+               # environment checks, and Hermes error handling must survive any
+               # exception to produce a structured result rather than crash.
+    "EXE001",  # Shebang-not-executable — scripts are imported, not directly execed.
+]

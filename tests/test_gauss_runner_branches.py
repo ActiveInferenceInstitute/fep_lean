@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from catalogue.topics import FEPTopicCatalogue, TopicEntry
 from gauss.client import OpenGaussClient
-from gauss.runner import GaussRunner, TopicRunResult
+from gauss.runner import GaussRunner
 from llm.hermes import HermesConfig, HermesExplainer, HermesResult
 from verification.lean_verifier import LeanVerifier
 
@@ -86,7 +87,24 @@ def test_run_topics_batch_catches_runner_exception(tmp_path: Path) -> None:
     assert "Unhandled runner exception" in out[0].error
 
 
+def test_run_topic_closes_session_after_unexpected_error(tmp_path: Path) -> None:
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    hermes = HermesExplainer(HermesConfig(enabled=False))
+    client = OpenGaussClient(gauss_home=tmp_path / "g")
+    runner = GaussRunner(lean, hermes, client, PROJ)
+
+    def explode(*_args, **_kwargs):
+        raise RuntimeError("injected failure after session creation")
+
+    runner._record_hermes_turns = explode  # type: ignore[method-assign]
+    with pytest.raises(RuntimeError, match="injected failure"):
+        runner.run_topic(_topic())
+    rows = client._conn.execute("SELECT status FROM sessions").fetchall()
+    assert [row["status"] for row in rows] == ["error"]
+
+
 # ── Explicit workflow selection tests ────────────────────────────────────────
+
 
 def test_workflow_draft_preserves_requested_stage(tmp_path: Path) -> None:
     lean = LeanVerifier(PROJ / "lean", PROJ)
@@ -111,6 +129,7 @@ def test_workflow_prove_preserves_requested_stage(tmp_path: Path) -> None:
 
 
 # ── Hermes caching tests ──────────────────────────────────────────────────────
+
 
 class _CountingHermes(HermesExplainer):
     """Hermes fixture that counts calls and returns a compile-clean sketch."""
@@ -158,6 +177,7 @@ def test_stage_results_empty_for_verify(tmp_path: Path) -> None:
 
 # ── Review workflow stage_results test ───────────────────────────────────────
 
+
 def test_run_topic_review_workflow_populates_stage_results(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -167,7 +187,6 @@ def test_run_topic_review_workflow_populates_stage_results(
 
     lean = LeanVerifier(PROJ / "lean", PROJ)
     # A sketch that will compile so verify_res.compiles is True (triggers review pass)
-    compile_sketch = "theorem fixtureReview : True := True.intro\n"
     hermes = _CountingHermes()
 
     client = OpenGaussClient(gauss_home=tmp_path / "g")

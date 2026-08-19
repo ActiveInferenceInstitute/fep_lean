@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -90,6 +91,32 @@ def find_toolchain_bin(lean_dir: Path | None = None) -> Path | None:
         return candidates[0] if candidates else None
     except (OSError, PermissionError):
         return None
+
+
+def find_executable(name: str, lean_dir: Path | None = None) -> str | None:
+    """Resolve a Lean/Lake executable using the pinned project toolchain.
+
+    The elan proxy is not guaranteed to be on ``PATH`` in a fresh checkout,
+    and the proxy may also try to write elan state before it can run.  Prefer
+    the direct binary from the project's pinned toolchain, then honour the
+    normal PATH and finally the elan proxy location.
+    """
+    explicit = os.environ.get(f"FEP_LEAN_{name.upper()}_EXE", "").strip()
+    if explicit:
+        return explicit if Path(explicit).is_file() else None
+
+    toolchain_bin = find_toolchain_bin(lean_dir)
+    if toolchain_bin:
+        direct = toolchain_bin / name
+        if direct.is_file():
+            return str(direct)
+
+    found = shutil.which(name)
+    if found:
+        return found
+
+    elan_proxy = get_elan_home() / "bin" / name
+    return str(elan_proxy) if elan_proxy.is_file() else None
 
 
 def subprocess_env(lean_dir: Path | None = None) -> dict[str, str]:

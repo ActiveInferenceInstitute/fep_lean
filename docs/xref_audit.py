@@ -63,7 +63,8 @@ def main(argv: list[str] | None = None) -> int:
         help="Manuscript directory to scan (default: projects/fep_lean/manuscript).",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Also list every anchor/label definition found.",
     )
@@ -85,9 +86,9 @@ def main(argv: list[str] | None = None) -> int:
     ref_origin: dict[str, list[tuple[Path, int]]] = defaultdict(list)
     for path in files:
         text = path.read_text(encoding="utf-8")
-        p, l, r = _scan(text)
+        p, line, r = _scan(text)
         pandoc_anchors |= p
-        latex_labels |= l
+        latex_labels |= line
         referenced |= r
         for i, line in enumerate(text.splitlines(), start=1):
             for m in _RE_REF.finditer(line):

@@ -21,7 +21,6 @@ from output.manuscript import (
     build_manuscript_vars,
     build_typeset_equations_markdown,
     build_unified_formalism_appendix_markdown,
-    write_unified_formalism_appendix_markdown,
     write_manuscript_vars,
     write_unified_formalism_appendix_markdown,
 )
@@ -47,9 +46,13 @@ def test_build_manuscript_vars_shape() -> None:
     assert "maturity_icon" in v["topics"]["fep-035"]
     assert "lean_chars" in v["topics"]["fep-035"]
     assert "verify" in v
-    assert v["lean_toolchain"] == (PROJ / "lean" / "lean-toolchain").read_text(
-        encoding="utf-8"
-    ).strip().splitlines()[0]
+    assert (
+        v["lean_toolchain"]
+        == (PROJ / "lean" / "lean-toolchain")
+        .read_text(encoding="utf-8")
+        .strip()
+        .splitlines()[0]
+    )
     assert v["lean_version"] == "4.29.0"
     assert v["mathlib_tag"] == "v4.29.0"
 
@@ -145,8 +148,7 @@ def test_build_unified_formalism_appendix_markdown_structure() -> None:
 def test_fep_001_latex_equations_from_yaml_matches_data_module() -> None:
     if str(PROJ / "scripts") not in sys.path:
         sys.path.insert(0, str(PROJ / "scripts"))
-    from catalogue_sketches import LATEX_EQUATIONS
-    from catalogue_sketches import THEOREM_LATEX
+    from catalogue_sketches import LATEX_EQUATIONS, THEOREM_LATEX
 
     c = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
     t1 = next(t for t in c.topics if t.id == "fep-001")
@@ -196,6 +198,9 @@ def test_latest_verification_manifest_newest(tmp_path: Path) -> None:
     new.mkdir(parents=True)
     (old / "verification_manifest.json").write_text("{}", encoding="utf-8")
     (new / "verification_manifest.json").write_text("{}", encoding="utf-8")
+    # Only complete runs are candidates: give both a complete summary.json.
+    (old / "summary.json").write_text(json.dumps({"complete": True}), encoding="utf-8")
+    (new / "summary.json").write_text(json.dumps({"complete": True}), encoding="utf-8")
     import os
     import time
 
@@ -203,6 +208,59 @@ def test_latest_verification_manifest_newest(tmp_path: Path) -> None:
     picked = _get_latest_verification_manifest(tmp_path)
     assert picked is not None
     assert "run_new" in str(picked)
+
+
+def test_latest_verification_manifest_ignores_incomplete_runs(tmp_path: Path) -> None:
+    """A crashed/partial run (no complete summary) must never be served as the
+    current verification block."""
+    base = tmp_path / "output" / "reports"
+    incomplete = base / "run_partial"
+    complete_run = base / "run_complete"
+    incomplete.mkdir(parents=True)
+    complete_run.mkdir(parents=True)
+    # The incomplete run is NEWER, but lacks a complete summary.
+    (incomplete / "verification_manifest.json").write_text(
+        json.dumps({"compiles_true": 9}), encoding="utf-8"
+    )
+    (incomplete / "summary.json").write_text(
+        json.dumps({"complete": False}), encoding="utf-8"
+    )
+    (complete_run / "verification_manifest.json").write_text(
+        json.dumps({"compiles_true": 3}), encoding="utf-8"
+    )
+    (complete_run / "summary.json").write_text(
+        json.dumps({"complete": True}), encoding="utf-8"
+    )
+    import os
+    import time
+
+    os.utime(incomplete / "summary.json", (time.time() + 10, time.time() + 10))
+    picked = _get_latest_verification_manifest(tmp_path)
+    assert picked is not None
+    assert "run_complete" in str(picked)
+
+
+def test_manuscript_vars_honor_explicit_output_root(tmp_path: Path) -> None:
+    custom = tmp_path / "custom-output" / "reports" / "run_custom"
+    custom.mkdir(parents=True)
+    (custom / "summary.json").write_text(
+        json.dumps({"complete": True}), encoding="utf-8"
+    )
+    (custom / "verification_manifest.json").write_text(
+        json.dumps(
+            {
+                "verify_lean_ran": True,
+                "topics_with_result": 1,
+                "compiles_true": 1,
+                "compiles_false": 0,
+                "results": [{"topic_id": "fep-001", "compiles": True}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    c = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
+    values = build_manuscript_vars(c, PROJ, output_root=tmp_path / "custom-output")
+    assert values["verify"]["topics_with_result"] == 1
 
 
 def test_verify_block_from_manifest_json(tmp_path: Path) -> None:
@@ -413,6 +471,7 @@ def test_build_manuscript_vars_exposes_hermes_block(tmp_path: Path) -> None:
         json.dumps(
             {
                 "run_id": "test_hermes_block",
+                "complete": True,
                 "topics": [
                     {
                         "topic_id": "fep-001",
@@ -457,7 +516,9 @@ def test_write_manuscript_vars_roundtrip(tmp_path: Path) -> None:
 
     shutil.copytree(PROJ / "config", tmp_path / "config")
     (tmp_path / "manuscript").mkdir()
-    (tmp_path / "manuscript" / "config.yaml").write_text("paper:\n  title: t\n", encoding="utf-8")
+    (tmp_path / "manuscript" / "config.yaml").write_text(
+        "paper:\n  title: t\n", encoding="utf-8"
+    )
     for d in ("scripts", "tests", "src", "output"):
         (tmp_path / d).mkdir()
     (tmp_path / "src" / "__init__.py").write_text('"""x"""\n', encoding="utf-8")
@@ -499,7 +560,9 @@ def test_count_test_cases_invalidates_on_test_change(tmp_path: Path) -> None:
     cache_dir.mkdir(parents=True)
     cache_path = cache_dir / "tests_collected.json"
 
-    cache_path.write_text(json.dumps({"collected": 99, "ts": "fixture"}), encoding="utf-8")
+    cache_path.write_text(
+        json.dumps({"collected": 99, "ts": "fixture"}), encoding="utf-8"
+    )
     old_mtime = cache_path.stat().st_mtime - 10.0
     os.utime(cache_path, (old_mtime, old_mtime))
     test_mtime = old_mtime - 100.0

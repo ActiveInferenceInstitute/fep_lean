@@ -12,7 +12,10 @@ from typing import Any, Literal
 from catalogue.topics import FEPTopicCatalogue
 from gauss.runner import GaussRunner
 from output.figures import write_all_catalogue_figures
-from output.manuscript import write_manuscript_vars, write_unified_formalism_appendix_markdown
+from output.manuscript import (
+    write_manuscript_vars,
+    write_unified_formalism_appendix_markdown,
+)
 from verification.environment import run_validation_checks
 
 log = logging.getLogger(__name__)
@@ -67,15 +70,23 @@ class PipelineResult:
 
     @property
     def hermes_count(self) -> int:
-        return sum(bool(getattr(item, "hermes_success", False)) for item in self._topic_results)
+        return sum(
+            bool(getattr(item, "hermes_success", False)) for item in self._topic_results
+        )
 
     @property
     def lean_verified_count(self) -> int:
-        return sum(bool(getattr(item, "lean_compiles", False)) for item in self._topic_results)
+        return sum(
+            bool(getattr(item, "lean_compiles", False)) for item in self._topic_results
+        )
 
     @property
     def lean_compile_ok(self) -> int:
-        return sum(bool(getattr(item, "lean_compiles", False)) and not bool(getattr(item, "lean_has_sorry", True)) for item in self._topic_results)
+        return sum(
+            bool(getattr(item, "lean_compiles", False))
+            and not bool(getattr(item, "lean_has_sorry", True))
+            for item in self._topic_results
+        )
 
     @property
     def duration_s(self) -> float:
@@ -83,7 +94,9 @@ class PipelineResult:
 
     @property
     def stats(self) -> dict[str, Any]:
-        gauss_stage = next((stage for stage in self.stages if stage.name == "Gauss Sessions"), None)
+        gauss_stage = next(
+            (stage for stage in self.stages if stage.name == "Gauss Sessions"), None
+        )
         return {
             "topics_total": self.catalogue_topics,
             "topics_verified": self.verified_topics,
@@ -106,7 +119,16 @@ class PipelineResult:
             "verified_topics": self.verified_topics,
             "capabilities": self.capabilities,
             "failure_reason": self.failure_reason,
-            "stages": [{"name": stage.name, "status": stage.status, "message": stage.message, "duration_s": round(stage.duration_s, 3), "error": stage.error} for stage in self.stages],
+            "stages": [
+                {
+                    "name": stage.name,
+                    "status": stage.status,
+                    "message": stage.message,
+                    "duration_s": round(stage.duration_s, 3),
+                    "error": stage.error,
+                }
+                for stage in self.stages
+            ],
             "lean_stats": self.lean_stats,
         }
 
@@ -125,18 +147,35 @@ class FEPPipeline:
         if output_root is None:
             try:
                 import yaml
-                settings = yaml.safe_load((self.project_root / "config" / "settings.yaml").read_text(encoding="utf-8")) or {}
+
+                settings = (
+                    yaml.safe_load(
+                        (self.project_root / "config" / "settings.yaml").read_text(
+                            encoding="utf-8"
+                        )
+                    )
+                    or {}
+                )
                 configured = settings.get("output", {}).get("root")
                 if configured:
                     configured_root = (self.project_root / str(configured)).resolve()
             except (OSError, yaml.YAMLError, AttributeError):
                 configured_root = None
-        self.output_root = _resolve_output_root(self.project_root, output_root or configured_root)
+        self.output_root = _resolve_output_root(
+            self.project_root, output_root or configured_root
+        )
         self._catalogue: FEPTopicCatalogue | None = None
         self._topics_to_run: list[Any] = []
         self._run_topic_results: list[dict[str, Any]] = []
 
-    def run(self, *, mode: PipelineMode = "full", topic_filter: list[str] | None = None, area_filter: str | None = None, workflow: str = "verify") -> PipelineResult:
+    def run(
+        self,
+        *,
+        mode: PipelineMode = "full",
+        topic_filter: list[str] | None = None,
+        area_filter: str | None = None,
+        workflow: str = "verify",
+    ) -> PipelineResult:
         if mode not in ("full", "catalogue"):
             raise ValueError(f"unsupported pipeline mode: {mode}")
         started = time.perf_counter()
@@ -146,45 +185,128 @@ class FEPPipeline:
             t0 = time.perf_counter()
             try:
                 payload = action()
-                result = StepResult(name, "ok", duration_s=time.perf_counter() - t0, payload=payload)
+                result = StepResult(
+                    name, "ok", duration_s=time.perf_counter() - t0, payload=payload
+                )
             except Exception as exc:
-                result = StepResult(name, "error", duration_s=time.perf_counter() - t0, error=f"{type(exc).__name__}: {exc}")
+                result = StepResult(
+                    name,
+                    "error",
+                    duration_s=time.perf_counter() - t0,
+                    error=f"{type(exc).__name__}: {exc}",
+                )
                 payload = None
                 log.error("stage %s failed: %s", name, exc)
             stages.append(result)
             return result, payload
 
-        catalogue_stage, catalogue_payload = stage("Load Catalogue", self._load_catalogue(topic_filter, area_filter))
+        catalogue_stage, _catalogue_payload = stage(
+            "Load Catalogue", self._load_catalogue(topic_filter, area_filter)
+        )
         if catalogue_stage.status != "ok":
-            return PipelineResult("error", mode=mode, total_duration=time.perf_counter() - started, stages=stages, failure_reason=catalogue_stage.error or "catalogue load failed")
+            return PipelineResult(
+                "error",
+                mode=mode,
+                total_duration=time.perf_counter() - started,
+                stages=stages,
+                failure_reason=catalogue_stage.error or "catalogue load failed",
+            )
 
-        validation_stage, validation = stage("Environment Validation", lambda: run_validation_checks(self.project_root, mode=mode))
+        validation_stage, validation = stage(
+            "Environment Validation",
+            lambda: run_validation_checks(self.project_root, mode=mode),
+        )
         if validation_stage.status != "ok" or validation.get("status") != "ok":
-            reason = validation_stage.error or f"{validation.get('failed_count', 0)} required capability checks failed"
-            result = PipelineResult("error", mode=mode, complete=False, total_duration=time.perf_counter() - started, stages=stages, catalogue_topics=len(self._topics_to_run), capabilities={c["name"]: bool(c["ok"]) for c in validation.get("checks", [])} if isinstance(validation, dict) else {}, failure_reason=reason)
+            reason = (
+                validation_stage.error
+                or f"{validation.get('failed_count', 0)} required capability checks failed"
+            )
+            result = PipelineResult(
+                "error",
+                mode=mode,
+                complete=False,
+                total_duration=time.perf_counter() - started,
+                stages=stages,
+                catalogue_topics=len(self._topics_to_run),
+                capabilities={
+                    c["name"]: bool(c["ok"]) for c in validation.get("checks", [])
+                }
+                if isinstance(validation, dict)
+                else {},
+                failure_reason=reason,
+            )
             return result
 
         raw_results: list[Any] = []
         if mode == "full":
-            gauss_stage, gauss_payload = stage("Gauss Sessions", lambda: self._run_gauss(workflow))
+            gauss_stage, gauss_payload = stage(
+                "Gauss Sessions", lambda: self._run_gauss(workflow)
+            )
             if gauss_stage.status != "ok":
-                return PipelineResult("error", mode=mode, total_duration=time.perf_counter() - started, stages=stages, catalogue_topics=len(self._topics_to_run), failure_reason=gauss_stage.error or "verification stage failed")
+                return PipelineResult(
+                    "error",
+                    mode=mode,
+                    total_duration=time.perf_counter() - started,
+                    stages=stages,
+                    catalogue_topics=len(self._topics_to_run),
+                    failure_reason=gauss_stage.error or "verification stage failed",
+                )
             raw_results = gauss_payload.get("results", [])
         else:
-            stages.append(StepResult("Gauss Sessions", "not_run", message="catalogue mode never performs verification"))
+            stages.append(
+                StepResult(
+                    "Gauss Sessions",
+                    "not_run",
+                    message="catalogue mode never performs verification",
+                )
+            )
 
-        artifact_stage, _ = stage("Manuscript Artifacts", lambda: self._write_artifacts())
+        artifact_stage, _ = stage(
+            "Manuscript Artifacts", lambda: self._write_artifacts()
+        )
         if artifact_stage.status != "ok":
-            return PipelineResult("error", mode=mode, total_duration=time.perf_counter() - started, stages=stages, catalogue_topics=len(self._topics_to_run), failure_reason=artifact_stage.error or "artifact generation failed", _topic_results=raw_results)
+            return PipelineResult(
+                "error",
+                mode=mode,
+                total_duration=time.perf_counter() - started,
+                stages=stages,
+                catalogue_topics=len(self._topics_to_run),
+                failure_reason=artifact_stage.error or "artifact generation failed",
+                _topic_results=raw_results,
+            )
 
         self._run_topic_results = [item.as_dict() for item in raw_results]
         stats = self._compute_lean_stats()
-        verified = sum(bool(getattr(item, "success", False)) and bool(getattr(item, "lean_compiles", False)) and not bool(getattr(item, "lean_has_sorry", True)) for item in raw_results)
-        complete = mode == "catalogue" or (len(raw_results) == len(self._topics_to_run) and verified == len(self._topics_to_run))
+        verified = sum(
+            bool(getattr(item, "success", False))
+            and bool(getattr(item, "lean_compiles", False))
+            and not bool(getattr(item, "lean_has_sorry", True))
+            for item in raw_results
+        )
+        complete = mode == "catalogue" or (
+            len(raw_results) == len(self._topics_to_run)
+            and verified == len(self._topics_to_run)
+        )
         status = "ok" if complete else "error"
-        return PipelineResult(status, mode=mode, complete=complete, total_duration=time.perf_counter() - started, stages=stages, lean_stats=stats, catalogue_topics=len(self._topics_to_run), verified_topics=verified, capabilities={"catalogue": True, "verification": mode == "full"}, failure_reason="" if complete else "one or more topics failed strict verification", _topic_results=raw_results)
+        return PipelineResult(
+            status,
+            mode=mode,
+            complete=complete,
+            total_duration=time.perf_counter() - started,
+            stages=stages,
+            lean_stats=stats,
+            catalogue_topics=len(self._topics_to_run),
+            verified_topics=verified,
+            capabilities={"catalogue": True, "verification": mode == "full"},
+            failure_reason=""
+            if complete
+            else "one or more topics failed strict verification",
+            _topic_results=raw_results,
+        )
 
-    def _load_catalogue(self, topic_filter: list[str] | None, area_filter: str | None) -> Any:
+    def _load_catalogue(
+        self, topic_filter: list[str] | None, area_filter: str | None
+    ) -> Any:
         def action() -> dict[str, Any]:
             self._catalogue = FEPTopicCatalogue.from_yaml(self.topics_file)
             topics = self._catalogue.topics
@@ -197,25 +319,67 @@ class FEPPipeline:
                 topics = [topic for topic in topics if topic.area == area_filter]
             maximum = _max_topics_from_env()
             self._topics_to_run = topics[:maximum] if maximum else topics
-            return {"topics": [topic.id for topic in self._topics_to_run], "total_catalogue_topics": len(self._catalogue.topics)}
+            return {
+                "topics": [topic.id for topic in self._topics_to_run],
+                "total_catalogue_topics": len(self._catalogue.topics),
+            }
+
         return action
 
     def _run_gauss(self, workflow: str) -> dict[str, Any]:
         runner = GaussRunner.create_default(self.project_root, require_cli=True)
-        if not getattr(runner.hermes, "is_live", False):
-            raise RuntimeError("Hermes is not live; full mode requires configured credentials")
-        runner.hermes.preflight()
-        results = runner.run_topics_batch(self._topics_to_run, workflow=workflow)
-        return {"results": results, "topics": [result.as_dict() for result in results]}
+        try:
+            if not getattr(runner.hermes, "is_live", False):
+                raise RuntimeError(
+                    "Hermes is not live; full mode requires configured credentials"
+                )
+            runner.hermes.preflight()
+            results = runner.run_topics_batch(self._topics_to_run, workflow=workflow)
+            return {
+                "results": results,
+                "topics": [result.as_dict() for result in results],
+            }
+        finally:
+            runner.close()
 
     def _write_artifacts(self) -> dict[str, str]:
         if self._catalogue is None:
             raise RuntimeError("catalogue is not loaded")
-        vars_path = write_manuscript_vars(self.project_root, self._catalogue)
-        appendix_path = write_unified_formalism_appendix_markdown(self.project_root, self._catalogue)
-        figures = write_all_catalogue_figures(self._catalogue, self.project_root, output_root=self.output_root)
-        return {"vars_file": str(vars_path), "appendix": str(appendix_path), "figures": str(len(figures))}
+        vars_path = write_manuscript_vars(
+            self.project_root,
+            self._catalogue,
+            output_root=self.output_root,
+        )
+        appendix_path = write_unified_formalism_appendix_markdown(
+            self.project_root, self._catalogue
+        )
+        figures = write_all_catalogue_figures(
+            self._catalogue, self.project_root, output_root=self.output_root
+        )
+        return {
+            "vars_file": str(vars_path),
+            "appendix": str(appendix_path),
+            "figures": str(len(figures)),
+        }
 
     def _compute_lean_stats(self) -> dict[str, Any]:
         rows = self._run_topic_results
-        return {"total_processed": len(rows), "compiles_clean": sum(bool(row.get("lean_compiles")) and not bool(row.get("lean_has_sorry")) for row in rows), "compile_error": sum(not bool(row.get("lean_compiles")) for row in rows), "hermes_error": sum(not bool(row.get("hermes_success")) for row in rows), "error_logs": [f"{row.get('topic_id')}: {row.get('error', '')}" for row in rows if row.get("error")], "clean_logs": [f"{row.get('topic_id')} successfully verified" for row in rows if row.get("lean_compiles") and not row.get("lean_has_sorry")]}
+        return {
+            "total_processed": len(rows),
+            "compiles_clean": sum(
+                bool(row.get("lean_compiles")) and not bool(row.get("lean_has_sorry"))
+                for row in rows
+            ),
+            "compile_error": sum(not bool(row.get("lean_compiles")) for row in rows),
+            "hermes_error": sum(not bool(row.get("hermes_success")) for row in rows),
+            "error_logs": [
+                f"{row.get('topic_id')}: {row.get('error', '')}"
+                for row in rows
+                if row.get("error")
+            ],
+            "clean_logs": [
+                f"{row.get('topic_id')} successfully verified"
+                for row in rows
+                if row.get("lean_compiles") and not row.get("lean_has_sorry")
+            ],
+        }

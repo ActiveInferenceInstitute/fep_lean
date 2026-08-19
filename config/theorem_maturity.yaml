@@ -1,0 +1,357 @@
+# Maintained semantic review of the catalogue theorem proxies.
+# This file is authoring data; docs/theorem-maturity-audit.md is its generated projection.
+schema_version: 1
+review_date: "2026-07-31"
+native_evidence: "The native Lean evidence is the per-topic sweep from uv run fep-lean verify; it establishes compilation only, not the semantic disposition below."
+status_policy: "A future mathlib_status change requires a refreshed native Lean receipt and an explicit changelog entry; this audit never turns a proxy into a stronger mathematical claim."
+topics:
+  - id: fep-001
+    primary_theorem: fep001_measure_union_le
+    invariant: "Measure mass is subadditive over two events."
+    assumption_review: "Conditional on an arbitrary measurable space and measure; no probability normalization or finite mass is assumed."
+    non_vacuity: "Structural: the zero measure inhabits the context, while a nonzero probability witness is deliberately absent."
+    acceptance_probe: "native Lean compile of fep001_measure_union_le; semantic follow-up is a nonzero finite-measure instantiation."
+    disposition: proxy
+  - id: fep-002
+    primary_theorem: fep002_elbo_bound
+    invariant: "A nonnegative KL remainder makes free energy a lower bound on log evidence."
+    assumption_review: "Conditional: the decomposition and KL nonnegativity are hypotheses; the probabilistic definitions are not formalized here."
+    non_vacuity: "Witnessed by logEvidence = freeEnergy = klDiv = 0, with the strict probabilistic witness intentionally deferred."
+    acceptance_probe: "native Lean compile of fep002_elbo_bound plus a finite real witness satisfying both hypotheses."
+    disposition: conditional_proxy
+  - id: fep-003
+    primary_theorem: fep003_efe_monotone
+    invariant: "Finite expected-cost aggregation preserves pointwise cost order."
+    assumption_review: "Conditional on a finite state set and pointwise order; no policy distribution or expectation normalization is assumed."
+    non_vacuity: "Witnessed by a singleton state set and constant costs with ca ≤ cb."
+    acceptance_probe: "native Lean compile of fep003_efe_monotone and a singleton Finset instantiation."
+    disposition: proxy
+  - id: fep-004
+    primary_theorem: fep004_inner_self_nonneg
+    invariant: "The finite coordinate inner product with itself is nonnegative."
+    assumption_review: "Unconditional over two real coordinates; this is a Euclidean PSD anchor, not a Fisher-information construction."
+    non_vacuity: "Witnessed by the vector (1, 0)."
+    acceptance_probe: "native Lean compile of fep004_inner_self_nonneg with zero and nonzero coordinate witnesses."
+    disposition: structural_proxy
+  - id: fep-005
+    primary_theorem: fep005_total_cover
+    invariant: "A total state-to-block assignment places every state in one partition block."
+    assumption_review: "Unconditional for any function Fin 20 → Fin 4; disjointness and totality come from functional assignment."
+    non_vacuity: "Witnessed by any constant assignment and by the identity-style finite assignment."
+    acceptance_probe: "native Lean compile of fep005_total_cover and finite membership checks for a concrete assignment."
+    disposition: structural_proxy
+  - id: fep-006
+    primary_theorem: fep006_comp_measurable
+    invariant: "Measurable state maps remain measurable under composition."
+    assumption_review: "Conditional on measurability of both maps; no dynamics, invariant measure, or flow equation is assumed."
+    non_vacuity: "Witnessed by identity and constant maps on standard measurable spaces."
+    acceptance_probe: "native Lean compile of fep006_comp_measurable with identity-map witnesses."
+    disposition: structural_proxy
+  - id: fep-007
+    primary_theorem: fep007_message_agg_mono
+    invariant: "A nonnegative factor-weighted message aggregate is monotone in incoming messages."
+    assumption_review: "Conditional on nonnegative factors and pointwise incoming-message order; graph normalization and fixed-point semantics are absent."
+    non_vacuity: "Witnessed by constant unit factors, zero lower messages, and unit upper messages."
+    acceptance_probe: "native Lean compile of fep007_message_agg_mono on a singleton neighbor set."
+    disposition: proxy
+  - id: fep-008
+    primary_theorem: fep008_exists_minG
+    invariant: "A real-valued objective attains a minimum on a finite nonempty policy set."
+    assumption_review: "Conditional on finite nonemptiness; the theorem does not define expected free energy or prove a unique policy."
+    non_vacuity: "Witnessed by a singleton policy set with any real objective."
+    acceptance_probe: "native Lean compile of fep008_exists_minG and a singleton-policy witness."
+    disposition: conditional_proxy
+  - id: fep-009
+    primary_theorem: fep009_likelihood_mono
+    invariant: "Measure-based likelihood mass is monotone under event inclusion."
+    assumption_review: "Conditional on an arbitrary measure and set inclusion; the catalogue prose mentions factorization, but this theorem does not establish independence."
+    non_vacuity: "Witnessed by nested finite sets under a counting or zero measure."
+    acceptance_probe: "native Lean compile of fep009_likelihood_mono; semantic follow-up is a product-measure factorization theorem."
+    disposition: scope_gap
+  - id: fep-010
+    primary_theorem: fep010_detailed_balance
+    invariant: "The real exponential of opposite scalar energies multiplies to one."
+    assumption_review: "Unconditional algebra over ℝ; the identity is not a physical detailed-balance law without transition rates or a stationary measure."
+    non_vacuity: "Witnessed by every real a, including a = 1."
+    acceptance_probe: "native Lean compile of fep010_detailed_balance and evaluation at a = 1."
+    disposition: scope_gap
+  - id: fep-011
+    primary_theorem: fep011_negLog_nonneg_prob
+    invariant: "Negative log probability is nonnegative on the interval (0, 1]."
+    assumption_review: "Conditional on strict positivity and an upper bound; no probability space or random variable is introduced."
+    non_vacuity: "Witnessed by u = 1/2 and the boundary u = 1."
+    acceptance_probe: "native Lean compile of fep011_negLog_nonneg_prob with u = 1/2."
+    disposition: conditional_proxy
+  - id: fep-012
+    primary_theorem: fep012_gibbsPartition_pos
+    invariant: "A finite nonempty sum of exponential Boltzmann weights is strictly positive."
+    assumption_review: "Conditional only on policy-set nonemptiness; no normalization, temperature parameter, or entropy objective is proved."
+    non_vacuity: "Witnessed by a singleton policy set and arbitrary finite costs."
+    acceptance_probe: "native Lean compile of fep012_gibbsPartition_pos and a singleton-policy witness."
+    disposition: conditional_proxy
+  - id: fep-013
+    primary_theorem: fep013_helmholtz_mono_entropy
+    invariant: "At positive temperature, increasing entropy decreases U − TS."
+    assumption_review: "Conditional on T > 0 and S₁ ≤ S₂; U, T, and S are unconstrained real scalars rather than thermodynamic observables."
+    non_vacuity: "Witnessed by U = 0, T = 1, S₁ = 0, and S₂ = 1."
+    acceptance_probe: "native Lean compile of fep013_helmholtz_mono_entropy with the stated scalar witness."
+    disposition: structural_proxy
+  - id: fep-014
+    primary_theorem: fep014_dpi_measurable
+    invariant: "Composition of measurable maps is measurable, a prerequisite for pushforward arguments."
+    assumption_review: "Conditional on two measurable maps; despite the title, no KL nonnegativity, chain rule, or data-processing inequality is formalized."
+    non_vacuity: "Witnessed by identity maps and constant maps on measurable spaces."
+    acceptance_probe: "native Lean compile of fep014_dpi_measurable; semantic follow-up is an actual KL data-processing statement."
+    disposition: scope_gap
+  - id: fep-015
+    primary_theorem: fep015_measurable_comp
+    invariant: "Variational objectives remain measurable under composition of measurable maps."
+    assumption_review: "Conditional on measurability of both maps; no integrability or objective value is assumed."
+    non_vacuity: "Witnessed by identity and constant maps."
+    acceptance_probe: "native Lean compile of fep015_measurable_comp with identity-map witnesses."
+    disposition: structural_proxy
+  - id: fep-016
+    primary_theorem: fep016_precision_weighted
+    invariant: "A nonnegative precision-weighted squared residual is nonnegative."
+    assumption_review: "Conditional only on precision ≥ 0; no likelihood, Hessian, or approximation error bound is formalized."
+    non_vacuity: "Witnessed by precision 1 and x = μ + 1."
+    acceptance_probe: "native Lean compile of fep016_precision_weighted and a positive-precision witness."
+    disposition: conditional_proxy
+  - id: fep-017
+    primary_theorem: fep017_posterior_nonneg
+    invariant: "An unnormalized likelihood-times-prior posterior is pointwise nonnegative."
+    assumption_review: "Conditional on pointwise nonnegative factors; normalization and posterior mass-one properties are absent."
+    non_vacuity: "Witnessed by constant unit prior and likelihood on a finite state."
+    acceptance_probe: "native Lean compile of fep017_posterior_nonneg with unit factors."
+    disposition: scope_gap
+  - id: fep-018
+    primary_theorem: fep018_triangle
+    invariant: "Euclidean distance satisfies the triangle inequality."
+    assumption_review: "Unconditional in a two-dimensional Euclidean space; this is not a theorem about statistical-manifold geodesics."
+    non_vacuity: "Witnessed by three distinct finite coordinate vectors."
+    acceptance_probe: "native Lean compile of fep018_triangle and a concrete three-point distance calculation."
+    disposition: scope_gap
+  - id: fep-019
+    primary_theorem: fep019_mixture_nonneg
+    invariant: "A finite weighted sum of nonnegative prior-predictive terms is nonnegative."
+    assumption_review: "Conditional on nonnegative weights and likelihoods over the support; no normalized prior or predictive density law is assumed."
+    non_vacuity: "Witnessed by a singleton support with unit weight and likelihood."
+    acceptance_probe: "native Lean compile of fep019_mixture_nonneg on a singleton support."
+    disposition: conditional_proxy
+  - id: fep-020
+    primary_theorem: fep020_descent
+    invariant: "A scalar step x − η·grad decreases x when η and grad are positive."
+    assumption_review: "Conditional on positive scalar step and gradient; it is not a stochastic Langevin sampler or convergence theorem."
+    non_vacuity: "Witnessed by x = 0, η = 1, and grad = 1."
+    acceptance_probe: "native Lean compile of fep020_descent with the scalar witness."
+    disposition: scope_gap
+  - id: fep-021
+    primary_theorem: fep021_efe_zero_iff
+    invariant: "A sum of two nonnegative EFE components vanishes exactly when both vanish."
+    assumption_review: "Conditional on nonnegative components; the risk/ambiguity-to-epistemic/pragmatic equivalence is merely assumed elsewhere in the sketch."
+    non_vacuity: "Witnessed by (e, p) = (0, 0), with positive pairs demonstrating the converse boundary."
+    acceptance_probe: "native Lean compile of fep021_efe_zero_iff and finite scalar witnesses."
+    disposition: conditional_proxy
+  - id: fep-022
+    primary_theorem: fep022_pushforward_nonneg
+    invariant: "Pushforward measure mass is nonnegative on every measurable-space event."
+    assumption_review: "Conditional on a measurable map parameter, although the measurability hypothesis is not used by this positivity theorem; no posterior predictive statistic is proved."
+    non_vacuity: "Witnessed by the zero measure and by identity pushforward on a standard Borel space."
+    acceptance_probe: "native Lean compile of fep022_pushforward_nonneg; semantic follow-up is a predictive calibration or measure-preservation property."
+    disposition: scope_gap
+  - id: fep-023
+    primary_theorem: fep023_monotone
+    invariant: "Adding available policies can only enlarge the reachable-affordance set."
+    assumption_review: "Conditional on finite-policy inclusion and a deterministic policy-to-sensory map; no distributional reachability is modeled."
+    non_vacuity: "Witnessed by nested singleton policy sets and a nonconstant map."
+    acceptance_probe: "native Lean compile of fep023_monotone and explicit finite-set inclusion."
+    disposition: structural_proxy
+  - id: fep-024
+    primary_theorem: fep024_log_ratio
+    invariant: "Positive real log ratios decompose into a difference of logs."
+    assumption_review: "Conditional on positive numerator and denominator; this is an algebraic KL ingredient, not KL itself."
+    non_vacuity: "Witnessed by a = 2 and b = 1."
+    acceptance_probe: "native Lean compile of fep024_log_ratio with positive scalar witnesses."
+    disposition: conditional_proxy
+  - id: fep-025
+    primary_theorem: fep025_skew_diag_zero
+    invariant: "A skew-symmetric real matrix has zero diagonal."
+    assumption_review: "Conditional on matrix skew symmetry; no probability current, gradient flow, or NESS stationarity is formalized."
+    non_vacuity: "Witnessed by the zero 1 × 1 matrix and a nonzero 2 × 2 skew matrix."
+    acceptance_probe: "native Lean compile of fep025_skew_diag_zero with concrete skew matrices."
+    disposition: scope_gap
+  - id: fep-026
+    primary_theorem: fep026_complexity_increases
+    invariant: "The penalty −log p increases as a positive prior mass decreases."
+    assumption_review: "Conditional on positive p and q with p ≤ q; the q positivity hypothesis is unused by the monotonicity result."
+    non_vacuity: "Witnessed by p = 1/2 and q = 1."
+    acceptance_probe: "native Lean compile of fep026_complexity_increases and a positive ordered pair."
+    disposition: conditional_proxy
+  - id: fep-027
+    primary_theorem: fep027_prod_univ
+    invariant: "The product measure assigns product mass to the full rectangular space."
+    assumption_review: "Conditional on measurable spaces and SigmaFinite ν; this is a product-measure law, not a hierarchical generative-model factorization."
+    non_vacuity: "Witnessed by finite counting or Dirac measures on finite measurable spaces."
+    acceptance_probe: "native Lean compile of fep027_prod_univ and finite-measure instances."
+    disposition: scope_gap
+  - id: fep-028
+    primary_theorem: fep028_softmax_probs_sum_one
+    invariant: "Exponentiated policy scores normalize to one over a nonempty finite policy set."
+    assumption_review: "Conditional on nonempty finite support; the definition permits policies outside the support and does not formalize a policy-selection objective."
+    non_vacuity: "Witnessed by a singleton support and arbitrary γ and G."
+    acceptance_probe: "native Lean compile of fep028_softmax_probs_sum_one and a singleton-support normalization check."
+    disposition: conditional_proxy
+  - id: fep-029
+    primary_theorem: fep029_secant_ineq
+    invariant: "A scalar convex combination lies above the lower endpoint when endpoints are ordered."
+    assumption_review: "Conditional on t ∈ [0,1] and a ≤ b; no convex function or Bregman divergence is present."
+    non_vacuity: "Witnessed by a = 0, b = 1, and t = 1/2."
+    acceptance_probe: "native Lean compile of fep029_secant_ineq with an interior interpolation parameter."
+    disposition: scope_gap
+  - id: fep-030
+    primary_theorem: fep030_entropy_eq_log
+    invariant: "The Shannon-form expression for a finite uniform distribution equals log n."
+    assumption_review: "Conditional on n > 0 and a fixed uniform distribution; this proves no maximum over competing distributions."
+    non_vacuity: "Witnessed by n = 1 and n = 2."
+    acceptance_probe: "native Lean compile of fep030_entropy_eq_log with n = 2; semantic follow-up is the maximizing inequality."
+    disposition: scope_gap
+  - id: fep-031
+    primary_theorem: fep031_partition_pos
+    invariant: "A finite nonempty sum of Gibbs weights is strictly positive."
+    assumption_review: "Conditional on finite nonempty support; the separate gibbs_sum theorem is reflexive and does not define normalized probabilities."
+    non_vacuity: "Witnessed by a singleton support and any real β and energy."
+    acceptance_probe: "native Lean compile of fep031_partition_pos and a singleton partition witness."
+    disposition: scope_gap
+  - id: fep-032
+    primary_theorem: fep032_descent_contracts
+    invariant: "The squared scalar gradient step contracts for a step size in (0,1]."
+    assumption_review: "Conditional on η ∈ (0,1]; no objective, gradient regularity, or convergence over iterations is assumed."
+    non_vacuity: "Witnessed by x₀ = 1 and η = 1/2."
+    acceptance_probe: "native Lean compile of fep032_descent_contracts and the stated scalar witness."
+    disposition: conditional_proxy
+  - id: fep-033
+    primary_theorem: fep033_horizon_mono
+    invariant: "Cumulative nonnegative cost is monotone under finite horizon inclusion."
+    assumption_review: "Conditional on finite-set inclusion and nonnegative costs; no temporal transition or discount normalization is assumed."
+    non_vacuity: "Witnessed by empty S, singleton T, and constant unit cost."
+    acceptance_probe: "native Lean compile of fep033_horizon_mono on nested finite horizons."
+    disposition: conditional_proxy
+  - id: fep-034
+    primary_theorem: fep034_update_nonneg
+    invariant: "A categorical likelihood times a nonnegative transition-weighted prior remains nonnegative."
+    assumption_review: "Conditional on pointwise nonnegative factors; transition normalization and posterior normalization are absent."
+    non_vacuity: "Witnessed by unit prior, transition, and likelihood on a singleton state set."
+    acceptance_probe: "native Lean compile of fep034_update_nonneg with unit finite-state factors."
+    disposition: scope_gap
+  - id: fep-035
+    primary_theorem: fep035_log_mul
+    invariant: "Positive products become sums under the real logarithm."
+    assumption_review: "Conditional on positive factors; despite the title, no Jensen inequality or concavity theorem is formalized."
+    non_vacuity: "Witnessed by a = 2 and b = 3."
+    acceptance_probe: "native Lean compile of fep035_log_mul with positive scalar witnesses; semantic follow-up is Jensen proper."
+    disposition: scope_gap
+  - id: fep-036
+    primary_theorem: fep036_scaledMass_nonneg
+    invariant: "A nonnegative real weight times measure mass converted to ℝ remains nonnegative."
+    assumption_review: "Conditional on c ≥ 0; the empirical-Bayes coupling and estimator semantics are not defined."
+    non_vacuity: "Witnessed by c = 1 and a finite or zero measure."
+    acceptance_probe: "native Lean compile of fep036_scaledMass_nonneg and a finite-measure witness."
+    disposition: scope_gap
+  - id: fep-037
+    primary_theorem: fep037_einstein_pos
+    invariant: "The defined product kT × fluctuation is positive when both factors are positive."
+    assumption_review: "Conditional on positive scalars; the fluctuation-dissipation relation is introduced as a definition rather than derived."
+    non_vacuity: "Witnessed by kT = 1 and fluctuation = 1."
+    acceptance_probe: "native Lean compile of fep037_einstein_pos with positive scalar witnesses."
+    disposition: scope_gap
+  - id: fep-038
+    primary_theorem: fep038_fisher_inner_nonneg
+    invariant: "The two-coordinate sum-of-squares inner product is PSD."
+    assumption_review: "Unconditional for finite real coordinates; no Fisher matrix, parameterization, or natural-gradient update is defined."
+    non_vacuity: "Witnessed by g = (1, 0) and g = (0, 0)."
+    acceptance_probe: "native Lean compile of fep038_fisher_inner_nonneg with nonzero and zero vectors."
+    disposition: scope_gap
+  - id: fep-039
+    primary_theorem: fep039_global_mono
+    invariant: "A finite sum of local free-energy terms preserves pointwise order."
+    assumption_review: "Conditional on pointwise order over Fin 4; local terms are arbitrary real values and not tied to a partition measure."
+    non_vacuity: "Witnessed by constant zero and unit local contributions."
+    acceptance_probe: "native Lean compile of fep039_global_mono with constant finite functions."
+    disposition: proxy
+  - id: fep-040
+    primary_theorem: fep040_entropy_mono
+    invariant: "The logarithm of a positive variance proxy is monotone in variance."
+    assumption_review: "Conditional on σ₁ > 0 and σ₁ ≤ σ₂; the Gaussian entropy formula and heat-capacity derivative are not formalized."
+    non_vacuity: "Witnessed by σ₁ = 1 and σ₂ = 2."
+    acceptance_probe: "native Lean compile of fep040_entropy_mono and positive ordered variances."
+    disposition: scope_gap
+  - id: fep-041
+    primary_theorem: fep041_epistemic_nonneg
+    invariant: "A weighted finite sum of nonnegative divergence scores is nonnegative."
+    assumption_review: "Conditional on nonnegative weights and scores; `div` is an arbitrary scalar function, not a proved divergence."
+    non_vacuity: "Witnessed by a singleton observation with unit weight and divergence."
+    acceptance_probe: "native Lean compile of fep041_epistemic_nonneg on a singleton observation set."
+    disposition: scope_gap
+  - id: fep-042
+    primary_theorem: fep042_preimage_mono
+    invariant: "A statistic map preserves event inclusion under preimage."
+    assumption_review: "Unconditional for any function; no factorization criterion or sufficiency relation is stated."
+    non_vacuity: "Witnessed by identity and constant maps with nested codomain sets."
+    acceptance_probe: "native Lean compile of fep042_preimage_mono and explicit nested sets."
+    disposition: scope_gap
+  - id: fep-043
+    primary_theorem: fep043_min_unique_value
+    invariant: "Any two global minimizers of a real function have equal value."
+    assumption_review: "Conditional on two explicit global-minimum hypotheses; differentiability and a Hessian condition are not used."
+    non_vacuity: "Witnessed by f(x) = x² with x₀ = y₀ = 0, and by any constant function."
+    acceptance_probe: "native Lean compile of fep043_min_unique_value with a concrete quadratic witness."
+    disposition: conditional_proxy
+  - id: fep-044
+    primary_theorem: fep044_convex_combo_nonneg
+    invariant: "A convex combination of nonnegative endpoint values is nonnegative."
+    assumption_review: "Conditional on α ∈ [0,1] and nonnegative a,b; no α-divergence formula or divergence axiom is present."
+    non_vacuity: "Witnessed by α = 1/2 and a = b = 1."
+    acceptance_probe: "native Lean compile of fep044_convex_combo_nonneg with an interior α witness."
+    disposition: scope_gap
+  - id: fep-045
+    primary_theorem: fep045_cons_update
+    invariant: "A list fold applies one conjugate-family update before folding the tail."
+    assumption_review: "Conditional only on an arbitrary structure with an arbitrary update function; existence is constructive but conjugacy is not constrained."
+    non_vacuity: "Witnessed by any family and a singleton or two-element data list."
+    acceptance_probe: "native Lean compile of fep045_cons_update with a concrete update function."
+    disposition: scope_gap
+  - id: fep-046
+    primary_theorem: fep046_strict_decrease
+    invariant: "A retained stick mass strictly decreases for positive mass and a break fraction in (0,1]."
+    assumption_review: "Conditional on positive u and 0 < v ≤ 1; no simplex normalization across multiple breaks is assumed."
+    non_vacuity: "Witnessed by u = 1 and v = 1/2."
+    acceptance_probe: "native Lean compile of fep046_strict_decrease with the scalar witness."
+    disposition: conditional_proxy
+  - id: fep-047
+    primary_theorem: fep047_forward_mono
+    invariant: "A finite sum-product forward message is monotone in incoming messages."
+    assumption_review: "Conditional on nonnegative factors and pointwise incoming order; no normalized belief propagation semantics are formalized."
+    non_vacuity: "Witnessed by a singleton neighbor set, unit factor, and ordered zero/unit inputs."
+    acceptance_probe: "native Lean compile of fep047_forward_mono on a singleton neighbor set."
+    disposition: proxy
+  - id: fep-048
+    primary_theorem: fep048_contraction_unique
+    invariant: "Two fixed points cannot satisfy a strict distance contraction at those same fixed points."
+    assumption_review: "The strict inequality hypothesis contradicts the fixed-point equalities when x and y are distinct, so the conclusion is logically valid but assumption-vacuous for the intended uniqueness claim."
+    non_vacuity: "Only the reflexive case x = y is compatible; a genuine contraction map theorem needs a global Lipschitz hypothesis."
+    acceptance_probe: "native Lean compile of fep048_contraction_unique plus a review check that the hypotheses reduce to |x−y| < |x−y|."
+    disposition: assumption_gap
+  - id: fep-049
+    primary_theorem: fep049_entropy_production_nonneg
+    invariant: "The scalar product of nonnegative flux and force is nonnegative."
+    assumption_review: "Conditional on the signs that encode the desired conclusion; no constitutive law or thermodynamic entropy balance is proved."
+    non_vacuity: "Witnessed by J = 1 and F = 1, plus zero-flux boundary behavior."
+    acceptance_probe: "native Lean compile of fep049_entropy_production_nonneg with positive scalar witnesses."
+    disposition: scope_gap
+  - id: fep-050
+    primary_theorem: fep050_excess_work_nonneg
+    invariant: "Work above the defined kT log 2 threshold has nonnegative excess."
+    assumption_review: "Conditional on the threshold inequality; the Landauer erasure model and entropy-change derivation are not formalized."
+    non_vacuity: "Witnessed by kT = 1 and W = log 2."
+    acceptance_probe: "native Lean compile of fep050_excess_work_nonneg and the threshold equality witness."
+    disposition: scope_gap

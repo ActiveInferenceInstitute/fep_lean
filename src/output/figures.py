@@ -15,10 +15,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
+
 from catalogue.topics import FEPTopicCatalogue
 
 
-def _save(fig: plt.Figure, path: Path) -> Path:
+def _save(fig: Figure, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
     fig.savefig(path, dpi=150, format="png", metadata={"Software": "fep_lean"})
@@ -27,7 +29,11 @@ def _save(fig: plt.Figure, path: Path) -> Path:
 
 
 def _write_bar_chart(
-    values: Mapping[str, int], title: str, out: Path, *, show_pct: bool = False,
+    values: Mapping[str, int],
+    title: str,
+    out: Path,
+    *,
+    show_pct: bool = False,
     subtitle: str | None = None,
 ) -> Path:
     labels = list(values)
@@ -40,18 +46,24 @@ def _write_bar_chart(
     ax.set_ylabel("Topics")
     ax.grid(axis="y", alpha=0.25)
     total = sum(nums) or 1
-    for bar, n in zip(bars, nums):
-        label = f"{n} ({100*n/total:.0f}%)" if show_pct else str(n)
+    for bar, n in zip(bars, nums, strict=False):
+        label = f"{n} ({100 * n / total:.0f}%)" if show_pct else str(n)
         ax.text(bar.get_x() + bar.get_width() / 2, n, label, ha="center", va="bottom")
     return _save(fig, out)
 
 
-def _write_maturity_heatmap(area_maturity: Mapping[str, Mapping[str, int]], out: Path) -> Path:
+def _write_maturity_heatmap(
+    area_maturity: Mapping[str, Mapping[str, int]], out: Path
+) -> Path:
     areas = list(area_maturity)
     statuses = ["real", "partial", "aspirational"]
-    data = np.array([[int(area_maturity[a].get(s, 0)) for s in statuses] for a in areas])
+    data = np.array(
+        [[int(area_maturity[a].get(s, 0)) for s in statuses] for a in areas]
+    )
     fig, ax = plt.subplots(figsize=(7, max(3.5, len(areas) * 0.55)))
-    image = ax.imshow(data, cmap="Greens" if np.all(data[:, 1:] == 0) else "Blues", aspect="auto")
+    image = ax.imshow(
+        data, cmap="Greens" if np.all(data[:, 1:] == 0) else "Blues", aspect="auto"
+    )
     ax.set_xticks(range(len(statuses)), statuses)
     ax.set_yticks(range(len(areas)), areas)
     ax.set_title("Catalogue maturity by area")
@@ -67,8 +79,13 @@ def _write_sorry_distribution(values: Mapping[str, int], out: Path) -> Path:
     nums = [int(values[k]) for k in labels]
     fig, ax = plt.subplots(figsize=(5.2, 4.4))
     if nums:
-        ax.pie(nums, labels=labels, autopct="%1.0f%%", startangle=90,
-               colors=["#2f855a", "#d69e2e", "#c53030"][:len(nums)])
+        ax.pie(
+            nums,
+            labels=labels,
+            autopct="%1.0f%%",
+            startangle=90,
+            colors=["#2f855a", "#d69e2e", "#c53030"][: len(nums)],
+        )
     ax.set_title("Formalization status distribution")
     return _save(fig, out)
 
@@ -78,7 +95,7 @@ def _write_pipeline_dag(out: Path) -> Path:
     names = ["Catalogue", "Validation", "Hermes + Lean", "Artifacts", "Report"]
     xs = range(len(names))
     ax.plot(list(xs), [0] * len(names), "o-", color="#315f8c", linewidth=2)
-    for x, name in zip(xs, names):
+    for x, name in zip(xs, names, strict=False):
         ax.text(x, 0.08, name, ha="center", va="bottom")
     ax.set_xlim(-0.4, len(names) - 0.6)
     ax.set_ylim(-0.25, 0.35)
@@ -95,8 +112,12 @@ def _write_sequence_diagram(out: Path) -> Path:
         ax.text(i, 4.1, actor, ha="center", va="bottom", weight="bold")
     arrows = [(0, 1, 3.3), (1, 2, 2.7), (2, 3, 2.1), (3, 4, 1.5), (1, 4, 0.9)]
     for start, end, y in arrows:
-        ax.annotate("", xy=(end, y), xytext=(start, y),
-                    arrowprops={"arrowstyle": "->", "color": "#315f8c"})
+        ax.annotate(
+            "",
+            xy=(end, y),
+            xytext=(start, y),
+            arrowprops={"arrowstyle": "->", "color": "#315f8c"},
+        )
     ax.set_xlim(-0.5, len(actors) - 0.5)
     ax.set_ylim(0.4, 4.6)
     ax.axis("off")
@@ -111,17 +132,47 @@ def write_all_catalogue_figures(
     output_root: Path | None = None,
 ) -> list[Path]:
     """Write the nine canonical catalogue figures and return their paths."""
-    out = (Path(output_root) if output_root is not None else Path(project_root) / "output") / "figures"
+    out = (
+        Path(output_root) if output_root is not None else Path(project_root) / "output"
+    ) / "figures"
     summary = catalogue.summary()
     paths = [
-        _write_bar_chart(summary["areas"], "Topics by area", out / "topics_by_area.png", show_pct=True),
-        _write_bar_chart(summary["maturity"], "Topics by formalization status", out / "topics_by_status.png", show_pct=True),
+        _write_bar_chart(
+            summary["areas"],
+            "Topics by area",
+            out / "topics_by_area.png",
+            show_pct=True,
+        ),
+        _write_bar_chart(
+            summary["maturity"],
+            "Topics by formalization status",
+            out / "topics_by_status.png",
+            show_pct=True,
+        ),
         _write_maturity_heatmap(summary["area_maturity"], out / "area_maturity.png"),
         _write_sorry_distribution(summary["maturity"], out / "status_distribution.png"),
         _write_pipeline_dag(out / "pipeline_dag.png"),
         _write_sequence_diagram(out / "execution_sequence.png"),
-        _write_bar_chart({t.id: t.lean_chars for t in catalogue.topics[:10]}, "Lean sketch size (first ten)", out / "lean_size_sample.png"),
-        _write_bar_chart({a: sum(t.lean_chars for t in catalogue.topics if t.area == a) for a in summary["areas"]}, "Lean source size by area", out / "lean_size_by_area.png"),
-        _write_bar_chart({a: sum(len(t.latex_equations) for t in catalogue.topics if t.area == a) for a in summary["areas"]}, "Formal signatures by area", out / "signatures_by_area.png"),
+        _write_bar_chart(
+            {t.id: t.lean_chars for t in catalogue.topics[:10]},
+            "Lean sketch size (first ten)",
+            out / "lean_size_sample.png",
+        ),
+        _write_bar_chart(
+            {
+                a: sum(t.lean_chars for t in catalogue.topics if t.area == a)
+                for a in summary["areas"]
+            },
+            "Lean source size by area",
+            out / "lean_size_by_area.png",
+        ),
+        _write_bar_chart(
+            {
+                a: sum(len(t.latex_equations) for t in catalogue.topics if t.area == a)
+                for a in summary["areas"]
+            },
+            "Formal signatures by area",
+            out / "signatures_by_area.png",
+        ),
     ]
     return paths

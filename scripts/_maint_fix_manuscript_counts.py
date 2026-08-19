@@ -25,10 +25,10 @@ def _fix_table(content: str, total: int) -> str:
     """Drop markdown table rows for FEP-xxx not in 1..total (rough heuristic)."""
     lines = content.split("\n")
     new_lines: list[str] = []
-    pat = re.compile(r"fep-(\d+)", re.I)
+    pat = re.compile(r"fep-(\d+)", re.IGNORECASE)
     for line in lines:
         stripped = line.strip()
-        if stripped.startswith("| FEP-") or stripped.startswith("| fep-"):
+        if stripped.startswith(("| FEP-", "| fep-")):
             m = pat.search(line)
             if m and int(m.group(1)) > total:
                 continue

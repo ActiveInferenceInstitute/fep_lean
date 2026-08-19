@@ -2,22 +2,18 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import os
 
 import pytest
 
 import gauss.cli as gauss_cli
 
-PROJ = Path(__file__).resolve().parent.parent
-
 pytestmark = pytest.mark.timeout(180)
 
 
-import os
-
-
-@pytest.mark.skipif("gauss" in os.environ.get("FEP_LEAN_TOOLS_MISSING", ""),
-                    reason="gauss CLI missing")
+@pytest.mark.skipif(
+    "gauss" in os.environ.get("FEP_LEAN_TOOLS_MISSING", ""), reason="gauss CLI missing"
+)
 def test_gauss_doctor_real_without_project_root() -> None:
     ok, msg = gauss_cli.check_gauss_cli(None, require=True)
     assert ok is True

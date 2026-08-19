@@ -6,20 +6,22 @@ No direct execution.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
-from pipeline.core import FEPPipeline, PipelineResult, StepResult
+from catalogue.topics import FEPTopicCatalogue
 from output.manuscript import _verify_block_from_manifest
-from output.reporter import Reporter, ReportPaths
+from output.reporter import Reporter, ReportPaths, validate_report_receipt
+from pipeline.core import FEPPipeline, PipelineResult, StepResult
 
 PROJ = Path(__file__).resolve().parent.parent
 
 
-from catalogue.topics import FEPTopicCatalogue
 TOPICS = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
+
 
 def _minimal_result(tmp_path: Path) -> PipelineResult:
     """Build a minimal PipelineResult without running the pipeline."""
@@ -28,10 +30,31 @@ def _minimal_result(tmp_path: Path) -> PipelineResult:
     run_test_dir.mkdir()
     r.run_dir = str(run_test_dir)
     r.stages = [
-        StepResult(name="Load Catalogue", status="ok", duration_s=0.01, payload={"topics": ["fep-001", "fep-002"]}),
-        StepResult(name="Environment Validation", status="ok", duration_s=0.5, payload={"status": "ok", "failed_count": 0, "checks": [{"name": "lean_cli", "ok": True, "message": "ok", "duration_s": 0.1}]}),
+        StepResult(
+            name="Load Catalogue",
+            status="ok",
+            duration_s=0.01,
+            payload={"topics": ["fep-001", "fep-002"]},
+        ),
+        StepResult(
+            name="Environment Validation",
+            status="ok",
+            duration_s=0.5,
+            payload={
+                "status": "ok",
+                "failed_count": 0,
+                "checks": [
+                    {"name": "lean_cli", "ok": True, "message": "ok", "duration_s": 0.1}
+                ],
+            },
+        ),
         StepResult(name="Gauss Sessions", status="skipped", duration_s=0.001),
-        StepResult(name="Manuscript Artifacts", status="ok", duration_s=0.05, payload={"vars_file": "manuscript_vars.yaml"}),
+        StepResult(
+            name="Manuscript Artifacts",
+            status="ok",
+            duration_s=0.05,
+            payload={"vars_file": "manuscript_vars.yaml"},
+        ),
     ]
     r.total_duration = 1.0
     r.lean_stats = {
@@ -348,6 +371,400 @@ def test_index_md_splits_lean_directly_vs_post_fallback(tmp_path: Path) -> None:
     assert "Final Lean compiled" in text
 
 
+def test_index_and_summary_use_selected_topics_and_hash_nested_artifacts(
+    tmp_path: Path,
+) -> None:
+    rows = [
+        {
+            "topic_id": "fep-001",
+            "success": False,
+            "hermes_success": False,
+            "lean_compiles": False,
+        }
+    ]
+    result = _result_with_gauss(rows)
+    result.catalogue_topics = 1
+    rep = Reporter(tmp_path, run_id="test_selected_topics")
+    paths = rep.generate(TOPICS, result)
+    index = paths.index_md.read_text(encoding="utf-8")
+    assert "**Total Topics:** 1" in index
+    assert "**Catalogue Topics:** 50" in index
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    hashes = summary["artifact_hashes"]
+    assert "topics/fep-001.md" in hashes
+    assert hashes["topics/fep-001.md"]
+    root = paths.summary_json.parent.resolve()
+    for relative, digest in hashes.items():
+        artifact = (root / relative).resolve()
+        assert root in artifact.parents
+        assert artifact.is_file()
+        assert hashlib.sha256(artifact.read_bytes()).hexdigest() == digest
+    assert "summary.json" not in hashes
+    run_manifest = json.loads((root / "run_manifest.json").read_text(encoding="utf-8"))
+    assert run_manifest["catalogue_topics"] == 1
+    assert run_manifest["complete"] is False
+    assert len(run_manifest["topics"]) == 1
+
+
+def test_validate_report_receipt_accepts_catalogue_bundle(tmp_path: Path) -> None:
+    result = PipelineResult(
+        status="ok",
+        mode="catalogue",
+        complete=True,
+        catalogue_topics=50,
+        verified_topics=0,
+    )
+    result.stages = [
+        StepResult(name="Load Catalogue", status="ok"),
+        StepResult(
+            name="Environment Validation",
+            status="ok",
+            payload={"status": "ok", "checks": []},
+        ),
+        StepResult(name="Gauss Sessions", status="not_run"),
+        StepResult(name="Manuscript Artifacts", status="ok"),
+    ]
+    rep = Reporter(tmp_path, run_id="run_catalogue_receipt")
+    paths = rep.generate(TOPICS, result)
+
+    receipt = validate_report_receipt(paths.root)
+
+    assert receipt["valid"] is True
+    assert receipt["claim_ready"] is False
+    assert receipt["mode"] == "catalogue"
+    assert receipt["selected_topics"] == 50
+    assert receipt["checked_artifacts"] >= 6
+
+
+def test_validate_report_receipt_accepts_complete_full_bundle(tmp_path: Path) -> None:
+    rows = [
+        {
+            "topic_id": "fep-001",
+            "success": True,
+            "hermes_success": True,
+            "lean_compiles": True,
+            "lean_has_sorry": False,
+            "verification_source": "hermes_refined",
+        }
+    ]
+    result = _result_with_gauss(rows)
+    result.complete = True
+    result.catalogue_topics = 1
+    result.verified_topics = 1
+    rep = Reporter(tmp_path, run_id="run_full_receipt")
+    paths = rep.generate(TOPICS, result)
+
+    receipt = validate_report_receipt(paths.root, require_complete=True)
+
+    assert receipt["valid"] is True
+    assert receipt["claim_ready"] is True
+    assert receipt["mode"] == "full"
+    assert receipt["selected_topics"] == receipt["verified_topics"] == 1
+    assert receipt["errors"] == []
+
+
+def test_validate_report_receipt_rejects_string_verification_flags(
+    tmp_path: Path,
+) -> None:
+    rows = [
+        {
+            "topic_id": "fep-001",
+            "success": True,
+            "hermes_success": True,
+            "lean_compiles": True,
+            "lean_has_sorry": False,
+            "verification_source": "hermes_refined",
+        }
+    ]
+    result = _result_with_gauss(rows)
+    result.complete = True
+    result.catalogue_topics = 1
+    result.verified_topics = 1
+    rep = Reporter(tmp_path, run_id="run_string_flags_receipt")
+    paths = rep.generate(TOPICS, result)
+
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    verification = json.loads(
+        (paths.root / "verification_manifest.json").read_text(encoding="utf-8")
+    )
+    summary["topics"][0].update(
+        {"success": "true", "lean_compiles": "true", "lean_has_sorry": "false"}
+    )
+    verification["results"][0].update({"compiles": "true", "lean_has_sorry": "false"})
+    paths.summary_json.write_text(json.dumps(summary), encoding="utf-8")
+    (paths.root / "verification_manifest.json").write_text(
+        json.dumps(verification), encoding="utf-8"
+    )
+
+    receipt = validate_report_receipt(paths.root, require_complete=True)
+
+    assert receipt["valid"] is False
+    assert any(
+        "summary topic fep-001 success must be a boolean" in error
+        for error in receipt["errors"]
+    )
+    assert any(
+        "summary topic fep-001 lean_compiles must be a boolean" in error
+        for error in receipt["errors"]
+    )
+    assert any(
+        "summary topic fep-001 lean_has_sorry must be a boolean" in error
+        for error in receipt["errors"]
+    )
+    assert any(
+        "verification topic fep-001 compiles must be a boolean" in error
+        for error in receipt["errors"]
+    )
+    assert any(
+        "verification topic fep-001 lean_has_sorry must be a boolean" in error
+        for error in receipt["errors"]
+    )
+    assert "complete full-mode receipt is required" in receipt["errors"]
+
+
+def test_validate_report_receipt_detects_tampering_and_path_escape(
+    tmp_path: Path,
+) -> None:
+    rep = Reporter(tmp_path, run_id="run_tamper_receipt")
+    paths = rep.generate(TOPICS, _minimal_result(tmp_path))
+    root = paths.root
+
+    paths.index_md.write_text(
+        paths.index_md.read_text(encoding="utf-8") + "tampered\n", encoding="utf-8"
+    )
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    summary["artifact_hashes"]["../outside.txt"] = "0" * 64
+    paths.summary_json.write_text(json.dumps(summary), encoding="utf-8")
+
+    receipt = validate_report_receipt(root)
+
+    assert receipt["valid"] is False
+    assert any("hash mismatch" in error for error in receipt["errors"])
+    assert any("escapes report directory" in error for error in receipt["errors"])
+
+
+def test_validate_report_receipt_rejects_missing_and_malformed_manifests(
+    tmp_path: Path,
+) -> None:
+    missing = validate_report_receipt(tmp_path / "missing_receipt")
+    assert missing["valid"] is False
+    assert any("report directory is missing" in error for error in missing["errors"])
+
+    root = tmp_path / "malformed_receipt"
+    root.mkdir()
+    (root / "summary.json").write_text("{", encoding="utf-8")
+    (root / "run_manifest.json").write_text("[]", encoding="utf-8")
+
+    receipt = validate_report_receipt(root)
+
+    assert receipt["valid"] is False
+    assert any("invalid summary.json" in error for error in receipt["errors"])
+    assert any(
+        "run_manifest.json must contain a JSON object" in error
+        for error in receipt["errors"]
+    )
+    assert any(
+        "missing verification_manifest.json" in error for error in receipt["errors"]
+    )
+
+
+def test_validate_report_receipt_checks_summary_types_and_required_hashes(
+    tmp_path: Path,
+) -> None:
+    rep = Reporter(tmp_path, run_id="run_invalid_summary_receipt")
+    paths = rep.generate(
+        TOPICS,
+        PipelineResult(
+            status="ok", mode="catalogue", complete=True, catalogue_topics=50
+        ),
+    )
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    summary.update(
+        {
+            "mode": "unsupported",
+            "complete": "yes",
+            "catalogue_topics": True,
+            "verified_topics": -1,
+            "topics": "not-a-list",
+            "source_digest": "bad",
+            "config_digest": None,
+            "toolchain": [],
+            "artifact_hashes": [],
+        }
+    )
+    paths.summary_json.write_text(json.dumps(summary), encoding="utf-8")
+
+    receipt = validate_report_receipt(paths.root)
+
+    assert receipt["valid"] is False
+    expected_errors = (
+        "summary mode is unsupported",
+        "summary complete must be a boolean",
+        "summary catalogue_topics must be a non-negative integer",
+        "summary verified_topics must be a non-negative integer",
+        "summary topics must be a list of objects",
+        "summary source_digest must be a lowercase SHA-256 digest",
+        "summary config_digest must be a lowercase SHA-256 digest",
+        "summary toolchain must be an object",
+        "summary artifact_hashes must be an object",
+        "required artifacts are not hashed",
+    )
+    assert all(
+        any(expected in error for error in receipt["errors"])
+        for expected in expected_errors
+    ), receipt["errors"]
+
+
+def test_validate_report_receipt_rejects_invalid_artifact_entries(
+    tmp_path: Path,
+) -> None:
+    rep = Reporter(tmp_path, run_id="run_invalid_artifact_receipt")
+    paths = rep.generate(TOPICS, _minimal_result(tmp_path))
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    hashes = summary["artifact_hashes"]
+    hashes[""] = "0" * 64
+    hashes["/absolute.txt"] = "0" * 64
+    hashes["."] = "0" * 64
+    hashes["missing.txt"] = "0" * 64
+    hashes["index.md"] = "not-a-digest"
+    paths.summary_json.write_text(json.dumps(summary), encoding="utf-8")
+
+    receipt = validate_report_receipt(paths.root)
+
+    assert receipt["valid"] is False
+    assert any("non-empty strings" in error for error in receipt["errors"])
+    assert sum("escapes report directory" in error for error in receipt["errors"]) >= 2
+    assert any(
+        "hashed artifact is missing: missing.txt" in error
+        for error in receipt["errors"]
+    )
+    assert any(
+        "invalid SHA-256 digest for artifact: index.md" in error
+        for error in receipt["errors"]
+    )
+    assert any(
+        "required artifacts are not hashed" in error for error in receipt["errors"]
+    )
+
+
+def test_validate_report_receipt_reconciles_rows_and_verification_counters(
+    tmp_path: Path,
+) -> None:
+    rows = [
+        {
+            "topic_id": "fep-001",
+            "success": True,
+            "hermes_success": True,
+            "lean_compiles": True,
+            "lean_has_sorry": False,
+            "verification_source": "hermes_refined",
+        }
+    ]
+    result = _result_with_gauss(rows)
+    result.catalogue_topics = 1
+    result.verified_topics = 1
+    rep = Reporter(tmp_path, run_id="run_inconsistent_rows_receipt")
+    paths = rep.generate(TOPICS, result)
+
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    run_manifest = json.loads(
+        (paths.root / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    verification = json.loads(
+        (paths.root / "verification_manifest.json").read_text(encoding="utf-8")
+    )
+    summary["topics"] = [{"topic_id": "fep-001"}, {}]
+    run_manifest["topics"] = {"topic_id": "fep-001"}
+    verification["results"] = [
+        {"topic_id": "fep-001", "compiles": True, "lean_has_sorry": True}
+    ]
+    verification.update(
+        {
+            "verify_lean_ran": False,
+            "topics_with_result": 0,
+            "compiles_true": 0,
+            "compiles_false": 1,
+        }
+    )
+    paths.summary_json.write_text(json.dumps(summary), encoding="utf-8")
+    (paths.root / "run_manifest.json").write_text(
+        json.dumps(run_manifest), encoding="utf-8"
+    )
+    (paths.root / "verification_manifest.json").write_text(
+        json.dumps(verification), encoding="utf-8"
+    )
+
+    receipt = validate_report_receipt(paths.root)
+
+    assert receipt["valid"] is False
+    expected_errors = (
+        "run manifest topics must be a list of objects",
+        "summary topics contains a row without a topic_id",
+        "summary and run manifest topic rows disagree",
+        "full-mode summary topic rows do not match selected-topic count",
+        "run manifest topic rows do not match the mode contract",
+        "verification manifest verify_lean_ran disagrees with its rows",
+        "verification manifest topics_with_result disagrees with its rows",
+        "verification manifest compiles_true disagrees with its rows",
+        "verification manifest compiles_false disagrees with its rows",
+        "verification compile flag disagrees for fep-001",
+        "verification sorry flag disagrees for fep-001",
+    )
+    assert all(
+        any(expected in error for error in receipt["errors"])
+        for expected in expected_errors
+    )
+
+
+def test_validate_report_receipt_keeps_full_mode_claim_boundary_explicit(
+    tmp_path: Path,
+) -> None:
+    rows = [
+        {
+            "topic_id": "fep-001",
+            "success": True,
+            "hermes_success": True,
+            "lean_compiles": True,
+            "lean_has_sorry": False,
+            "verification_source": "hermes_refined",
+        }
+    ]
+    result = _result_with_gauss(rows)
+    result.complete = True
+    result.catalogue_topics = 1
+    result.verified_topics = 1
+    rep = Reporter(tmp_path, run_id="run_incomplete_full_receipt")
+    paths = rep.generate(TOPICS, result)
+
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    run_manifest = json.loads(
+        (paths.root / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    summary["topics"] = []
+    summary["catalogue_topics"] = 0
+    summary["verified_topics"] = 0
+    summary["status"] = "error"
+    run_manifest["topics"] = []
+    run_manifest["catalogue_topics"] = 0
+    run_manifest["verified_topics"] = 0
+    run_manifest["verification_source"] = "unexpected"
+    run_manifest["lean_clean"] = False
+    paths.summary_json.write_text(json.dumps(summary), encoding="utf-8")
+    (paths.root / "run_manifest.json").write_text(
+        json.dumps(run_manifest), encoding="utf-8"
+    )
+
+    receipt = validate_report_receipt(paths.root, require_complete=True)
+
+    assert receipt["valid"] is False
+    assert receipt["claim_ready"] is False
+    assert any("must select at least one topic" in error for error in receipt["errors"])
+    assert any("summary must have status ok" in error for error in receipt["errors"])
+    assert any("wrong verification source" in error for error in receipt["errors"])
+    assert any("must mark lean_clean true" in error for error in receipt["errors"])
+    assert "complete full-mode receipt is required" in receipt["errors"]
+
+
 def test_summary_json_includes_topics_payload(tmp_path: Path) -> None:
     """``Reporter._gen_summary_json`` must include the per-topic rows so
     ``output.manuscript.build_manuscript_vars`` can derive Hermes aggregates."""
@@ -396,19 +813,94 @@ def test_build_verification_manifest_helper_shape() -> None:
     required by ``_verify_block_from_manifest``."""
 
     class _fixture:
-        def __init__(self, topic_id: str, compiles: bool, has_sorry: bool = False) -> None:
+        def __init__(
+            self, topic_id: str, compiles: bool, has_sorry: bool = False
+        ) -> None:
             self.topic_id = topic_id
             self.compiles = compiles
             self.has_sorry = has_sorry
 
     payload = Reporter.build_verification_manifest(
-        [_fixture("fep-001", True), _fixture("fep-002", False), _fixture("fep-003", True, True)]
+        [
+            _fixture("fep-001", True),
+            _fixture("fep-002", False),
+            _fixture("fep-003", True, True),
+        ]
     )
     assert payload["verify_lean_ran"] is True
     assert payload["topics_with_result"] == 3
     assert payload["compiles_true"] == 2
     assert payload["compiles_false"] == 1
-    assert {row["topic_id"] for row in payload["results"]} == {"fep-001", "fep-002", "fep-003"}
+    assert {row["topic_id"] for row in payload["results"]} == {
+        "fep-001",
+        "fep-002",
+        "fep-003",
+    }
     sorry_rows = [row for row in payload["results"] if row["lean_has_sorry"]]
     assert len(sorry_rows) == 1
     assert sorry_rows[0]["topic_id"] == "fep-003"
+
+
+def test_summary_json_carries_run_id(tmp_path: Path) -> None:
+    """summary.json must carry the run_id so manuscripts can render it."""
+    rep = Reporter(tmp_path, run_id="run_id_carrier")
+    paths = rep.generate(TOPICS, _minimal_result(tmp_path))
+    summary = json.loads(paths.summary_json.read_text(encoding="utf-8"))
+    assert summary["run_id"] == "run_id_carrier"
+
+
+def test_validate_receipt_detects_source_drift(tmp_path: Path) -> None:
+    """Supplying project_root must flag a stored digest that no longer matches
+    the live source tree."""
+    rows = [
+        {
+            "topic_id": "fep-001",
+            "success": True,
+            "hermes_success": True,
+            "lean_compiles": True,
+            "lean_has_sorry": False,
+            "verification_source": "hermes_refined",
+        }
+    ]
+    result = _result_with_gauss(rows)
+    result.complete = True
+    result.catalogue_topics = 1
+    result.verified_topics = 1
+    rep = Reporter(tmp_path, run_id="run_drift_receipt")
+    paths = rep.generate(TOPICS, result)
+
+    # Validation without a project root stays clean (no live-tree comparison).
+    base = validate_report_receipt(paths.root, require_complete=True)
+    assert base["valid"] is True
+
+    # Point at a project root with a source file that no longer matches,
+    # e.g. a touched file inside a tmp copy. Simplest real drift: add a source
+    # directory with an extra file and pass a fake project_root copy.
+    drift_root = tmp_path / "drift_project"
+    drift_root.mkdir()
+    (drift_root / "src").mkdir()
+    (drift_root / "src" / "extra_module.py").write_text("# drift\n", encoding="utf-8")
+
+    drifted = validate_report_receipt(
+        paths.root, require_complete=True, project_root=drift_root
+    )
+    assert drifted["valid"] is False
+    assert any("source_digest" in error for error in drifted["errors"])
+
+
+def test_reporter_skips_traversal_topic_write(tmp_path: Path) -> None:
+    """A crafted topic_id with path separators must not escape the run root."""
+    rows = [
+        {
+            "topic_id": "../../escape",
+            "success": True,
+            "hermes_success": True,
+            "lean_compiles": True,
+            "lean_has_sorry": False,
+            "verification_source": "hermes_refined",
+        }
+    ]
+    rep = Reporter(tmp_path, run_id="run_traversal")
+    paths = rep.generate(TOPICS, _result_with_gauss(rows))
+    assert not (paths.root / "topics" / ".." / ".." / "escape.md").exists()
+    assert not (paths.root.parents[1] / "escape.md").exists()

@@ -25,9 +25,9 @@ from pytest_httpserver import HTTPServer
 
 from catalogue.topics import FEPTopicCatalogue
 from llm.hermes import (
+    _FREE_MODEL_CHAIN,
     HermesConfig,
     HermesExplainer,
-    _FREE_MODEL_CHAIN,
 )
 
 PROJ = Path(__file__).resolve().parent.parent
@@ -72,7 +72,9 @@ def test_preflight_disables_hermes_on_403(
 ) -> None:
     """403 => preflight returns False, cfg.enabled flipped, actionable log."""
     httpserver.expect_request("/chat/completions", method="POST").respond_with_data(
-        json.dumps({"error": {"message": "Key limit exceeded (total limit)", "code": 403}}),
+        json.dumps(
+            {"error": {"message": "Key limit exceeded (total limit)", "code": 403}}
+        ),
         status=403,
         content_type="application/json",
     )
@@ -119,6 +121,42 @@ def test_preflight_tolerates_5xx(httpserver: HTTPServer) -> None:
     exp = HermesExplainer(cfg)
     assert exp.preflight() is True
     assert cfg.enabled is True
+
+
+def test_preflight_bounds_reasoning_model_and_restores_budget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cfg = HermesConfig(
+        model="moonshotai/kimi-k2.6",
+        api_key="sk-test",
+        max_tokens=100,
+        timeout_s=60,
+        reasoning_max_tokens=999,
+        reasoning_timeout_s=90,
+    )
+    seen: list[tuple[int, int, int, int]] = []
+    exp = HermesExplainer(cfg)
+
+    def fake_call(_messages, _model):
+        seen.append(
+            (
+                cfg.max_tokens,
+                cfg.reasoning_max_tokens,
+                cfg.timeout_s,
+                cfg.reasoning_timeout_s,
+            )
+        )
+        return {"choices": []}
+
+    monkeypatch.setattr(exp, "_call_api", fake_call)
+    assert exp.preflight() is True
+    assert seen == [(1, 1, 30, 30)]
+    assert (
+        cfg.max_tokens,
+        cfg.reasoning_max_tokens,
+        cfg.timeout_s,
+        cfg.reasoning_timeout_s,
+    ) == (100, 999, 60, 90)
 
 
 # ── fallback_models ──────────────────────────────────────────────────────────

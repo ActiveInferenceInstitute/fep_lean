@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from catalogue.topics import FEPTopicCatalogue
 from output.figures import (
     _write_bar_chart,
@@ -41,7 +42,9 @@ def test_write_all_catalogue_figures_serial_env(
 def test_write_bar_chart_show_pct(tmp_path: Path) -> None:
     """Percentage labels rendered when show_pct=True without error."""
     out = tmp_path / "pct.png"
-    _write_bar_chart({"real": 50, "partial": 0, "aspirational": 0}, "Test", out, show_pct=True)
+    _write_bar_chart(
+        {"real": 50, "partial": 0, "aspirational": 0}, "Test", out, show_pct=True
+    )
     assert out.stat().st_size > 1000
 
 

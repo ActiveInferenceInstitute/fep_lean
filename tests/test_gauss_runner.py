@@ -27,9 +27,8 @@ _HAS_API_KEY = bool(
 # Set FEP_LEAN_LIVE_TESTS=0 in CI to skip expensive API calls even when keys exist.
 # Set FEP_LEAN_LIVE_TESTS=1 to force-run even without a key (will fail at API level).
 _FEP_LEAN_LIVE_VAR = os.environ.get("FEP_LEAN_LIVE_TESTS", "").lower()
-_LIVE_TESTS_ENABLED = (
-    _FEP_LEAN_LIVE_VAR in ("1", "true", "yes")
-    or (_HAS_API_KEY and _FEP_LEAN_LIVE_VAR not in ("0", "false", "no"))
+_LIVE_TESTS_ENABLED = _FEP_LEAN_LIVE_VAR in ("1", "true", "yes") or (
+    _HAS_API_KEY and _FEP_LEAN_LIVE_VAR not in ("0", "false", "no")
 )
 
 
@@ -69,7 +68,7 @@ def test_run_topic_creates_sqlite_session(runner: GaussRunner, tmp_path: Path) -
 def test_run_topic_no_api_key_hermes_skipped(runner: GaussRunner) -> None:
     topic = TOPICS.topics[0]
     result = runner.run_topic(topic)
-    # No API key → Hermes naturally skips execution and returns failure 
+    # No API key → Hermes naturally skips execution and returns failure
     assert result.hermes_success is False
 
 
@@ -144,7 +143,10 @@ def test_run_topics_batch_workflow_kwarg(
     assert all(r.workflow == "draft" for r in results)
 
 
-@pytest.mark.skipif(not (_HAS_API_KEY and _LIVE_TESTS_ENABLED), reason="No API key found (set OPENROUTER_API_KEY or ANTHROPIC_API_KEY); or suppressed via FEP_LEAN_LIVE_TESTS=0")
+@pytest.mark.skipif(
+    not (_HAS_API_KEY and _LIVE_TESTS_ENABLED),
+    reason="No API key found (set OPENROUTER_API_KEY or ANTHROPIC_API_KEY); or suppressed via FEP_LEAN_LIVE_TESTS=0",
+)
 def test_run_topic_with_real_hermes(tmp_path: Path) -> None:
     """Full GaussRunner integration: real OpenRouter HTTP → SQLite → LeanVerifier.
 

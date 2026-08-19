@@ -1,6 +1,6 @@
 # fep_lean/src/llm/
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 LLM integration for the FEP formalisation pipeline. `HermesExplainer` sends a
 2-message prompt (system + user) to an OpenAI-compatible chat-completions

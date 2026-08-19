@@ -15,10 +15,15 @@ def test_catalogue_validation_is_read_only_capability_check() -> None:
     assert all(check["ok"] for check in result["checks"])
 
 
-def test_full_validation_reports_missing_capabilities_without_building(monkeypatch) -> None:
+def test_full_validation_reports_missing_capabilities_without_building(
+    monkeypatch,
+) -> None:
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     result = run_validation_checks(PROJ, mode="full")
     assert result["status"] == "error"
-    assert any(check["name"] == "hermes_credentials" and not check["ok"] for check in result["checks"])
+    assert any(
+        check["name"] == "hermes_credentials" and not check["ok"]
+        for check in result["checks"]
+    )
     assert any(check["name"] == "mathlib_built" for check in result["checks"])

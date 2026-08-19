@@ -1,6 +1,6 @@
 # fep_lean/src/pipeline/
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 Top-level 4-stage FEP formalisation DAG orchestrator. Composes
 [`catalogue/`](../catalogue/), [`verification/`](../verification/),

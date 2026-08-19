@@ -11,11 +11,13 @@ Skipped files (contain literal {{}} syntax as documentation or are auto-generate
 Usage:
     uv run python scripts/_inject_manuscript_vars.py [--dry-run]
 """
+
 import re
 import sys
-import yaml
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 project_root = Path(__file__).resolve().parents[1]
 vars_path = project_root / "manuscript" / "manuscript_vars.yaml"
@@ -75,7 +77,7 @@ def main() -> None:
         content = md_file.read_text(encoding="utf-8")
         counter = [0]
 
-        def repl(m: re.Match[str]) -> str:
+        def repl(m: re.Match[str], counter=counter) -> str:
             key = m.group(1).strip()
             if key == "maturity.*":
                 counter[0] += 1

@@ -17,9 +17,9 @@ from gauss.client import OpenGaussClient, SessionRecord
 from gauss.runner import GaussRunner, TopicRunResult
 
 __all__ = [
-    "check_gauss_cli",
+    "GaussRunner",
     "OpenGaussClient",
     "SessionRecord",
-    "GaussRunner",
     "TopicRunResult",
+    "check_gauss_cli",
 ]

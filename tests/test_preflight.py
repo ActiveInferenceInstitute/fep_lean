@@ -25,7 +25,9 @@ def test_run_preflight_returns_zero_or_one() -> None:
     assert c in (0, 1)
 
 
-def test_run_preflight_require_gauss_when_missing(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_run_preflight_require_gauss_when_missing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Cover the gauss-missing path by hiding gauss from PATH."""
     monkeypatch.setenv("PATH", str(tmp_path))
     monkeypatch.setenv("FEP_LEAN_SKIP_FALLBACKS", "1")
@@ -39,7 +41,9 @@ def test_run_version_with_real_binary() -> None:
     assert "Python" in line or "python" in line.lower()
 
 
-def test_run_preflight_gauss_required_missing_with_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_run_preflight_gauss_required_missing_with_env(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Cover the gauss-fail early return in run_preflight with isolated PATH."""
     monkeypatch.setenv("PATH", str(tmp_path))
     monkeypatch.setenv("FEP_LEAN_SKIP_FALLBACKS", "1")
@@ -66,20 +70,26 @@ def test_preflight_main_cli_smoke() -> None:
     assert r.returncode in (0, 1)
 
 
-def test_preflight_main_require_gauss(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_preflight_main_require_gauss(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Exercise main() directly, failing via missing gauss."""
     monkeypatch.setenv("PATH", str(tmp_path))
     monkeypatch.setenv("FEP_LEAN_SKIP_FALLBACKS", "1")
     monkeypatch.setattr(sys, "argv", ["fep-lean-preflight", "--require-gauss"])
     from verification.preflight import main
+
     with pytest.raises(SystemExit) as exc:
         main()
     assert exc.value.code == 1
 
 
-def test_run_preflight_happy_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_run_preflight_happy_path(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """A partial tree remains a strict full-mode failure."""
     from verification import preflight
+
     monkeypatch.setattr(preflight, "project_root", lambda: tmp_path / "proj")
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()

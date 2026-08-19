@@ -23,7 +23,9 @@ def project_root() -> Path:
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--apply", action="store_true", help="Write topics.yaml (default is dry-run)")
+    p.add_argument(
+        "--apply", action="store_true", help="Write topics.yaml (default is dry-run)"
+    )
     p.add_argument(
         "--ids",
         required=True,

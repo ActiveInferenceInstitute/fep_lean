@@ -5,7 +5,7 @@ wrappers for environments that discover Python scripts automatically:
 
 - `01_fep_catalogue_and_figures.py` → `fep-lean catalogue`
 - `02_run_single_topic.py` → `fep-lean topic ID`
-- `03_lean_verify_only.py` → `fep-lean run`
+- `03_lean_verify_only.py` → `fep-lean verify` (Lean only; no Hermes/Gauss)
 - `04_generate_reports.py` → `fep-lean report`
 
 Maintenance sources are prefixed with `_maint_`. Regenerate YAML and the tracked

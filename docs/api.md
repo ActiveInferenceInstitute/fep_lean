@@ -1,6 +1,6 @@
 # Public API Reference — fep_lean
 
-**Version**: v0.7.1 | **Status**: Active | **Last Updated**: April 2026
+**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
 
 This document lists the public API signatures exposed under `src/`. Signatures are maintained by hand and spot-checked against the running code; the `pin_audit.py` / `xref_audit.py` gates do not cover this file, so treat the source modules as authoritative when they disagree.
 
@@ -13,13 +13,13 @@ This document lists the public API signatures exposed under `src/`. Signatures a
 ```python
 @dataclass
 class TopicEntry:
-    id: str              # "fep-001" format
-    title: str           # Short human title
-    area: str            # One of 5 valid areas
-    mathlib: str         # Comma-separated Mathlib4 module names
-    mathlib_status: str  # "real" | "partial" | "aspirational" (loader default if omitted: "partial"; all 50 shipped rows are "real" in v0.7.1)
-    nl: str              # Natural language mathematical statement
-    lean_sketch: str     # Lean4 theorem sketch
+    id: str  # "fep-001" format
+    title: str  # Short human title
+    area: str  # One of 5 valid areas
+    mathlib: str  # Comma-separated Mathlib4 module names
+    mathlib_status: str  # "real" | "partial" | "aspirational" (loader default if omitted: "partial"; all 50 shipped rows are "real" in v1.0.0)
+    nl: str  # Natural language mathematical statement
+    lean_sketch: str  # Lean4 theorem sketch
 ```
 
 The shipped **`config/topics.yaml`** tags all rows **`real`** today; counts in `summary()` reflect whatever is in YAML.
@@ -132,14 +132,14 @@ class SessionRecord:
     area: str
     lean_sketch: str
     refined_sketch: str | None
-    status: str              # 'open' | 'success' | 'failed' | 'error' | 'skipped'
+    status: str  # 'open' | 'success' | 'failed' | 'error' | 'skipped'
     hermes_success: bool
-    lean_compiles: int       # -1 = not attempted; 0 = fail; 1 = ok
+    lean_compiles: int  # -1 = not attempted; 0 = fail; 1 = ok
     source: str
-    created_at: float        # Unix timestamp
+    created_at: float  # Unix timestamp
     closed_at: float | None
     duration_s: float | None
-    turns: list[dict]        # [{turn_index, role, content, tokens}]
+    turns: list[dict]  # [{turn_index, role, content, tokens}]
 ```
 
 ---
@@ -317,8 +317,9 @@ Optional env caps (see [`hermes.md`](hermes.md), [`configuration.md`](configurat
 ```python
 class HermesAPIError(Exception):
     """Raised by ``HermesExplainer._call_api`` for API/transport failures."""
+
     status_code: int | None
-    transient: bool        # True for retryable transport errors (IncompleteRead, URLError)
+    transient: bool  # True for retryable transport errors (IncompleteRead, URLError)
 ```
 
 ---
@@ -556,6 +557,13 @@ class Reporter:
         catalogue: FEPTopicCatalogue,
         result: PipelineResult,
     ) -> ReportPaths
+
+def validate_report_receipt(
+    report_root: Path,
+    *,
+    require_complete: bool = False,
+) -> dict[str, Any]:
+    """Read-only hash and manifest reconciliation for one report bundle."""
 ```
 
 Output layout (filenames on disk; `ReportPaths` fields point to these paths):

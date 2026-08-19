@@ -46,6 +46,7 @@ def verifier() -> LeanVerifier:
 
 # ── Construction and configuration ───────────────────────────────────────────
 
+
 def test_verifier_instantiates(verifier: LeanVerifier) -> None:
     assert verifier is not None
     assert verifier._lean_dir == LEAN_DIR
@@ -68,6 +69,7 @@ def test_lean_version_returns_none_or_str(verifier: LeanVerifier) -> None:
 
 # ── check_mathlib_built ───────────────────────────────────────────────────────
 
+
 def test_check_mathlib_built_returns_tuple(verifier: LeanVerifier) -> None:
     ok, msg = verifier.check_mathlib_built()
     assert isinstance(ok, bool)
@@ -76,12 +78,13 @@ def test_check_mathlib_built_returns_tuple(verifier: LeanVerifier) -> None:
 
 
 def test_check_mathlib_built_message_is_informative(verifier: LeanVerifier) -> None:
-    ok, msg = verifier.check_mathlib_built()
+    _ok, msg = verifier.check_mathlib_built()
     # Message must mention either "Mathlib" or "lake"
     assert "athlib" in msg or "lake" in msg or "olean" in msg
 
 
 # ── VerifyResult dataclass ────────────────────────────────────────────────────
+
 
 def test_verify_result_compiles_clean() -> None:
     r = VerifyResult(
@@ -135,6 +138,7 @@ def test_verify_result_skipped() -> None:
 
 # ── _wrap_lean_code ────────────────────────────────────────────────────────────
 
+
 def test_wrap_lean_code_adds_import_when_missing(verifier: LeanVerifier) -> None:
     code = "theorem foo : True := True.intro"
     wrapped = verifier._wrap_lean_code(code)
@@ -159,22 +163,25 @@ def test_wrap_lean_code_single_import_not_wrapped(verifier: LeanVerifier) -> Non
 
 # ── _sanitize_lean_block ──────────────────────────────────────────────────────
 
+
 def test_sanitize_lean_block_clean():
     """Imports at top should not be modified."""
     code = "import Mathlib\nnamespace Foo\ntheorem t : 1 = 1 := rfl\nend Foo"
     result = _sanitize_lean_block(code)
     assert result == code
 
+
 def test_sanitize_lean_block_strips_late_imports():
     """Import statements after namespace content must be removed."""
     code = "namespace Foo\ntheorem t : 1 = 1 := rfl\nimport Mathlib.Data.Finset.Max\nend Foo"
     result = _sanitize_lean_block(code)
-    assert 'import Mathlib.Data.Finset.Max' not in result
-    assert 'theorem t' in result
-    assert 'namespace Foo' in result
+    assert "import Mathlib.Data.Finset.Max" not in result
+    assert "theorem t" in result
+    assert "namespace Foo" in result
 
 
 # ── verify_sketch (without lake) ──────────────────────────────────────────────
+
 
 def test_verify_sketch_skipped_when_lake_missing(verifier: LeanVerifier) -> None:
     """When lake is unavailable, result is VerifyResult with skip_reason or error.
@@ -190,7 +197,9 @@ def test_verify_sketch_skipped_when_lake_missing(verifier: LeanVerifier) -> None
     assert r.skip_reason, f"Expected skip_reason when lake is missing, got: {r}"
 
 
-def test_verify_sketch_returns_result_even_with_bad_sketch(verifier: LeanVerifier) -> None:
+def test_verify_sketch_returns_result_even_with_bad_sketch(
+    verifier: LeanVerifier,
+) -> None:
     """Compilation errors must not raise; they must be captured in VerifyResult."""
     sketch = "this is not lean code at all ??? !!!"
     r = verifier.verify_sketch("fep-bad", sketch)
@@ -201,11 +210,14 @@ def test_verify_sketch_returns_result_even_with_bad_sketch(verifier: LeanVerifie
 
 # ── verify_sketch WITH LAKE (requires Mathlib setup) ─────────────────────────
 
+
 def test_verify_sketch_with_lake_trivial(verifier: LeanVerifier) -> None:
     """When lake is available and Mathlib is built, verify a trivially true theorem."""
     if not verifier.check_lake_available():
-        pytest.skip("lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or uv run fep-lean setup — wraps it) first")
-    mathlib_ok, mathlib_msg = verifier.check_mathlib_built()
+        pytest.skip(
+            "lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or uv run fep-lean setup — wraps it) first"
+        )
+    _mathlib_ok, _mathlib_msg = verifier.check_mathlib_built()
     # Trivial True.intro doesn't actually need Mathlib loaded
     sketch = "theorem fep_lean_trivial_check : True := True.intro"
     r = verifier.verify_sketch("fep-trivial", sketch)
@@ -218,7 +230,9 @@ def test_verify_sketch_with_lake_trivial(verifier: LeanVerifier) -> None:
 def test_verify_sketch_with_lake_and_mathlib_sorry(verifier: LeanVerifier) -> None:
     """Typical FEP topic sketch: sorry-based, imports Mathlib, must classify correctly."""
     if not verifier.check_lake_available():
-        pytest.skip("lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or uv run fep-lean setup — wraps it) first")
+        pytest.skip(
+            "lake not on PATH — run scripts/_maint_bootstrap_lean_toolchain.sh (or uv run fep-lean setup — wraps it) first"
+        )
     mathlib_ok, mathlib_msg = verifier.check_mathlib_built()
     if not mathlib_ok:
         pytest.skip(f"Mathlib not built: {mathlib_msg}")
@@ -243,9 +257,12 @@ def test_verify_sketch_with_lake_and_mathlib_sorry(verifier: LeanVerifier) -> No
 
 # ── verify_batch ──────────────────────────────────────────────────────────────
 
+
 def test_verify_batch_returns_one_per_item(verifier: LeanVerifier) -> None:
-    items = [("fep-001", "theorem a : True := True.intro"),
-             ("fep-002", "theorem b : True := True.intro")]
+    items = [
+        ("fep-001", "theorem a : True := True.intro"),
+        ("fep-002", "theorem b : True := True.intro"),
+    ]
     results = verifier.verify_batch(items)
     assert len(results) == 2
     assert all(isinstance(r, VerifyResult) for r in results)
@@ -259,6 +276,7 @@ def test_verify_batch_empty_input(verifier: LeanVerifier) -> None:
 
 
 # ── environment helpers ────────────────────────────────────────────────────────
+
 
 def test_subprocess_env_has_elan_home() -> None:
     env = _subprocess_env()

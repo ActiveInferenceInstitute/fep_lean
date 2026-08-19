@@ -1,4 +1,3 @@
-# ruff: noqa: RUF001
 """Build display-math LaTeX for each ``theorem`` in catalogue sketches (full-signature form).
 
 ``catalogue_sketches`` calls :func:`build_theorem_latex_from_sketches` at module load. Each
@@ -28,12 +27,7 @@ def _extract_variable_block(body: str) -> str:
         t = ln.strip()
         if t.startswith("variable "):
             acc.append(t[len("variable ") :].strip())
-        elif acc and (
-            t.startswith("open ")
-            or t.startswith("import ")
-            or t.startswith("namespace ")
-            or t.startswith("/-")
-        ):
+        elif acc and (t.startswith(("open ", "import ", "namespace ", "/-"))):
             break
     return " ".join(acc) if acc else ""
 
@@ -201,15 +195,9 @@ def _convert_lean_expr(s: str) -> str:
     t = t.replace("π_1", r"\pi_1")
     t = t.replace("π_2", r"\pi_2")
     t = re.sub(r"(?<![A-Za-z])id(?![A-Za-z])", r"\\mathsf{id}", t)
-    t = re.sub(
-        r"(?<![A-Za-z])log(?![A-Za-z])", r"\\log", t, flags=re.IGNORECASE
-    )
-    t = re.sub(
-        r"(?<![A-Za-z])ln(?![A-Za-z])", r"\\ln", t, flags=re.IGNORECASE
-    )
-    t = re.sub(
-        r"(?<![A-Za-z])exp(?![A-Za-z])", r"\\exp", t, flags=re.IGNORECASE
-    )
+    t = re.sub(r"(?<![A-Za-z])log(?![A-Za-z])", r"\\log", t, flags=re.IGNORECASE)
+    t = re.sub(r"(?<![A-Za-z])ln(?![A-Za-z])", r"\\ln", t, flags=re.IGNORECASE)
+    t = re.sub(r"(?<![A-Za-z])exp(?![A-Za-z])", r"\\exp", t, flags=re.IGNORECASE)
     t = t.replace(
         r"\mathsf{MeasurableSpace} \alpha", r"\mathsf{MeasurableSpace}~\alpha"
     )
@@ -231,9 +219,7 @@ def _wrap_aligned(rows: list[str]) -> str:
     return r"\begin{aligned}" + "\n" + " \\\\\n".join(lines) + "\n" + r"\end{aligned}"
 
 
-def _one_theorem_latex(
-    var_ctx: str, binders: str, goal: str, *, with_ctx: bool
-) -> str:
+def _one_theorem_latex(var_ctx: str, binders: str, goal: str, *, with_ctx: bool) -> str:
     conv_var = _convert_lean_expr(var_ctx) if var_ctx else ""
     conv_b = _convert_lean_expr(binders) if binders else ""
     conv_g = _convert_lean_expr(goal) if goal else ""
@@ -253,7 +239,7 @@ def _one_theorem_latex(
 
 def build_theorem_latex_from_sketches(sketches: dict[str, str]) -> dict[str, str]:
     out: dict[str, str] = {}
-    for tid, body in sketches.items():
+    for body in sketches.values():
         vblock = _extract_variable_block(body)
         names = _theorem_names_in_order(body)
         for name in names:
@@ -262,9 +248,7 @@ def build_theorem_latex_from_sketches(sketches: dict[str, str]) -> dict[str, str
                 out[name] = r"\mathsf{?}"
                 continue
             b, g = _split_binders_and_goal(stmt)
-            out[name] = _one_theorem_latex(
-                vblock, b, g, with_ctx=bool(vblock.strip())
-            )
+            out[name] = _one_theorem_latex(vblock, b, g, with_ctx=bool(vblock.strip()))
     return out
 
 

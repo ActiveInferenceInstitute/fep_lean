@@ -1,59 +1,25 @@
-# fep_lean — deferred backlog
+# fep_lean — canonical backlog
 
-Created 2026-08-18 by the comprehensive review + hardening pass. Items here are
-validated findings that were deliberately **not** implemented in that pass;
-each carries an acceptance criterion so a future session can pick them up
-without re-deriving the analysis.
+Only open work belongs here. Completed work is represented by passing evidence
+in the repository history or an eventual changelog; do not add struck-through
+rows or a completed-work archive to this table.
 
-## Toolchain
+| ID | Outcome | Acceptance probe | Dependencies | Priority | Evidence source |
+| --- | --- | --- | --- | --- | --- |
+| FEP-FULL-002 | Exercise a real Hermes plus OpenGauss plus Lean full-mode smoke run and then the complete selected catalogue. | With credentials supplied out of band, `uv run fep-lean preflight` is `status: ok`; `uv run fep-lean run --topic fep-001` and `uv run fep-lean run` return `complete: true`, with matching report and verification manifest counts. | A permitted provider key, healthy `gauss doctor`, and writable `GAUSS_HOME`. | P0 | `ISA.md` ISA-05/06; `src/pipeline/core.py`; `src/gauss/runner.py` |
+| FEP-PROV-003 | Confirm the report receipt independently on a real complete full-mode run. | After FEP-FULL-002, recompute every `summary.json.artifact_hashes` entry, verify relative paths stay inside the run directory, and confirm the verification/run manifests agree with `complete`, mode, selected count, and topic rows. | FEP-FULL-002 and the checked-in report schema. | P1 | `src/output/reporter.py`; `tests/test_reporter.py`; `ISA.md` ISA-07 |
 
-- **T1 — mypy gate is not runnable in-repo.** `[tool.mypy] strict = true` is
-  configured in `pyproject.toml` but the `src/` tree uses flat,
-  `pythonpath=["src"]`-style imports (`from catalogue.topics import ...`) that
-  mypy cannot resolve without `mypy_path` configuration, and PyYAML ships no
-  inline stubs (`import-untyped`). Observed: 30+ `import-not-found` errors on a
-  stock `uv run mypy src/`.
-  Acceptance: add `mypy_path = ["src"]` (or package the modules properly) and
-  `types-PyYAML` to the dev extras; `uv run mypy src/` exits 0, or the config
-  is removed if the gate is intentionally aspirational.
+| T1 | Make the configured mypy gate runnable: flat `src/` imports need `mypy_path = ["src"]` and `types-PyYAML`; otherwise remove the aspirational config. | `uv run mypy src/` exits 0 (or no `[tool.mypy]` section remains). | — | P2 | `pyproject.toml` `[tool.mypy]`; observed 30+ import-not-found errors 2026-08-18 |
+| T2 | Run the opt-in full-catalogue Lean compile gate (`FEP_LEAN_CATALOGUE_COMPILE_TEST=1`) on a documented CI/maintainer cadence. | Gate executes and fails the build on any non-clean compile; locally verified 2026-08-18: 50/50 clean in 104 s. | Warm Lake workspace. | P2 | `tests/test_catalogue_sketches_compile.py` |
+| T3 | Add a credential-gated end-to-end live test of `run_single_topic("fep-001", mode="full")`. | With `FEP_LEAN_LIVE_TESTS=1` and credentials, the test asserts a structured PipelineResult. | Provider key, healthy gauss. | P2 | `src/pipeline/orchestrator.py` |
+| T4 | Pin the ruff rule set in `pyproject.toml` (`[tool.ruff.lint]` select: I001, UP037, UP035, F401, F811, E402, E741, SIM105, SIM201) so future ruff versions cannot reintroduce failures. | `uv run ruff check src/` passes on a fresh ruff install. | — | P3 | 2026-08-18 pass fixed 57 findings to 0 |
+| T5 | Resolve the `hermes.fallback_count` manuscript token mismatch (code emits `hermes.model_fallback_count`). | `_inject_manuscript_vars.py --dry-run` leaves zero unmatched placeholders in shipped chapters. | — | P3 | `manuscript` chapters; `src/output/manuscript.py` |
+| T6 | Update the monorepo-scoped `PYTHONPATH` snippet in `docs/development.md` for the standalone repo. | The documented export works from this checkout root. | — | P3 | `docs/development.md` |
 
-## Testing
+## Closure rule
 
-- **T2 — serial_lean full-catalogue gate runs only opt-in.**
-  `tests/test_catalogue_sketches_compile.py` skips unless
-  `FEP_LEAN_CATALOGUE_COMPILE_TEST=1`; CI should run it after a warm Lake
-  workspace so the 50-topic sorry-free claim is machine-enforced per commit.
-  Acceptance: CI job (or documented maintainer cadence) executes the gate and
-  fails the build on any non-clean compile. Verified locally 2026-08-18: all
-  50 sketches compile clean in 104 s.
-- **T3 — fep-lean run end-to-end live test is not automated.** The full-mode
-  path (Hermes -> Lean -> SQLite -> report) is exercised only through unit-level
-  seams; a credential-gated integration test would catch chain-advance and
-  caching regressions against the live API.
-  Acceptance: an opt-in (`FEP_LEAN_LIVE_TESTS=1`) test runs
-  `run_single_topic("fep-001", mode="full")` and asserts a structured result.
-
-## Packaging / config
-
-- **T4 — pyproject.toml has no [tool.ruff] section.** `docs/development.md`
-  tells developers to run `uv run ruff check src/`, which now passes clean
-  under ruff's default rules (2026-08-18), but nothing pins the rule set, so
-  future ruff versions can reintroduce failures. Acceptance: add a minimal
-  `[tool.ruff.lint]` select list covering the rules fixed in this pass
-  (I001, UP037, UP035, F401, F811, E402, E741, SIM105, SIM201) and document it
-  in `docs/development.md`.
-- **T5 — no `hermes.fallback_count` token.** Manuscript prose references
-  `{{hermes.fallback_count}}` while the code produces
-  `hermes.model_fallback_count`. The injector leaves the unmatched token
-  literal. Acceptance: either add `fallback_count` as an alias in
-  `_hermes_block_from_summary` or normalise the manuscript prose to the
-  existing key; `_inject_manuscript_vars.py --dry-run` should report zero
-  unmatched `{{...}}` placeholders in shipped chapters.
-
-## Docs
-
-- **T6 — docs/development.md PYTHONPATH note references monorepo layout.**
-  It suggests `export PYTHONPATH=projects/fep_lean/src:.:infrastructure`,
-  which applies only to the old monorepo checkout, not this standalone repo.
-  Acceptance: update the snippet to the standalone form (`src` on
-  `PYTHONPATH` or `uv run`) or scope the note explicitly to monorepo users.
+An item leaves this table only when its acceptance probe passes in the current
+checkout, the evidence is retained in a test/report/documentation change where
+appropriate, and the result is recorded in the repository's changelog or
+release notes. Until then, the row remains open even if a partial local probe
+looks promising.
