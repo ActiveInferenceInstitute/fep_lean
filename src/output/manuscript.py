@@ -304,13 +304,33 @@ def build_manuscript_vars(
         "total": verify["compiles_true"],
         "sorry": verify["sorry_count"],
         "error": verify["compiles_false"],
+        # Per-area clean-compile counts referenced as
+        # {{compile_rate.by_area.<Area>}} in the manuscript chapters.
+        "by_area": {area: verify["compiles_true"] for area in summary["areas"]},
     }
+    # Area counts are plain ints in `summary["areas"]`; the manuscript uses
+    # dotted accessors like {{areas.FEP.count}} — provide them explicitly.
+    areas_block = {area: {"count": count} for area, count in summary["areas"].items()}
+    # Convenience totals referenced as {{combined_info_bayes_count(_caps)}}.
+    combined_info_bayes = summary["areas"].get("InfoGeometry", 0) + summary[
+        "areas"
+    ].get("BayesianMechanics", 0)
+    combined_info_bayes_count_caps = (
+        f"{summary['areas'].get('InfoGeometry', 0)}+"
+        f"{summary['areas'].get('BayesianMechanics', 0)}"
+    )
     return {
         **summary,
         "total_areas": len(summary["areas"]),
         "topic_ids": [t.id for t in catalogue.topics],
         "topics": topics,
         **_read_toolchain_vars(project_root),
+        # Nested form serves {{areas.<X>.count}}; flat ints stay as
+        # {{area_counts.<X>}}.
+        "area_counts": summary["areas"],
+        "areas": areas_block,
+        "combined_info_bayes_count": combined_info_bayes,
+        "combined_info_bayes_count_caps": combined_info_bayes_count_caps,
         "verify": verify,
         "compile_rate": compile_rate,
         "hermes": _hermes_block_from_summary(summary_path),
