@@ -43,3 +43,7 @@ jobs:
       - name: Compile aggregate
         working-directory: lean
         run: lake build FepSketches
+      - name: Full-catalogue sorry-free compile gate (50 topics)
+        env:
+          FEP_LEAN_CATALOGUE_COMPILE_TEST: "1"
+        run: uv run pytest tests/test_catalogue_sketches_compile.py -q
