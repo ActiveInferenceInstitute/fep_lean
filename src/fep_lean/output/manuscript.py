@@ -257,7 +257,6 @@ def _hermes_block_from_summary(path: Path | None) -> dict[str, Any]:
         "primary_model": "",
         "models_used": "",
         "model_fallback_count": 0,
-        "fallback_count": 0,
         "network_retry_count": 0,
         "chain_advance_reasons": {},
         "chain_advance_reasons_summary": "none",
@@ -322,11 +321,6 @@ def _hermes_block_from_summary(path: Path | None) -> dict[str, Any]:
             "primary_model": primary_model,
             "models_used": ", ".join(sorted(set(models))),
             "model_fallback_count": max(0, len(models) - counts.get(primary_model, 0)),
-            "fallback_count": sum(
-                str(r.get("verification_source", "")) not in {"", "hermes_refined"}
-                for r in rows
-                if isinstance(r, dict)
-            ),
             "network_retry_count": sum(
                 int(r.get("network_retries", 0) or 0)
                 for r in rows

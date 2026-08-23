@@ -1,8 +1,8 @@
 ---
 title: fep_lean Ideal State Assessment
-status: active
-phase: catalogue-155-local-acceptance-pending
-updated: 2026-08-21
+status: released
+phase: catalogue-155-v1.1.0
+updated: 2026-08-23
 ---
 
 # fep_lean Ideal State Assessment
@@ -103,19 +103,27 @@ uv run python scripts/build_formalism_coverage.py --check
 uv run fep-lean atlas --check
 uv run fep-lean dashboard --check
 uv run python docs/pin_audit.py --check-latest
-uv run pytest tests/ -q --cov=src --cov-fail-under=89
 uv run mypy src
-uv run fep-lean catalogue
 uv run fep-lean setup
+cd lean
+lake build FepSketches
+cd ..
 uv run fep-lean verify --fail-on-warnings --receipt output/native-verification.json
 uv run python scripts/audit_formalisms.py --receipt output/formalism-audit.json
+uv run fep-lean catalogue
 uv run python docs/theorem_ref_audit.py
 uv run python docs/citation_audit.py
 uv run python scripts/render_manuscript.py --check
 uv run python docs/check_links.py --strict --include-root
 uv run python docs/md_hygiene.py --strict
-uv run python docs/pin_audit.py --check-latest
 uv run python docs/xref_audit.py
+uv run python scripts/capture_browser_acceptance.py
+uv run python scripts/build_release_bundle.py --run-python-acceptance
+release_dir="$(mktemp -d)"
+SOURCE_DATE_EPOCH=0 uv run python scripts/build_release_bundle.py \
+  --output "$release_dir/fep-lean-1.1.0-155.tar.gz"
+SOURCE_DATE_EPOCH=0 uv run python scripts/build_release_bundle.py \
+  --check --output "$release_dir/fep-lean-1.1.0-155.tar.gz"
 uv run fep-lean preflight
 ```
 
@@ -125,9 +133,6 @@ workflow after credentials are supplied through the operator's existing secret
 mechanism:
 
 ```bash
-cd lean
-lake build FepSketches
-cd ..
 FEP_LEAN_CATALOGUE_COMPILE_TEST=1 uv run pytest tests/test_catalogue_bodies_compile.py -q --no-cov
 uv run fep-lean run --topic fep-001
 uv run fep-lean run
@@ -176,4 +181,5 @@ declaration, and trusted-axiom claims recorded above. It does not support a
 current 155-topic provider claim until ISA-06 and the provider-backed parts of
 ISA-07 have fresh evidence for these exact bytes. Historical provider receipts
 remain useful provenance but do not cross that boundary. The final worktree
-must also be inspected before any separately authorized publication.
+must be inspected, its release receipts must validate, and published artifact
+bytes must match their recorded hashes before any release is accepted.

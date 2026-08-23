@@ -103,8 +103,9 @@ _RESOURCE_MARKUP_RE = re.compile(
 _CANONICAL_LICENSE = "CC-BY-4.0"
 _CANONICAL_PUBLICATION_DOI = "10.5281/zenodo.19699233"
 _CANONICAL_PUBLICATION_JOURNAL = "Active Inference Journal"
+_CANONICAL_REPOSITORY_URL = "https://github.com/ActiveInferenceInstitute/fep_lean"
 _CANONICAL_RELEASE_VERSION = "1.1.0"
-_CANONICAL_RELEASE_DATE = "2026-08-21"
+_CANONICAL_RELEASE_DATE = "2026-08-23"
 _MINIMUM_SPDX_SETUPTOOLS_REQUIREMENT = "setuptools>=77.0.3"
 _MAX_ARCHIVE_MEMBERS = 20_000
 _MAX_MEMBER_BYTES = 512 * 1024 * 1024
@@ -157,6 +158,7 @@ _MANUSCRIPT_FIGURE_REFERENCES: Mapping[str, str] = {
     ),
 }
 _REQUIRED_STATIC_MEMBERS: tuple[tuple[str, str], ...] = (
+    (".aii/config.yaml", "institute_metadata"),
     ("README.md", "project_documentation"),
     ("LICENSE", "legal_metadata"),
     ("CITATION.cff", "citation_metadata"),
@@ -1592,6 +1594,16 @@ def _license_metadata_errors(project_root: Path) -> tuple[str, ...]:
             errors.append(
                 f"CITATION.cff date-released must be {_CANONICAL_RELEASE_DATE}"
             )
+        if not isinstance(citation, dict) or citation.get("repository-code") != (
+            _CANONICAL_REPOSITORY_URL
+        ):
+            errors.append(
+                f"CITATION.cff repository-code must be {_CANONICAL_REPOSITORY_URL}"
+            )
+        if not isinstance(citation, dict) or citation.get("url") != (
+            _CANONICAL_REPOSITORY_URL
+        ):
+            errors.append(f"CITATION.cff URL must be {_CANONICAL_REPOSITORY_URL}")
         preferred = (
             citation.get("preferred-citation") if isinstance(citation, dict) else None
         )
@@ -1690,6 +1702,41 @@ def _license_metadata_errors(project_root: Path) -> tuple[str, ...]:
             errors.append(
                 f"Python package version must be {_CANONICAL_RELEASE_VERSION}"
             )
+        package_readme = (
+            re.search(r'(?m)^readme\s*=\s*"([^"]+)"\s*$', project_section.group(1))
+            if project_section is not None
+            else None
+        )
+        if package_readme is None or package_readme.group(1) != "README.md":
+            errors.append("Python package readme must be README.md")
+        package_authors = (
+            re.search(r"(?ms)^authors\s*=\s*\[(.*?)\]", project_section.group(1))
+            if project_section is not None
+            else None
+        )
+        authors_text = package_authors.group(1) if package_authors is not None else ""
+        if (
+            'name = "Daniel Ari Friedman"' not in authors_text
+            or 'email = "daniel@activeinference.institute"' not in authors_text
+        ):
+            errors.append(
+                "Python package authors must identify Daniel Ari Friedman "
+                "<daniel@activeinference.institute>"
+            )
+        urls_section = re.search(
+            r"(?ms)^\[project\.urls\]\s*(.*?)(?=^\[[^\n]+\]|\Z)", pyproject
+        )
+        urls_text = urls_section.group(1) if urls_section is not None else ""
+        expected_urls = {
+            "Repository": _CANONICAL_REPOSITORY_URL,
+            "Changelog": f"{_CANONICAL_REPOSITORY_URL}/blob/main/CHANGELOG.md",
+            "Concept DOI": f"https://doi.org/{_CANONICAL_PUBLICATION_DOI}",
+        }
+        for label, expected_url in expected_urls.items():
+            quoted_label = re.escape(f'"{label}"' if " " in label else label)
+            match = re.search(rf'(?m)^{quoted_label}\s*=\s*"([^"]+)"\s*$', urls_text)
+            if match is None or match.group(1) != expected_url:
+                errors.append(f"Python package {label} URL must be {expected_url}")
 
     try:
         package_init = _relative_file_bytes(root, "src/fep_lean/__init__.py").decode(
@@ -1719,6 +1766,67 @@ def _license_metadata_errors(project_root: Path) -> tuple[str, ...]:
         ):
             errors.append(
                 f"runtime settings version must be {_CANONICAL_RELEASE_VERSION}"
+            )
+
+    try:
+        sidecar = yaml.safe_load(
+            _relative_file_bytes(root, ".aii/config.yaml").decode("utf-8")
+        )
+    except (ReleaseBundleError, UnicodeDecodeError, yaml.YAMLError) as exc:
+        errors.append(f"InstituteOS sidecar metadata cannot be read: {exc}")
+    else:
+        meta = sidecar.get("meta") if isinstance(sidecar, dict) else None
+        if not isinstance(meta, dict) or meta.get("updated") != (
+            _CANONICAL_RELEASE_DATE
+        ):
+            errors.append(
+                f"InstituteOS sidecar update date must be {_CANONICAL_RELEASE_DATE}"
+            )
+        repo = sidecar.get("repo") if isinstance(sidecar, dict) else None
+        description = str(repo.get("description", "")) if isinstance(repo, dict) else ""
+        if f"Release v{_CANONICAL_RELEASE_VERSION}" not in description:
+            errors.append(
+                "InstituteOS sidecar description must identify release "
+                f"v{_CANONICAL_RELEASE_VERSION}"
+            )
+        if _CANONICAL_RELEASE_DATE not in description:
+            errors.append(
+                "InstituteOS sidecar description must identify release date "
+                f"{_CANONICAL_RELEASE_DATE}"
+            )
+        if _CANONICAL_PUBLICATION_DOI not in description:
+            errors.append(
+                "InstituteOS sidecar description must identify concept DOI "
+                f"{_CANONICAL_PUBLICATION_DOI}"
+            )
+        if not isinstance(repo, dict) or repo.get("full_name") != (
+            "ActiveInferenceInstitute/fep_lean"
+        ):
+            errors.append(
+                "InstituteOS sidecar repository must be "
+                "ActiveInferenceInstitute/fep_lean"
+            )
+        ecosystem = sidecar.get("ecosystem") if isinstance(sidecar, dict) else None
+        links = ecosystem.get("links") if isinstance(ecosystem, dict) else None
+        if not isinstance(links, dict) or links.get("github") != (
+            _CANONICAL_REPOSITORY_URL
+        ):
+            errors.append(
+                f"InstituteOS sidecar GitHub URL must be {_CANONICAL_REPOSITORY_URL}"
+            )
+        provenance = sidecar.get("provenance") if isinstance(sidecar, dict) else None
+        if not isinstance(provenance, dict) or provenance.get("license") != (
+            _CANONICAL_LICENSE
+        ):
+            errors.append(f"InstituteOS sidecar license must be {_CANONICAL_LICENSE}")
+        sidecar_citation = (
+            provenance.get("citation") if isinstance(provenance, dict) else None
+        )
+        if not isinstance(sidecar_citation, dict) or sidecar_citation.get("doi") != (
+            _CANONICAL_PUBLICATION_DOI
+        ):
+            errors.append(
+                f"InstituteOS sidecar citation DOI must be {_CANONICAL_PUBLICATION_DOI}"
             )
     return tuple(errors)
 

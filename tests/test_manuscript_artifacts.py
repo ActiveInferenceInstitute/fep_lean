@@ -468,7 +468,6 @@ def test_hermes_block_aggregates_from_summary(tmp_path: Path) -> None:
     assert block["tokens_total"] == 3000
     assert block["tokens_mean"] == 1500
     assert block["hermes_lean_compiles_count"] == 1
-    assert block["hermes_lean_compiles_count"] == 1
     assert block["primary_model"] == "z-ai/glm-5.1"
     assert "z-ai/glm-5.1" in block["models_used"]
     # All three topics used the same model, so the OpenRouter chain never
@@ -483,8 +482,7 @@ def test_hermes_block_aggregates_from_summary(tmp_path: Path) -> None:
 
 def test_hermes_block_counts_model_chain_advances(tmp_path: Path) -> None:
     """When a topic's final model differs from the primary (most-used) model,
-    ``model_fallback_count`` reports it.  Distinct from ``fallback_count``,
-    which reports a model-chain advance rather than a source substitution.
+    ``model_fallback_count`` reports it.
 
     Also asserts that per-topic ``network_retries`` sum into
     ``network_retry_count`` and ``chain_advance_reason`` strings are tallied
@@ -646,7 +644,6 @@ def test_build_manuscript_vars_exposes_hermes_block(
     assert v["hermes"]["tokens_mean"] == 1000
     assert v["hermes"]["primary_model"] == "z-ai/glm-5.1"
     assert v["hermes"]["hermes_lean_compiles_count"] == 2
-    assert v["hermes"]["fallback_count"] == 0
     assert "tests" in v
     assert v["tests"]["collected"] == 1
 

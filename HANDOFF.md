@@ -1,9 +1,9 @@
 # fep_lean formalism and publication handoff
 
-**Date:** 2026-08-21
+**Date:** 2026-08-23
 **Repository:** `ActiveInferenceInstitute/fep_lean`
 **Checkout:** `/home/trim/Documents/Git/HumOS/projects/outside_of_hum/fep_lean`
-**Audited base:** `66c525e` (`main...origin/main`)
+**Release line:** `v1.1.0`
 
 ## Mission and evidence boundary
 
@@ -37,9 +37,9 @@ for its own source snapshot. It is now historical too: the schema-2 expansion
 changed the roster, body-source manifest, formal resources, and source digests.
 It must not be described as current evidence for the 155-topic checkout.
 
-No provider secret is stored in the repository. No commit, push, or publication
-was part of this pass; the worktree intentionally contains the complete
-uncommitted change set.
+No provider secret is stored in the repository. Versioned publication does not
+promote the historical provider runs: only a separately authorized,
+source-bound full receipt can make a current Hermes/OpenGauss claim.
 
 ## Canonical ownership
 
@@ -138,26 +138,50 @@ uv run python scripts/build_formalism_coverage.py --check
 uv run python scripts/build_formalism_atlas.py --check
 uv run fep-lean dashboard --check
 uv run python docs/pin_audit.py --check-latest
-uv run python scripts/audit_formalisms.py \
-  --receipt output/formalism-audit.json
-uv run pytest tests/ -q --cov=src --cov-fail-under=89
 uv run mypy src
 uv run ruff check src tests scripts docs
 uv run ruff format --check src tests scripts docs
+(cd lean && lake build FepSketches)
+uv run fep-lean verify --fail-on-warnings \
+  --receipt output/native-verification.json
+uv run python scripts/audit_formalisms.py \
+  --receipt output/formalism-audit.json
 uv run fep-lean catalogue
 uv run python scripts/render_manuscript.py --check
 uv run python docs/theorem_ref_audit.py
 uv run python docs/citation_audit.py
 uv run python docs/check_links.py --strict --include-root
 uv run python docs/md_hygiene.py --strict
-uv run python docs/pin_audit.py --check-latest
 uv run python docs/xref_audit.py
-(cd lean && lake build FepSketches)
-uv run fep-lean verify --fail-on-warnings \
-  --receipt output/native-verification.json
+uv run python scripts/capture_browser_acceptance.py
+uv run python scripts/build_release_bundle.py --run-python-acceptance
 uv run fep-lean preflight
 git diff --check
+
+release_a_dir="$(mktemp -d)"
+release_b_dir="$(mktemp -d)"
+archive_a="$release_a_dir/fep-lean-1.1.0-155.tar.gz"
+archive_b="$release_b_dir/fep-lean-1.1.0-155.tar.gz"
+SOURCE_DATE_EPOCH=0 uv run python scripts/build_release_bundle.py \
+  --output "$archive_a"
+SOURCE_DATE_EPOCH=0 uv run python scripts/build_release_bundle.py \
+  --output "$archive_b"
+cmp "$archive_a" "$archive_b"
+sha256sum "$archive_a" "$archive_b"
+SOURCE_DATE_EPOCH=0 uv run python scripts/build_release_bundle.py \
+  --check --output "$archive_a"
+SOURCE_DATE_EPOCH=0 uv run python scripts/build_release_bundle.py \
+  --check --output "$archive_b"
 ```
+
+The canonical Python-acceptance command runs the exact collected suite and
+atomically writes `output/pytest.xml`, `output/coverage.xml`, and
+`output/python-acceptance.json`; a raw `pytest` run is a useful development
+gate but is not a release receipt. Catalogue/manuscript generation precedes
+that receipt because `manuscript/manuscript_vars.yaml` owns the canonical test
+count. Browser capture follows the final renderer sources and atlas/dashboard
+bytes. The two archive builds must remain byte-identical and independently
+validate against the live checkout before publication.
 
 Independently validate the native receipt against the live source tree before
 using its prose projection. The CI workflow contains the exact validation

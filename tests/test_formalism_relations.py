@@ -259,8 +259,8 @@ def test_shipped_graph_conserves_relation_and_capability_state() -> None:
         (edge.source, edge.target, edge.kind.value, edge.witness)
         for edge in graph.edges
     )
-    assert BASELINE_CAPABILITY_IDS <= capability_ids
-    assert BASELINE_EDGE_SIGNATURES <= edge_signatures
+    assert capability_ids >= BASELINE_CAPABILITY_IDS
+    assert edge_signatures >= BASELINE_EDGE_SIGNATURES
     assert frozenset(EXPANSION_CAPABILITY_BY_FAMILY.values()) <= capability_ids
 
     expansion_families = {

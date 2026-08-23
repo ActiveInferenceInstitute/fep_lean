@@ -66,7 +66,6 @@ Hermes commentary is optional and has no bearing on native Lean acceptance. Manu
 | Models used | {{hermes.models_used}} |
 | Model-chain advances | {{hermes.model_fallback_count}} |
 | Same-model network retries | {{hermes.network_retry_count}} |
-| Baseline-sketch fallbacks | {{hermes.fallback_count}} |
 | Hermes-refined sketches compiling | {{hermes.hermes_lean_compiles_count}} |
 | Mean measured topic time | {{hermes.mean_topic_s}} s |
 | Token total | {{hermes.tokens_total}} |

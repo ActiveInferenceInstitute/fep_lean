@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.1.0 — 2026-08-21
+## 1.1.0 — 2026-08-23
 
-### 155-topic formalism expansion and local acceptance
+### 155-topic formalism expansion and release acceptance
 
 - Extended the maintained schema-2 roster beyond `fep-120` through `fep-155`,
   yielding 155 stable topics in 20 families across the five established areas.
@@ -193,10 +193,11 @@ they hash. They are not current acceptance evidence for the 155-topic cut.
   they predate the current report-receipt schema and their source/configuration
   digests no longer match the live tree. They are not claim-ready evidence for
   the final source or the complete 50-topic catalogue.
-- `FEP-FULL-002` and `FEP-PROV-003` are complete. No provider secret is tracked;
-  commit, push, and publication remain separately unauthorized.
+- `FEP-FULL-002` and `FEP-PROV-003` were complete for that snapshot. The
+  historical run stored no provider secret and granted no authority for a
+  later release.
 
-## Unreleased — 2026-08-19
+## Development snapshot — 2026-08-19
 
 ### Package and canonical ownership
 
@@ -287,7 +288,7 @@ they hash. They are not current acceptance evidence for the 155-topic cut.
   Hermes/OpenGauss smoke, complete run, and final full-report receipt remain
   open; no credential, provider call, commit, push, or publication occurred.
 
-## Unreleased — 2026-07-31
+## Development snapshot — 2026-07-31
 
 ### Verified in the local audit
 
@@ -335,7 +336,7 @@ they hash. They are not current acceptance evidence for the 155-topic cut.
   exercise the live Hermes/OpenGauss/Lean full-mode smoke and complete-catalogue
   runs. No credential is stored in this repository.
 
-## Unreleased — 2026-07-31 (revision 2)
+## Development snapshot — 2026-07-31 (revision 2)
 
 ### Improvements from Mahakala adversarial review
 

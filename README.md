@@ -11,6 +11,16 @@ literature. The twenty families include five second-expansion families for
 finite-sample risk, closed-loop policy trees, native blanket transfer, finite
 exponential-family dual geometry, and exact two-state continuous time.
 
+## Release
+
+Version `1.1.0` is the 155-topic publication cut. The canonical software
+release is [GitHub `v1.1.0`](https://github.com/ActiveInferenceInstitute/fep_lean/releases/tag/v1.1.0),
+and the evolving scholarly record is identified by the
+[Zenodo concept DOI](https://doi.org/10.5281/zenodo.19699233). The GitHub
+release notes cross-reference the immutable Zenodo version DOI and publish the
+release-bundle checksum; the bundle manifest remains the owner of per-file
+hashes. Neither publication surface changes the evidence boundaries below.
+
 ## Contract
 
 `full` execution is strict. It requires the pinned Lean/Lake/Mathlib workspace,
@@ -156,13 +166,13 @@ checkout root. The equivalent maintained scripts are thin command wrappers in
 - [`ISA.md`](ISA.md) defines the ideal state, anti-criteria, and evidence gates.
 - [`TODO.md`](TODO.md) is the canonical open-only backlog with behavior-based
   acceptance probes.
-- [`CHANGELOG.md`](CHANGELOG.md) records the local audit evidence and remaining
-  release boundary.
+- [`CHANGELOG.md`](CHANGELOG.md) records release changes and their evidence
+  boundary.
 - [`manuscript/04i_formalism_catalogue_155.md`](manuscript/04i_formalism_catalogue_155.md)
   states the five new families, theorem assumptions, non-vacuity witnesses,
   and evidence boundaries in one authored chapter.
 - [`HANDOFF.md`](HANDOFF.md) gives the next reviewer the operating protocol,
-  evidence receipt, and remaining extension scope.
+  evidence pointers, and extension backlog.
 
 ## Development checks
 

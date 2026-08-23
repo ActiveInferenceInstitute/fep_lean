@@ -7,7 +7,7 @@ paper:
   title: "Towards Lean 4 Formalization of the Free Energy Principle"
   subtitle: "AI-Driven Theorem Sketching and Verification for Active Inference and Bayesian Mechanics"
   version: "1.1.0"
-  date: "2026-08-21"
+  date: "2026-08-23"
 
 authors:
   - name: "Daniel Ari Friedman"

@@ -50,6 +50,22 @@ def test_built_wheel_imports_in_isolated_namespace(tmp_path: Path) -> None:
         wheel_metadata = archive.read(metadata_name).decode("utf-8")
     assert "License-Expression: CC-BY-4.0\n" in wheel_metadata
     assert "License-File: LICENSE\n" in wheel_metadata
+    assert "Author-email: Daniel Ari Friedman <daniel@activeinference.institute>\n" in (
+        wheel_metadata
+    )
+    assert "Description-Content-Type: text/markdown\n" in wheel_metadata
+    assert (
+        "Project-URL: Repository, https://github.com/ActiveInferenceInstitute/fep_lean\n"
+        in wheel_metadata
+    )
+    assert (
+        "Project-URL: Changelog, https://github.com/ActiveInferenceInstitute/fep_lean/blob/main/CHANGELOG.md\n"
+        in wheel_metadata
+    )
+    assert (
+        "Project-URL: Concept DOI, https://doi.org/10.5281/zenodo.19699233\n"
+        in wheel_metadata
+    )
 
     environment = tmp_path / "venv"
     venv.EnvBuilder(with_pip=False, system_site_packages=True).create(environment)
