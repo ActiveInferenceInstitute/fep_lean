@@ -481,8 +481,8 @@ def test_hermes_block_aggregates_from_summary(tmp_path: Path) -> None:
 
 
 def test_hermes_block_counts_model_chain_advances(tmp_path: Path) -> None:
-    """When a topic's final model differs from the primary (most-used) model,
-    ``model_fallback_count`` reports it.
+    """When a topic advances beyond the configured primary,
+    ``model_fallback_count`` reports the recorded advance.
 
     Also asserts that per-topic ``network_retries`` sum into
     ``network_retry_count`` and ``chain_advance_reason`` strings are tallied
@@ -521,6 +521,73 @@ def test_hermes_block_counts_model_chain_advances(tmp_path: Path) -> None:
     assert block["network_retry_count"] == 3
     assert block["chain_advance_reasons"] == {"empty_content": 1}
     assert block["chain_advance_reasons_summary"] == "1× empty_content"
+
+
+def test_hermes_block_does_not_mislabel_a_frequently_used_fallback(
+    tmp_path: Path,
+) -> None:
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text(
+        json.dumps(
+            {
+                "run_id": "20260420_222223",
+                "topics": [
+                    {
+                        "hermes_model": "primary/model",
+                        "hermes_success": True,
+                        "chain_advance_reason": "",
+                    },
+                    {
+                        "hermes_model": "fallback/model",
+                        "hermes_success": True,
+                        "chain_advance_reason": "empty_content",
+                    },
+                    {
+                        "hermes_model": "fallback/model",
+                        "hermes_success": True,
+                        "chain_advance_reason": "empty_content",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    block = _hermes_block_from_summary(summary_path)
+
+    assert block["primary_model"] == "primary/model"
+    assert block["model_fallback_count"] == 2
+
+
+def test_hermes_block_leaves_primary_unavailable_when_every_row_advanced(
+    tmp_path: Path,
+) -> None:
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text(
+        json.dumps(
+            {
+                "run_id": "20260420_222224",
+                "topics": [
+                    {
+                        "hermes_model": "fallback/a",
+                        "hermes_success": True,
+                        "chain_advance_reason": "empty_content",
+                    },
+                    {
+                        "hermes_model": "fallback/b",
+                        "hermes_success": True,
+                        "chain_advance_reason": "wall_clock_timeout",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    block = _hermes_block_from_summary(summary_path)
+
+    assert block["primary_model"] == ""
+    assert block["model_fallback_count"] == 2
 
 
 def test_hermes_block_aggregates_chain_reasons(tmp_path: Path) -> None:

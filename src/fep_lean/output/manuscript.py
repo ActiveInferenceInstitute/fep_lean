@@ -274,17 +274,17 @@ def _hermes_block_from_summary(path: Path | None) -> dict[str, Any]:
         for r in rows
         if isinstance(r, dict) and r.get("hermes_model")
     ]
-    counts: dict[str, int] = {}
     reasons: dict[str, int] = {}
+    primary_models: set[str] = set()
     for row in rows:
         if not isinstance(row, dict):
             continue
         model = str(row.get("hermes_model", ""))
-        if model:
-            counts[model] = counts.get(model, 0) + 1
         reason = str(row.get("chain_advance_reason", ""))
         if reason:
             reasons[reason] = reasons.get(reason, 0) + 1
+        elif model:
+            primary_models.add(model)
     tokens = [
         int(r.get("tokens_used", 0) or 0)
         for r in rows
@@ -298,7 +298,7 @@ def _hermes_block_from_summary(path: Path | None) -> dict[str, Any]:
     run_id = str(data.get("run_id", ""))
     if run_id and not run_id.startswith("run_"):
         run_id = "run_" + run_id
-    primary_model = max(counts, key=lambda model: counts[model]) if counts else ""
+    primary_model = next(iter(primary_models)) if len(primary_models) == 1 else ""
     keys.update(
         {
             "summary_present": True,
@@ -320,7 +320,7 @@ def _hermes_block_from_summary(path: Path | None) -> dict[str, Any]:
             ),
             "primary_model": primary_model,
             "models_used": ", ".join(sorted(set(models))),
-            "model_fallback_count": max(0, len(models) - counts.get(primary_model, 0)),
+            "model_fallback_count": sum(reasons.values()),
             "network_retry_count": sum(
                 int(r.get("network_retries", 0) or 0)
                 for r in rows

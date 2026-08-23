@@ -77,13 +77,14 @@ visual, browser, manuscript, and release tests under [`tests/`](../../../tests/)
 ## Evidence boundaries
 
 Current evidence is validated at its own parser or browser boundary rather
-than inferred from filenames. The durable entry points are:
+than inferred from filenames. The local generation destinations are
+`output/native-verification.json`, `output/formalism-audit.json`,
+`output/{pytest.xml,coverage.xml,python-acceptance.json}`, and
+`output/manuscript/`. Because `output/` is intentionally ignored, the durable
+published copies of those files live inside the validated release bundle. The
+tracked entry points are:
 
-- native Lean receipt: [`output/native-verification.json`](../../../output/native-verification.json);
-- declaration/axiom receipt: [`output/formalism-audit.json`](../../../output/formalism-audit.json);
 - browser receipt and images: [`assets/`](assets/);
-- Python JUnit, coverage, and acceptance receipts: [`output/`](../../../output/);
-- rendered manuscript and renderer provenance: [`output/manuscript/`](../../../output/manuscript/);
 - deterministic release owner:
   [`output/release_bundle.py`](../../../src/fep_lean/output/release_bundle.py).
 

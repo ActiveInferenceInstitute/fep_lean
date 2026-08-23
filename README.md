@@ -92,11 +92,12 @@ Python receipt binds the complete canonical collected-node roster, zero
 failures or errors, and line coverage at or above the maintained 89% floor to
 the same frozen source and test roster. The schema-4
 browser receipt replays all six accepted screenshots in Chrome 151 against 155
-topics, 20 families, and 15 typed numerical witnesses. The full report
-[`run_20260820_183143_709998`](output/reports/run_20260820_183143_709998/)
-remains historical evidence for the earlier 50-topic source snapshot and does
-not bind the 155-topic source; the earlier Kimi and Gemini one-topic runs are
-historical smoke evidence as well. No provider secret is stored in the
+topics, 20 families, and 15 typed numerical witnesses. The local full-report
+path `output/reports/run_20260820_183143_709998/` remains historical evidence
+for the earlier 50-topic source snapshot and does not bind the 155-topic
+source; ignored provider reports are deliberately not shipped in a release.
+The earlier Kimi and Gemini one-topic runs are historical smoke evidence as
+well. No provider secret is stored in the
 repository, and no execution receipt authorizes publication or proves the FEP
 as a physical theory.
 

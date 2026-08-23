@@ -11,7 +11,8 @@ it exercises ``run_single_topic`` — catalogue load, environment validation,
 Hermes HTTP, ``lake env lean`` verification, SQLite persistence, manuscript
 artifacts, and the report — in one shot.
 
-TODO.md item T3 (accepted 2026-08-18).
+This remains opt-in because it crosses the external provider boundary; the
+offline acceptance suite never treats a skipped live call as provider evidence.
 """
 
 from __future__ import annotations
