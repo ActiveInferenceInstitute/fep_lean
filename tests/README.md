@@ -1,11 +1,22 @@
 # Tests
 
-**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
-
 ```bash
 uv run pytest tests/ -q --cov=src --cov-fail-under=89
 ```
 
-**347** tests collected (`uv run pytest tests/ --collect-only -q`) across **29** `test_*.py` modules. A small number are **live-only** (Hermes/OpenRouter or httpbin); they auto-run when `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY` is set and skip otherwise — set `FEP_LEAN_LIVE_TESTS=0` to force-skip in key-present environments. See [AGENTS.md](AGENTS.md).
+The live collection is the authority for test counts:
 
-Policy: prefer real files, real subprocesses, and `monkeypatch` for environment isolation only. See [AGENTS.md](AGENTS.md).
+```bash
+uv run pytest tests/ --collect-only -q
+```
+
+Catalogue tests treat the maintained roster seal, family-owned body registry,
+semantic review, novelty ledger, relation graph, and manifested composition
+resources as separate owners. Generated YAML, Lean aggregates, and publication
+surfaces are checked for parity rather than repaired in fixtures.
+
+The default suite is credential-free. Tests that make provider calls require
+explicit live-test selection plus `OPENROUTER_API_KEY` or
+`ANTHROPIC_API_KEY`; set `FEP_LEAN_LIVE_TESTS=0` to suppress them when a key is
+present. Native Lean acceptance and full external acceptance are separate from
+the ordinary coverage run. See [AGENTS.md](AGENTS.md).

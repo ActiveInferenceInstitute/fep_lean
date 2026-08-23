@@ -1,0 +1,222 @@
+"""Fail-closed, source-preserving manuscript variable rendering."""
+
+from __future__ import annotations
+
+import os
+import re
+import shutil
+import tempfile
+from collections.abc import Mapping
+from pathlib import Path
+from typing import Any
+
+PLACEHOLDER_RE = re.compile(r"\{\{([^}]+)\}\}")
+SOURCE_EXCLUDES = frozenset(
+    {
+        "AGENTS.md",
+        "README.md",
+        "preamble.md",
+        "09z_unified_formalism_catalogue.md",
+        "09z_appendix_b_lean_catalogue.md",
+        "09zc_appendix_c_lean_equations.md",
+    }
+)
+MANUSCRIPT_ASSETS: dict[str, tuple[Path, Path]] = {
+    "../docs/formalism-atlas.svg": (
+        Path("docs/formalism-atlas.svg"),
+        Path("assets/formalism-atlas.svg"),
+    ),
+    "../docs/formalism-atlas.html": (
+        Path("docs/formalism-atlas.html"),
+        Path("assets/formalism-atlas.html"),
+    ),
+    "../docs/formal-kernel-dashboard.svg": (
+        Path("docs/formal-kernel-dashboard.svg"),
+        Path("assets/formal-kernel-dashboard.svg"),
+    ),
+    "../docs/formal-kernel-dashboard.html": (
+        Path("docs/formal-kernel-dashboard.html"),
+        Path("assets/formal-kernel-dashboard.html"),
+    ),
+}
+
+
+class ManuscriptRenderError(ValueError):
+    """Raised before output is written when manuscript variables are unresolved."""
+
+
+def flatten_variables(data: Any, prefix: str = "") -> dict[str, str]:
+    """Flatten nested manuscript data to deterministic dotted keys."""
+    flat: dict[str, str] = {}
+    if not isinstance(data, Mapping):
+        return flat
+    for raw_key, value in data.items():
+        key = f"{prefix}.{raw_key}" if prefix else str(raw_key)
+        if isinstance(value, Mapping):
+            flat.update(flatten_variables(value, key))
+        elif isinstance(value, list):
+            flat[key] = ", ".join(str(item) for item in value)
+        elif isinstance(value, bool):
+            flat[key] = str(value).lower()
+        elif value is None:
+            flat[key] = ""
+        else:
+            flat[key] = str(value)
+    return flat
+
+
+def manuscript_source_files(source_dir: Path) -> tuple[Path, ...]:
+    """Return authored Markdown inputs in stable order."""
+    source = Path(source_dir)
+    return tuple(
+        path for path in sorted(source.glob("*.md")) if path.name not in SOURCE_EXCLUDES
+    )
+
+
+def unresolved_placeholders(
+    source_dir: Path, variables: Mapping[str, Any]
+) -> tuple[str, ...]:
+    """Return unknown variables and malformed placeholder delimiters."""
+    flat = flatten_variables(variables)
+    unresolved: list[str] = []
+    for path in manuscript_source_files(source_dir):
+        content = path.read_text(encoding="utf-8")
+        matches = tuple(PLACEHOLDER_RE.finditer(content))
+        for match in matches:
+            key = match.group(1).strip()
+            # A literal ellipsis is used once while explaining expression
+            # syntax; it is not a publication variable.
+            if key == "…":
+                continue
+            if key not in flat:
+                line_number = content.count("\n", 0, match.start()) + 1
+                display_key = " ".join(key.split())
+                unresolved.append(f"{path.name}:{line_number}: {display_key}")
+        unmatched = list(content)
+        for match in matches:
+            unmatched[match.start() : match.end()] = " " * (match.end() - match.start())
+        unmatched_text = "".join(unmatched)
+        # Double closing braces occur naturally in LaTeX. A remaining opening
+        # pair, however, can only be a malformed publication placeholder because
+        # every balanced placeholder span was masked above.
+        for match in re.finditer(re.escape("{{"), unmatched_text):
+            line_number = content.count("\n", 0, match.start()) + 1
+            unresolved.append(f"{path.name}:{line_number}: unclosed opening delimiter")
+    return tuple(unresolved)
+
+
+def _atomic_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, raw_path = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(raw_path, path)
+    finally:
+        if os.path.exists(raw_path):
+            os.unlink(raw_path)
+
+
+def _replace_render_tree(staged: Path, destination: Path) -> None:
+    """Replace one renderer-owned destination tree, restoring it on failure."""
+    backup: Path | None = None
+    if destination.exists():
+        raw_backup = tempfile.mkdtemp(
+            prefix=f".{destination.name}.backup-", dir=destination.parent
+        )
+        backup = Path(raw_backup)
+        backup.rmdir()
+        os.replace(destination, backup)
+    try:
+        os.replace(staged, destination)
+    except BaseException:
+        if backup is not None and backup.exists() and not destination.exists():
+            os.replace(backup, destination)
+        raise
+    if backup is not None and backup.exists():
+        shutil.rmtree(backup)
+
+
+def render_manuscript(
+    source_dir: Path,
+    destination_dir: Path,
+    variables: Mapping[str, Any],
+) -> tuple[Path, ...]:
+    """Render authored Markdown into a separate build directory.
+
+    The entire source set is validated and staged before the renderer-owned
+    destination tree is replaced. An error cannot leave a partial update, and
+    files removed from the source or its referenced-asset roster cannot remain
+    in a later publication.
+    """
+    source = Path(source_dir).resolve()
+    destination = Path(destination_dir).resolve()
+    if source == destination or source.is_relative_to(destination):
+        raise ManuscriptRenderError(
+            "source must be outside the renderer-owned destination tree"
+        )
+    if destination.exists() and not destination.is_dir():
+        raise ManuscriptRenderError("destination must be a directory")
+    unresolved = unresolved_placeholders(source, variables)
+    if unresolved:
+        raise ManuscriptRenderError(
+            "unresolved manuscript placeholders:\n" + "\n".join(unresolved)
+        )
+    source_contents = {
+        source_path: source_path.read_text(encoding="utf-8")
+        for source_path in manuscript_source_files(source)
+    }
+    referenced_assets = {
+        reference: paths
+        for reference, paths in MANUSCRIPT_ASSETS.items()
+        if any(reference in content for content in source_contents.values())
+    }
+    missing_assets = [
+        str(source.parent / source_relative)
+        for source_relative, _destination_relative in referenced_assets.values()
+        if not (source.parent / source_relative).is_file()
+    ]
+    if missing_assets:
+        raise ManuscriptRenderError(
+            "referenced manuscript assets are missing:\n" + "\n".join(missing_assets)
+        )
+    flat = flatten_variables(variables)
+    rendered_contents: dict[Path, str] = {}
+    for source_path, content in source_contents.items():
+
+        def replace(match: re.Match[str]) -> str:
+            key = match.group(1).strip()
+            return match.group(0) if key == "…" else flat[key]
+
+        rendered_content = PLACEHOLDER_RE.sub(replace, content)
+        for reference, (
+            _source_relative,
+            destination_relative,
+        ) in referenced_assets.items():
+            rendered_content = rendered_content.replace(
+                reference, destination_relative.as_posix()
+            )
+        rendered_contents[source_path] = rendered_content
+    asset_contents = {
+        destination_relative: (source.parent / source_relative).read_text(
+            encoding="utf-8"
+        )
+        for source_relative, destination_relative in referenced_assets.values()
+    }
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staged = Path(
+        tempfile.mkdtemp(prefix=f".{destination.name}.stage-", dir=destination.parent)
+    )
+    try:
+        for source_path, rendered_content in rendered_contents.items():
+            _atomic_text(staged / source_path.name, rendered_content)
+        for destination_relative, asset_text in asset_contents.items():
+            _atomic_text(staged / destination_relative, asset_text)
+        _replace_render_tree(staged, destination)
+    finally:
+        if staged.exists():
+            shutil.rmtree(staged)
+    return tuple(destination / source_path.name for source_path in rendered_contents)

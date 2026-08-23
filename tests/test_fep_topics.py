@@ -6,37 +6,44 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import CatalogueValidationError, FEPTopicCatalogue
+from fep_lean.catalogue.schema import load_catalogue_metadata
+from fep_lean.catalogue.topics import CatalogueValidationError, FEPTopicCatalogue
 
 PROJ = Path(__file__).resolve().parent.parent
 TOPICS = PROJ / "config" / "topics.yaml"
+SEALED_IDS = load_catalogue_metadata(
+    PROJ / "config" / "catalogue_metadata.yaml"
+).topic_ids
 
 _EXPECTED_AREAS = {
-    "FEP": 14,
-    "ActiveInference": 11,
-    "BayesianMechanics": 10,
-    "InfoGeometry": 8,
-    "Thermodynamics": 7,
+    "FEP": 41,
+    "ActiveInference": 31,
+    "BayesianMechanics": 41,
+    "InfoGeometry": 21,
+    "Thermodynamics": 21,
 }
 
 
-def test_catalogue_loads_50_topics() -> None:
+def test_catalogue_loads_the_sealed_roster() -> None:
     c = FEPTopicCatalogue.from_yaml(TOPICS)
-    assert len(c.topics) == 50
+    assert len(c.topics) == len(SEALED_IDS)
     assert c.source_path == TOPICS
     ids = [t.id for t in c.topics]
-    assert ids == [f"fep-{i:03d}" for i in range(1, 51)]
+    assert ids == list(SEALED_IDS)
+    assert c.topics[0].primary_theorem == "fep001_variationalUpperBound_eq_iff"
+    assert c.topics[0].semantic_disposition == "formalized"
+    assert "Catalogue row" not in c.topics[0].nl
 
 
 def test_summary_totals_match_manual_rollups() -> None:
     c = FEPTopicCatalogue.from_yaml(TOPICS)
     s = c.summary()
-    assert s["total_topics"] == 50
-    assert sum(s["areas"].values()) == 50
+    assert s["total_topics"] == len(SEALED_IDS)
+    assert sum(s["areas"].values()) == len(SEALED_IDS)
     assert s["areas"] == dict(sorted(_EXPECTED_AREAS.items(), key=lambda x: x[0]))
     mat = s["maturity"]
-    assert mat["real"] + mat["partial"] + mat["aspirational"] == 50
-    assert mat["real"] == 50
+    assert mat["real"] + mat["partial"] + mat["aspirational"] == len(SEALED_IDS)
+    assert mat["real"] == len(SEALED_IDS)
     assert mat["partial"] == 0
     assert mat["aspirational"] == 0
     for area, count in s["areas"].items():
@@ -62,11 +69,12 @@ def test_unknown_yaml_raises_or_empty() -> None:
 
 def test_from_yaml_default_path(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(PROJ)
-    c = FEPTopicCatalogue.from_yaml()
-    assert len(c.topics) == 50
+    c = FEPTopicCatalogue.default()
+    assert len(c.topics) == len(SEALED_IDS)
+    assert c.source_path.name == "topics.yaml"
 
 
 def test_all_topics_mathlib_real() -> None:
     c = FEPTopicCatalogue.from_yaml(TOPICS)
     assert all(t.mathlib_status == "real" for t in c.topics)
-    assert {t.id for t in c.topics} == {f"fep-{i:03d}" for i in range(1, 51)}
+    assert {t.id for t in c.topics} == set(SEALED_IDS)

@@ -1,4 +1,4 @@
-"""Sad path tests for verification.lean_verifier using real process boundaries."""
+"""Sad path tests for fep_lean.verification.lean_verifier using real process boundaries."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from verification.lean_verifier import (
+from fep_lean.verification.lean_verifier import (
     LeanVerifier,
     _direct_toolchain_bin,
     _ensure_elan_home,
@@ -105,9 +105,9 @@ def test_lean_version_sandbox_errors(tmp_path: Path):
     temporary_lean.chmod(0o755)
     lv._lean_exe = str(temporary_lean)
 
-    import verification.lean_verifier
+    import fep_lean.verification.lean_verifier
 
-    verification.lean_verifier._LEAN_VERSION_CACHE.clear()
+    fep_lean.verification.lean_verifier._LEAN_VERSION_CACHE.clear()
 
     v = lv.lean_version()
     assert "sandbox proxy restriction" in v
@@ -117,7 +117,7 @@ def test_lean_version_sandbox_errors(tmp_path: Path):
     temporary_lean2.chmod(0o755)
     lv._lean_exe = str(temporary_lean2)
 
-    verification.lean_verifier._LEAN_VERSION_CACHE.clear()
+    fep_lean.verification.lean_verifier._LEAN_VERSION_CACHE.clear()
 
     v = lv.lean_version()
     assert "exit 1" in v
@@ -128,9 +128,9 @@ def test_lean_version_oserror(tmp_path: Path):
     lake_dir = tmp_path / "lake_dir"
     lake_dir.mkdir()
     lv._lean_exe = str(lake_dir)
-    import verification.lean_verifier
+    import fep_lean.verification.lean_verifier
 
-    verification.lean_verifier._LEAN_VERSION_CACHE.clear()
+    fep_lean.verification.lean_verifier._LEAN_VERSION_CACHE.clear()
     assert lv.lean_version() is None
 
 
@@ -190,17 +190,17 @@ def test_verify_sketch_subprocess_timeout(tmp_path: Path):
     temporary_lake.chmod(0o755)
 
     lv._lake_exe = str(temporary_lake)
-    import verification.lean_verifier
+    import fep_lean.verification.lean_verifier
 
-    original_timeout = verification.lean_verifier._VERIFICATION_TIMEOUT
-    verification.lean_verifier._VERIFICATION_TIMEOUT = 1
+    original_timeout = fep_lean.verification.lean_verifier._VERIFICATION_TIMEOUT
+    fep_lean.verification.lean_verifier._VERIFICATION_TIMEOUT = 1
 
     try:
         res = lv.verify_sketch("topic-1", "sorry")
         assert res.compiles is False
         assert "timeout after" in res.skip_reason
     finally:
-        verification.lean_verifier._VERIFICATION_TIMEOUT = original_timeout
+        fep_lean.verification.lean_verifier._VERIFICATION_TIMEOUT = original_timeout
 
 
 def test_verify_sketch_oserror(tmp_path: Path):

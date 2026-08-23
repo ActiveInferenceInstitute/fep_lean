@@ -12,22 +12,43 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - run: uv sync --extra dev
-      - run: uv run python scripts/_maint_build_fep_all_lean.py
-      - run: git diff --exit-code -- lean/FepSketches/fep_all.lean
+      - run: uv sync --locked --extra dev
+      - run: uv lock --check && uv pip check
+      - name: Check generated catalogue and formalism projections
+        run: |
+          uv run python scripts/_maint_build_topics_catalogue.py --check
+          uv run python scripts/_maint_build_fep_all_lean.py --check
+          uv run python scripts/_maint_build_formal_modules.py --check
+          uv run python scripts/theorem_maturity_audit.py --check
+          uv run python scripts/build_formalism_coverage.py --check
+          uv run python scripts/build_formalism_atlas.py --check
+          uv run python scripts/build_formal_kernel_dashboard.py --check
+      - name: Generate and validate publication inputs
+        run: |
+          uv run fep-lean catalogue
+          uv run python scripts/render_manuscript.py --check
+          uv run python docs/theorem_ref_audit.py
+          uv run python docs/citation_audit.py
       - run: uv run pytest tests/ -q --cov=src --cov-fail-under=89
       - run: uv run python docs/check_links.py --strict --include-root
       - run: uv run python docs/md_hygiene.py --strict
-      - run: uv run python docs/pin_audit.py
+      - name: Require the newest stable Lean-Mathlib release pair
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: uv run python docs/pin_audit.py --check-latest
       - run: uv run python docs/xref_audit.py
       - run: uv run mypy src
       - run: uv run ruff check src tests scripts docs
-      - run: uv run ruff format --check src tests scripts docs || echo "ruff format — 55 files need formatting (non-blocking)"
+      - run: uv run ruff format --check src tests scripts docs
+      - run: git diff --check
 
   lean:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
       - name: Install elan
         shell: bash
         run: |
@@ -35,15 +56,63 @@ jobs:
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
       - name: Install pinned toolchain
         run: elan toolchain install "$(cat lean/lean-toolchain)"
-      - name: Build Mathlib and aggregate
+      - name: Install Python package
+        run: uv sync --locked --extra dev
+      - name: Fetch pinned Mathlib cache
         working-directory: lean
+        shell: bash
         run: |
-          lake exe cache get
-          lake build
-      - name: Compile aggregate
+          if ! lake exe cache get; then
+            echo "Mathlib cache is not published for this release yet; building from source"
+          fi
+      - name: Compile warning-free aggregate
         working-directory: lean
-        run: lake build FepSketches
-      - name: Full-catalogue sorry-free compile gate (50 topics)
-        env:
-          FEP_LEAN_CATALOGUE_COMPILE_TEST: "1"
-        run: uv run pytest tests/test_catalogue_sketches_compile.py -q
+        shell: bash
+        run: |
+          set -o pipefail
+          build_log="$(mktemp)"
+          lake build FepSketches 2>&1 | tee "$build_log"
+          if grep -F "warning:" "$build_log"; then
+            echo "Lean aggregate emitted warnings"
+            exit 1
+          fi
+      - name: Verify exact 155-topic native receipt
+        run: |
+          uv run fep-lean verify \
+            --fail-on-warnings \
+            --receipt output/native-verification.json
+          uv run python - <<'PY'
+          from pathlib import Path
+          from fep_lean.output import validate_native_lean_receipt
+
+          result = validate_native_lean_receipt(
+              Path("output/native-verification.json"),
+              project_root=Path.cwd(),
+          )
+          print(result)
+          raise SystemExit(0 if result["native_claim_ready"] else 1)
+          PY
+      - name: Audit formal declarations and axioms
+        run: |
+          uv run python scripts/audit_formalisms.py \
+            --receipt output/formalism-audit.json
+          uv run python - <<'PY'
+          from pathlib import Path
+          from fep_lean.verification.formalism_audit import (
+              validate_formalism_audit_receipt,
+          )
+
+          root = Path.cwd()
+          errors = validate_formalism_audit_receipt(
+              root / "output/formalism-audit.json",
+              root,
+          )
+          print({"valid": not errors, "errors": errors})
+          raise SystemExit(0 if not errors else 1)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-formal-evidence
+          path: |
+            output/native-verification.json
+            output/formalism-audit.json

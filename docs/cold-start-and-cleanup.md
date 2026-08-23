@@ -1,87 +1,135 @@
-# Cold start and cleanup — fep_lean
+# Cold start and recoverable cleanup
 
-**Version**: v1.0.0 | **Last Updated**: July 2026
+Use this page to distinguish maintained source from reproducible local state.
+Inspect targets before deleting anything: this checkout contains a tracked Lean
+aggregate beside ignored verifier scratch files.
 
-Use this when you want the **next** `./run.sh` or `scripts/02_run_analysis.py --project fep_lean` pass to behave like a **fresh** end-to-end run: no stale reports, no old `latest` symlink, no cached test metadata under the project tree.
+## Maintained files: never clean as cache
 
-## What you can always delete (project tree only)
+These paths are source or tracked generated projections:
 
-These paths are **regenerated** by the pipeline, tests (with `tmp_path`), or are ephemeral. They are listed in [`.gitignore`](../.gitignore).
+- `config/catalogue_metadata.yaml`
+- `config/theorem_maturity.yaml`
+- `config/formalism_novelty.yaml`
+- `config/formalism_relations.yaml`
+- `src/fep_lean/catalogue/bodies/*.py`, `registry.py`, and `latex.py`
+- `config/topics.yaml` and `src/fep_lean/data/topics.yaml`
+- `lean/lakefile.lean`, `lean/lean-toolchain`, and `lean/lake-manifest.json`
+- `lean/FepSketches/fep_all.lean`
+- canonical manifested `src/fep_lean/formal/**/*.lean` modules and their
+  tracked `lean/FepSketches/` projections
+- `docs/formalism-coverage.json` and `docs/formalism-coverage.md`
+- `docs/formalism-atlas.svg`, `docs/formalism-atlas.html`,
+  `docs/formal-kernel-dashboard.svg`, and
+  `docs/formal-kernel-dashboard.html`
+- authored `manuscript/*.md` files
 
-| Path | Role | After delete |
-|------|------|--------------|
-| `output/` | Figures, `reports/run_*`, `latest` symlink, ad-hoc logs, `.cache/` | Recreated on next analysis / Reporter run |
-| `manuscript/manuscript_vars.yaml` | Injected metrics from last pipeline | Rewritten in **Manuscript Artifacts**; raw manuscript `{{…}}` shows until regenerated |
-| `manuscript/09z_unified_formalism_catalogue.md` | Auto-generated B+C: Lean and typeset LaTeX per topic (`{#sec:…}` + `equation` / `\label{eq:…}`) | Rewritten with `write_unified_formalism_appendix_markdown` |
-| `manuscript/09z_appendix_b_lean_catalogue.md` / `09zc_…` | obsolete (older pipeline) | Remove if present; no longer written |
-| `.pytest_cache/` | Pytest node id cache | Harmless; recreated on next `pytest` |
-| `__pycache__/`, `*.egg-info/` | Python bytecode / install metadata | Recreated by interpreter / `uv sync` |
-| `gauss_pf2/`, `gauss_prefetch/`, `gauss_grace/` | Test scratch dirs (belt-and-suspenders ignore) | Safe if present |
+In particular, do not remove `lean/FepSketches/`: it contains the tracked
+aggregate. The verifier owns only files matching
+`lean/FepSketches/_verify_*.lean`, which are ignored and removed after each
+normal check.
 
-**One-shot cleanup from project root** (`projects/fep_lean/`):
-
-```bash
-rm -rf output .pytest_cache
-rm -f manuscript/manuscript_vars.yaml \
-      manuscript/09z_unified_formalism_catalogue.md \
-      manuscript/09z_appendix_b_lean_catalogue.md \
-      manuscript/09zc_appendix_c_lean_equations.md
-find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-```
-
-Do **not** delete `config/topics.yaml`, `scripts/catalogue_sketches.py`, `lean/lakefile.lean`, or `lean/lean-toolchain` — they are source of truth.
-
-**After a wipe**, internal doc links and PDF placeholder resolution expect `manuscript/manuscript_vars.yaml` plus the unified formalism appendix `09z_unified_formalism_catalogue.md` to exist again. Either run the full analysis / Manuscript Artifacts stage, or regenerate **catalogue-only** artifacts without Hermes (from `projects/fep_lean/`):
+Before cleanup, inspect the exact state:
 
 ```bash
-PYTHONPATH=src:. uv run python -c "
-from pathlib import Path
-from catalogue.topics import FEPTopicCatalogue
-from output.manuscript import (
-    write_manuscript_vars,
-    write_unified_formalism_appendix_markdown,
-)
-root = Path('.').resolve()
-c = FEPTopicCatalogue.from_yaml()
-write_manuscript_vars(root, c)
-write_unified_formalism_appendix_markdown(root, c)
-"
+git status --short --branch
+git status --ignored --short
+git ls-files lean/FepSketches config src/fep_lean/data
 ```
 
-That repopulates YAML from the checked-in catalogue and default summary fixtures; it does **not** replace a full verifier run’s `verification_manifest.json` metrics — run the pipeline with workflows for live `verify.*` fields.
+## Reproducible checkout-local state
 
-## Optional: Gauss / Hermes state (outside this directory)
+The following ignored locations can be regenerated, but may contain useful
+local evidence. Preserve or archive any receipt you intend to cite before
+removal.
 
-Session and LLM cache live under **`GAUSS_HOME`** (default `~/.gauss`), not under `projects/fep_lean/`.
+| Path | Contents | Reproducer |
+| --- | --- | --- |
+| `output/` | figures, rendered manuscript, native receipts, run reports | relevant CLI command below |
+| `manuscript/manuscript_vars.yaml` | generated typed variable projection | `fep-lean catalogue` |
+| `manuscript/09z_unified_formalism_catalogue.md` | generated Lean and equation appendix | `fep-lean catalogue` |
+| `.pytest_cache/`, `.coverage`, `htmlcov/` | test metadata and coverage output | coverage gate |
+| `build/`, `dist/`, `*.egg-info/` | Python build output | `uv build` or `uv sync` |
+| `__pycache__/` | interpreter bytecode | Python import |
+| `lean/.lake/` | pinned dependency checkout and compiled Lake cache | `fep-lean setup` |
 
-| Location | When to clear |
-|----------|----------------|
-| `{GAUSS_HOME}/fep_lean_state.db` | Wipe for a **full** cold Hermes + session history (destructive) |
-| Hermes cache table / TTL | Responses keyed by topic + sketch + model; change sketch or model or wait for TTL |
+`output/reports/` may contain the only copy of a full-run receipt. Deleting it
+is recoverable only by repeating the provider-backed run, so it is not routine
+cache cleanup.
 
-For a **project-only** clean slate you do **not** need to touch `GAUSS_HOME`; clearing `output/` and regenerating manuscript artifacts is enough for reports and figures.
+## Rebuild the deterministic surfaces
 
-## Optional: Lean / Mathlib build cache (`lean/.lake/`)
+From the standalone repository root:
 
-| Action | Effect |
-|--------|--------|
-| Keep `lean/.lake/` | Fast `lake env lean` after first `lake build` / `lake exe cache get` |
-| Delete `lean/.lake/` | Next build re-fetches Mathlib and rebuilds (long cold start; use only if cache corruption suspected) |
+```bash
+uv sync --locked --extra dev
+uv run python scripts/_maint_build_topics_catalogue.py --check
+uv run python scripts/_maint_build_fep_all_lean.py --check
+uv run python scripts/_maint_build_formal_modules.py --check
+uv run python scripts/theorem_maturity_audit.py --check
+uv run python scripts/build_formalism_coverage.py --check
+uv run fep-lean atlas --check
+uv run fep-lean dashboard --check
+uv run fep-lean catalogue
+uv run python scripts/render_manuscript.py --check
+uv run python scripts/render_manuscript.py --output-dir output/manuscript
+```
 
-Also gitignored: `lean/build/`, `lean/FepSketches/` — safe to remove; Lake recreates as needed.
+The projection commands with `--check` are non-mutating freshness checks.
+Remove `--check` only when a maintained owner was intentionally changed and
+its projection must be regenerated.
 
-## `run.sh` and full analysis
+For a genuinely cold Lean workspace, use the bounded setup owner instead of
+manually manipulating `.lake` internals:
 
-From the **repository root**, `./run.sh` discovers active projects (including `fep_lean` under `projects/`). For a **full** Hermes + Lean + reports path:
+```bash
+uv run fep-lean setup
+(cd lean && lake build FepSketches)
+uv run fep-lean verify --fail-on-warnings \
+  --receipt output/native-verification.json
+```
 
-- Export or rely on `run.sh` default: `FEP_LEAN_GAUSS_WORKFLOWS=1` (see root `run.sh`).
-- Ensure `OPENROUTER_API_KEY` (or your configured provider) is set if you want live Hermes.
+`lake exe cache get` restores the exact pinned Mathlib binary cache; a source
+rebuild of all upstream Mathlib modules is normally unnecessary.
 
-After clearing the rows in **What you can always delete**, run **Run Full Pipeline** (or Stage 2 analysis for `fep_lean`) so stages recreate `output/reports/run_*`, figures, and manuscript artifacts.
+## External Gauss and Hermes state
+
+Session and LLM cache state lives under `GAUSS_HOME` (default `~/.gauss`),
+outside this checkout. It can contain credentials, sessions, and cached
+provider responses. Project cleanup does not authorize modifying it.
+
+If a full cold provider run is required, first obtain explicit operator
+authority, identify the exact Gauss targets, and preserve any report receipts
+that must remain auditable. Never copy a key or `.env` file into this
+repository.
+
+## Acceptance after cleanup
+
+Run the local acceptance surface after regeneration:
+
+```bash
+uv run pytest tests/ -q --cov=src --cov-fail-under=89
+uv run mypy src
+uv run ruff check src tests scripts docs
+uv run ruff format --check src tests scripts docs
+uv run python docs/check_links.py --strict --include-root
+uv run python docs/md_hygiene.py --strict
+uv run python docs/pin_audit.py
+uv run python docs/xref_audit.py
+uv run python docs/theorem_ref_audit.py
+uv run python docs/citation_audit.py
+uv run python scripts/build_formalism_coverage.py --check
+uv run fep-lean atlas --check
+uv run fep-lean dashboard --check
+uv run python scripts/render_manuscript.py --check
+```
+
+Finish by confirming that only intended generated projections changed with
+`git status --short` and `git diff --check`.
 
 ## Navigation
 
-- [← Getting started](getting-started.md)
-- [Troubleshooting →](troubleshooting.md)
-- [Pipeline →](pipeline.md)
-- [docs/README.md](README.md)
+- [Getting started](getting-started.md)
+- [Troubleshooting](troubleshooting.md)
+- [Pipeline](pipeline.md)
+- [Documentation index](README.md)

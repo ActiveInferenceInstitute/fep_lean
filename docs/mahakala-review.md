@@ -4,6 +4,14 @@
 **Reviewers:** Mahakala dharmapala (Wave 1: Adversarial Critical Review, Wave 3: Deception + Process, Wave 4: 6 Persona Proxies) + direct test suite audit
 **Duration:** ~2h total across multi-wave dispatch
 
+> **Historical snapshot, superseded for current-state claims.** This review is
+> retained as dated evidence. The 2026-08-19 hardening removed the misleading
+> workflow pseudo-gate, made mypy and Ruff formatting blocking in CI, defined
+> sketch versus semantic-disposition terminology, migrated code into the
+> `fep_lean` namespace, and added typed native receipts plus semantic and
+> coverage projections. File paths, counts, verdict conditions, and open items
+> below describe commit `147c19b`, not the current tree.
+
 ---
 
 ## 1. BLUF

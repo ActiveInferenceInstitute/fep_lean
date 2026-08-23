@@ -5,12 +5,10 @@ Setup:
 - Sets ``MPLBACKEND=Agg`` for headless matplotlib.
 - Probes for ``gauss``, ``lake``, ``lean`` on PATH (or ``~/.elan/bin``).
 - Sets ``FEP_LEAN_TOOLS_MISSING`` env var (comma-separated) when tools are absent.
-- Defaults ``FEP_LEAN_GAUSS_WORKFLOWS=0`` so unit tests skip LLM/Lean calls.
 
 Coverage notes:
-    ~8% of src/ is uncovered because it requires live Lean toolchain (lake/lean)
-    or network access (Hermes API). These paths are tested when
-    FEP_LEAN_GAUSS_WORKFLOWS=1 and FEP_LEAN_LIVE_TESTS=1 are set.
+    Remaining branches include live Lean and provider paths. Provider calls run
+    only under explicit live-test selection with configured credentials.
 """
 
 from __future__ import annotations
@@ -45,6 +43,3 @@ def pytest_configure(config: pytest.Config) -> None:
         os.environ["FEP_LEAN_TOOLS_MISSING"] = ",".join(still_missing)
     else:
         os.environ.setdefault("FEP_LEAN_REQUIRE_GAUSS", "1")
-    # Force catalogue-only mode at session start so inherited shell env does not
-    # accidentally enable live Hermes/Lean workflows for offline tests.
-    os.environ["FEP_LEAN_GAUSS_WORKFLOWS"] = "0"

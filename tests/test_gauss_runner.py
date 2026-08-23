@@ -11,11 +11,11 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import FEPTopicCatalogue
-from gauss.client import OpenGaussClient
-from gauss.runner import GaussRunner, TopicRunResult
-from llm.hermes import HermesConfig, HermesExplainer
-from verification.lean_verifier import LeanVerifier
+from fep_lean.catalogue.topics import FEPTopicCatalogue
+from fep_lean.gauss.client import OpenGaussClient
+from fep_lean.gauss.runner import GaussRunner, TopicRunResult
+from fep_lean.llm.hermes import HermesConfig, HermesExplainer
+from fep_lean.verification.lean_verifier import LeanVerifier
 
 PROJ = Path(__file__).resolve().parent.parent
 TOPICS = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
@@ -98,6 +98,7 @@ def test_topic_run_result_as_dict(runner: GaussRunner) -> None:
         "hermes_success",
         "lean_compiles",
         "lean_has_sorry",
+        "lean_warnings",
         "duration_s",
         "workflow",
         "stage_results",

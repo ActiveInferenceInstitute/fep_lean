@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import FEPTopicCatalogue
-from llm.hermes import (
+from fep_lean.catalogue.topics import FEPTopicCatalogue
+from fep_lean.llm.hermes import (
     _FEP_SYSTEM_PROMPT,
     HermesAPIError,
     HermesConfig,
@@ -24,6 +24,8 @@ from llm.hermes import (
     _extract_explanation,
     _extract_lean_block,
     _strip_extra_theorems,
+    lean_semantic_contract_sha256,
+    preserves_lean_semantic_contract,
     restore_lean_structure,
 )
 
@@ -47,6 +49,7 @@ def test_hermes_config_defaults() -> None:
     cfg = HermesConfig()
     assert cfg.enabled is True
     assert cfg.model
+    assert cfg.http_referer == "https://github.com/ActiveInferenceInstitute/fep_lean"
 
 
 def test_hermes_config_from_settings(
@@ -294,7 +297,7 @@ def test_hermes_try_fetch_raw_retries_429(monkeypatch: pytest.MonkeyPatch) -> No
         }
 
     monkeypatch.setattr(HermesExplainer, "_call_api", temporary_call)
-    monkeypatch.setattr("llm.hermes.time.sleep", lambda *_: None)
+    monkeypatch.setattr("fep_lean.llm.hermes.time.sleep", lambda *_: None)
     msgs = [{"role": "user", "content": "hi"}]
     raw, fatal, _err, retries, advance = ex._try_fetch_raw(msgs, "test-m", "fep-001")
     assert fatal is False
@@ -334,7 +337,7 @@ def test_hermes_explain_records_empty_content_chain_advance(
         }
 
     monkeypatch.setattr(HermesExplainer, "_call_api", temporary_call)
-    monkeypatch.setattr("llm.hermes.time.sleep", lambda *_: None)
+    monkeypatch.setattr("fep_lean.llm.hermes.time.sleep", lambda *_: None)
     res = ex.explain_topic(FIRST_TOPIC)
     assert res.success is True
     assert res.model_used == "fallback-m"
@@ -373,6 +376,21 @@ def test_build_messages_preamble_prepended() -> None:
     )
 
 
+def test_build_messages_review_mode_has_no_lean_rewrite_instruction() -> None:
+    explainer = HermesExplainer(HermesConfig(enabled=False))
+    messages = explainer.build_messages(
+        FIRST_TOPIC,
+        preamble="TASK: Review the compiled theorem.",
+        request_lean=False,
+    )
+    user_msg = next(
+        message["content"] for message in messages if message["role"] == "user"
+    )
+    assert "Review the compiled theorem" in user_msg
+    assert "Provide a refined Lean 4 theorem sketch" not in user_msg
+    assert "without rewriting" in user_msg
+
+
 @pytest.mark.skipif(
     not (_HAS_API_KEY and _LIVE_TESTS_ENABLED),
     reason="No API key found (set OPENROUTER_API_KEY or ANTHROPIC_API_KEY); or suppressed via FEP_LEAN_LIVE_TESTS=0",
@@ -405,7 +423,7 @@ def test_hermes_explain_topic_real_api_call() -> None:
     The test intentionally does **not** assert ``result.success``.  OpenRouter
     free-tier models are rate-limited; CI environments with no credits will
     exhaust the fallback chain and return ``success=False`` with a populated
-    ``error`` string.  That is correct behaviour, not a test failure.
+    ``error`` string.  That is correct behavior, not a test failure.
 
     How to run
     ----------
@@ -675,6 +693,91 @@ def test_restore_lean_structure_completeness_fallback() -> None:
     # Should fall back to original since no original theorem names survive
     assert "theorem fep001_measure_mono" in result
     assert "completely_different" not in result
+
+
+def test_restore_lean_structure_rejects_partial_name_preservation() -> None:
+    canonical = FIRST_TOPIC.lean_sketch
+    weakened = (
+        "namespace FEP001\n"
+        "theorem fep001_variationalUpperBound_eq_iff : True := True.intro\n"
+        "end FEP001\n"
+    )
+
+    result = restore_lean_structure(weakened, canonical)
+
+    assert result == canonical
+    assert not preserves_lean_semantic_contract(weakened, canonical)
+
+
+def test_restore_lean_structure_rejects_proof_change() -> None:
+    canonical = FIRST_TOPIC.lean_sketch
+    proof_only = canonical.replace(
+        "exact le_add_right (le_refl _)",
+        "simpa using le_add_right (le_refl _)",
+        1,
+    )
+
+    assert not preserves_lean_semantic_contract(proof_only, canonical)
+    assert lean_semantic_contract_sha256(proof_only) != (
+        lean_semantic_contract_sha256(canonical)
+    )
+    assert restore_lean_structure(proof_only, canonical) == canonical
+
+
+def test_restore_lean_structure_accepts_comment_and_whitespace_only_change() -> None:
+    canonical = FIRST_TOPIC.lean_sketch
+    annotated = canonical.replace(
+        "exact le_add_right (le_refl _)",
+        "  /- Provider explanation: the KL gap is nonnegative. -/\n"
+        "  exact   le_add_right   (le_refl _)",
+        1,
+    )
+
+    assert preserves_lean_semantic_contract(annotated, canonical)
+    assert lean_semantic_contract_sha256(annotated) == (
+        lean_semantic_contract_sha256(canonical)
+    )
+    assert restore_lean_structure(annotated, canonical).rstrip() == annotated.rstrip()
+
+
+def test_restore_lean_structure_rejects_indented_custom_axiom() -> None:
+    canonical = FIRST_TOPIC.lean_sketch
+    escaped = canonical.replace(
+        "  exact le_add_right (le_refl _)",
+        "  exact le_add_right (le_refl _)\n\n  axiom semanticEscape : False",
+        1,
+    ).replace(
+        "  exact InformationTheory.klDiv_eq_zero_iff",
+        "  exact False.elim semanticEscape",
+        1,
+    )
+
+    assert not preserves_lean_semantic_contract(escaped, canonical)
+    assert restore_lean_structure(escaped, canonical) == canonical
+
+
+def test_restore_lean_structure_rejects_theorem_type_weakening() -> None:
+    canonical = FIRST_TOPIC.lean_sketch
+    weakened = canonical.replace(
+        "surprisal ≤\n      fep001_variationalUpperBound approximation posterior surprisal",
+        "True",
+        1,
+    )
+
+    assert not preserves_lean_semantic_contract(weakened, canonical)
+    assert restore_lean_structure(weakened, canonical) == canonical
+
+
+def test_restore_lean_structure_rejects_definition_change() -> None:
+    canonical = FIRST_TOPIC.lean_sketch
+    redefined = canonical.replace(
+        "surprisal + fep001_variationalGap approximation posterior",
+        "fep001_variationalGap approximation posterior",
+        1,
+    )
+
+    assert not preserves_lean_semantic_contract(redefined, canonical)
+    assert restore_lean_structure(redefined, canonical) == canonical
 
 
 def test_restore_lean_structure_does_not_add_hermes_imports() -> None:

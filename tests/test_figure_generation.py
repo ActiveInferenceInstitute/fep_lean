@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import FEPTopicCatalogue
-from output.figures import (
+from fep_lean.catalogue.topics import FEPTopicCatalogue
+from fep_lean.output.figures import (
     _write_bar_chart,
     _write_maturity_heatmap,
     _write_pipeline_dag,

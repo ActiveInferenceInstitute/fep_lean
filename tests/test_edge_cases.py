@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import CatalogueValidationError, FEPTopicCatalogue
-from gauss.client import OpenGaussClient
-from verification.lean_verifier import LeanVerifier
+from fep_lean.catalogue.topics import CatalogueValidationError, FEPTopicCatalogue
+from fep_lean.gauss.client import OpenGaussClient
+from fep_lean.verification.lean_verifier import LeanVerifier
 
 PROJ = Path(__file__).resolve().parent.parent
 LEAN_DIR = PROJ / "lean"
@@ -103,17 +103,17 @@ def test_empty_catalogue_is_rejected(tmp_path: Path) -> None:
 
 def test_catalogue_from_yaml_real() -> None:
     c = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
-    assert len(c.topics) == 50
+    assert len(c.topics) == len(c.roster.topic_ids)
     s = c.summary()
-    assert s["total_topics"] == 50
-    assert sum(s["areas"].values()) == 50
+    assert s["total_topics"] == len(c.roster.topic_ids)
+    assert sum(s["areas"].values()) == len(c.roster.topic_ids)
 
 
 # ── PipelineResult computed properties ───────────────────────────────────────
 
 
 def test_pipeline_result_with_empty_stages() -> None:
-    from pipeline.core import PipelineResult
+    from fep_lean.pipeline.core import PipelineResult
 
     pr = PipelineResult(status="ok", total_duration=1.0, stages=[])
     assert pr.status == "ok"
@@ -122,7 +122,7 @@ def test_pipeline_result_with_empty_stages() -> None:
 
 
 def test_step_result_creation() -> None:
-    from pipeline.core import StepResult
+    from fep_lean.pipeline.core import StepResult
 
     sr = StepResult(name="Test", status="ok", message="done", duration_s=0.1)
     assert sr.name == "Test"
@@ -131,7 +131,7 @@ def test_step_result_creation() -> None:
 
 
 def test_step_result_with_error() -> None:
-    from pipeline.core import StepResult
+    from fep_lean.pipeline.core import StepResult
 
     sr = StepResult(
         name="Test", status="error", message="fail", duration_s=0.0, error="boom"
@@ -144,7 +144,7 @@ def test_step_result_with_error() -> None:
 
 
 def test_verify_block_missing_keys(tmp_path: Path) -> None:
-    from output.manuscript import _verify_block_from_manifest
+    from fep_lean.output.manuscript import _verify_block_from_manifest
 
     p = tmp_path / "manifest.json"
     p.write_text(json.dumps({"random_key": 42}), encoding="utf-8")
@@ -155,7 +155,7 @@ def test_verify_block_missing_keys(tmp_path: Path) -> None:
 
 
 def test_verify_block_non_integer_topics(tmp_path: Path) -> None:
-    from output.manuscript import _verify_block_from_manifest
+    from fep_lean.output.manuscript import _verify_block_from_manifest
 
     p = tmp_path / "manifest.json"
     p.write_text(json.dumps({"topics_with_result": "fifty"}), encoding="utf-8")
@@ -167,7 +167,7 @@ def test_verify_block_non_integer_topics(tmp_path: Path) -> None:
 
 
 def test_hermes_config_defaults() -> None:
-    from llm.hermes import HermesConfig
+    from fep_lean.llm.hermes import HermesConfig
 
     cfg = HermesConfig()
     assert cfg.model != ""
@@ -176,14 +176,14 @@ def test_hermes_config_defaults() -> None:
 
 
 def test_hermes_config_disabled_without_key() -> None:
-    from llm.hermes import HermesConfig
+    from fep_lean.llm.hermes import HermesConfig
 
     cfg = HermesConfig(api_key="", enabled=False)
     assert cfg.enabled is False
 
 
 def test_hermes_result_dataclass() -> None:
-    from llm.hermes import HermesResult
+    from fep_lean.llm.hermes import HermesResult
 
     r = HermesResult(
         success=False,

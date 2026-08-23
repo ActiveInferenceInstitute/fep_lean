@@ -1,118 +1,58 @@
-# FEP Lean Agents — `config/` (project root)
+# Configuration authoring contract
 
-**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
+Edit only the file that owns the intended concept:
 
-## Purpose
+- `settings.yaml` for non-secret runtime defaults;
+- `catalogue_metadata.yaml` for the schema-2 roster seal, family membership,
+  descriptive metadata, and Mathlib hints;
+- `theorem_maturity.yaml` for semantic claim review;
+- `formalism_novelty.yaml` for expansion-row nearest predecessors, carrier
+  deltas, invariants, and required composition bridges;
+- `formalism_relations.yaml` for reviewed relations and retained capability
+  status/evidence;
+- the appropriate `src/fep_lean/catalogue/bodies/*.py` module for canonical
+  Lean bodies. `registry.py` validates the family registry and `latex.py`
+  derives equation signatures.
 
-The `config/` directory contains the YAML configuration files that drive the
-`fep_lean` pipeline and its maintained theorem review. Runtime settings and
-catalogue bodies remain separate from the semantic audit.
+`topics.yaml` is generated. Never repair a generated row by hand. Run the
+topic generator, inspect both checkout and package-data projections, and use
+`--check` to prove idempotence.
 
-## Files
+## Invariants
 
-| File | Description |
-|------|-------------|
-| `settings.yaml` | All runtime configuration: GAUSS_HOME, model, Hermes AI layer |
-| `topics.yaml` | 50 FEP/AI/IG/BM/TD topic definitions (id, area, mathlib, mathlib_status, nl, lean_sketch, `latex_equations` — one string per `theorem` in the sketch) |
-| `theorem_maturity.yaml` | Maintained semantic review of each topic's primary theorem; rendered to `docs/theorem-maturity-audit.md` |
+- Preserve the exact ordered schema-2 roster seal and the declared family
+  partition.
+- Keep syntactic maturity, semantic disposition, native verification, and
+  full-run evidence as separate concepts.
+- Do not promote a disposition merely because Lean compiles.
+- Every relation edge needs an explicit rationale. Never infer topic
+  dependencies from shared imports or similar theorem syntax.
+- Every `formal` or `formal_pairing` edge names a qualified declaration that
+  resolves from canonical topic or composed Lean resources. `formal` asserts a
+  genuine derivation or identification across endpoints; `formal_pairing`
+  certifies both endpoint laws without claiming implication. Conceptual and
+  blocker edges never carry a witness.
+- Keep satisfied capability nodes with their declaration evidence; do not
+  erase the history of a resolved gap.
+- Every `scope_gap` or `assumption_gap` row needs a `blocked_by` edge to a named
+  capability.
+- Every novelty row must identify an earlier nearest topic, a nonempty carrier
+  delta and invariant, and a required `FEPComposed` bridge that resolves in a
+  manifested leaf composition module.
+- Do not copy live counts or model rosters into this file; use generated
+  coverage and live configuration.
+- Never store provider credentials in YAML.
 
-## `settings.yaml` — Key Sections
+## Focused gates
 
-Shipped defaults match [`settings.yaml`](settings.yaml); if this section lags, **trust the YAML**.
-
-### `project`
-| Key | Default | Description |
-|-----|---------|-------------|
-| `name` | `fep_lean` | Project identifier |
-| `version` | `1.0.0` | Semantic version |
-| `description` | (see YAML) | Human description |
-
-### `gauss`
-| Key | Default | Env Override | Description |
-|-----|---------|-------------|-------------|
-| `home` | `~/.gauss` | `GAUSS_HOME` | Root dir for sessions, artifacts, logs |
-| `default_model` | `moonshotai/kimi-k2.6` | `GAUSS_DEFAULT_MODEL` | Default OpenRouter model id for sessions |
-| `log_level` | `INFO` | `GAUSS_LOG_LEVEL` | Logging verbosity |
-| `source` | `fep_lean` | — | Session source tag for filtering |
-| `verify_lean` | `true` | — | When Gauss workflows run, invoke `lake env lean` per topic |
-
-### `hermes`
-| Key | Default | Env Override | Description |
-|-----|---------|-------------|-------------|
-| `enabled` | `true` | — | Enable Hermes when workflows run |
-| `model` | `moonshotai/kimi-k2.6` | — | Primary OpenRouter model ID (Moonshot Kimi K2.6, 262K ctx, fast instruct) |
-| `fallback_models` | (list in YAML) | — | Tried in order if primary fails |
-| `max_tokens` | `16384` | — | Max tokens (non-reasoning path) |
-| `timeout_s` | `150` | — | **Wall-clock** budget (seconds) for non-reasoning models — enforced via worker thread + `join(timeout=…)` in `_make_request` |
-| `reasoning_max_tokens` | `65536` | — | Budget for reasoning-style models (Kimi K2.x, GLM-5.1, DeepSeek-R1, o1/o3, Nemotron) |
-| `reasoning_timeout_s` | `300` | — | Wall-clock budget for reasoning-style models (same enforcement as `timeout_s`) |
-
-**HTTP retry env (read by `src/llm/hermes.py`, not YAML):**
-
-| Env | Default | Description |
-|-----|---------|-------------|
-| `HERMES_429_MAX_RETRIES` | `2` | Retries after HTTP 429 before next model |
-| `HERMES_NETWORK_MAX_RETRIES` | `2` | Retries after transient transport errors (`IncompleteRead`, `URLError`, etc.) before giving up on the current model |
-
-### Config Priority (highest → lowest)
-
-```
-Environment variable (OPENROUTER_API_KEY, GAUSS_HOME, etc.)
-    └─ ~/.gauss/.env  (auto-loaded by gauss/client.py)
-            └─ config/settings.yaml
-                    └─ Code defaults (in llm/hermes.py, gauss/runner.py)
+```bash
+uv run python scripts/_maint_build_topics_catalogue.py --check
+uv run python scripts/theorem_maturity_audit.py --check
+uv run python scripts/build_formalism_coverage.py --check
+uv run fep-lean atlas --check
+uv run pytest tests/test_fep_topics.py tests/test_semantics.py \
+  tests/test_formalism_relations.py tests/test_formalism_coverage.py -q --no-cov
 ```
 
-## `topics.yaml` — Topic Schema
-
-Each topic record must conform to:
-
-```yaml
-topics:
-  - id: fep-001                          # unique, format: fep-NNN, NN=001..050
-    title: Variational Free Energy Bound  # short human title
-    area: FEP                             # one of: FEP | ActiveInference | BayesianMechanics | InfoGeometry | Thermodynamics
-    mathlib: >                            # Mathlib4 module paths (comma-separated)
-      MeasureTheory, Probability.KL
-    mathlib_status: real                 # real | partial | aspirational
-    nl: >                                 # Natural-language statement (1-3 sentences)
-      The variational free energy F[q,p] ...
-    lean_sketch: |                        # Lean4 theorem sketch (multi-line)
-      theorem variational_free_energy_bound ...
-    latex_equations:                    # one LaTeX block per ``theorem``; see ``theorem_latex_signatures`` + ``SKETCHES`` in ``scripts/catalogue_sketches.py`` (direct source: ``catalogue_sketches``)
-      - "..."                             # (see generated topics.yaml; do not hand-edit the full list)
-```
-
-### Area Taxonomy
-
-| Area | Count | Primary Mathlib Modules |
-|------|-------|------------------------|
-| `FEP` | 14 | MeasureTheory.Measure.MeasureSpace, Analysis.SpecialFunctions.Log.Basic |
-| `ActiveInference` | 11 | Algebra.BigOperators.Group.Finset, Data.Fin, Order.Basic |
-| `InfoGeometry` | 8 | Analysis.InnerProductSpace.Basic, Topology.MetricSpace.Basic |
-| `BayesianMechanics` | 10 | LinearAlgebra.Matrix.Transpose, Data.Finset.Basic |
-| `Thermodynamics` | 7 | Analysis.SpecialFunctions.Log.Basic, Analysis.SpecialFunctions.Exp |
-
-### Maturity Distribution (July 2026)
-
-| Status | Count |
-|--------|------:|
-| ✓ `real` (status) | 50 |
-| ⚠ Partial | 0 |
-| ○ Aspirational | 0 |
-
-## Operating Contracts
-
-1. **Never commit API keys**: `settings.yaml` must not contain `OPENROUTER_API_KEY`.
-2. **topics.yaml is immutable during a run**: Do not modify `topics.yaml` while the pipeline is running.
-3. **All 50 topic IDs must be unique** and follow the `fep-NNN` pattern.
-4. **Lean sketches MUST be syntactically valid Lean4** (though they may use `sorry` axioms).
-5. **Mathlib field annotated with `mathlib_status`** — `real`, `partial`, or `aspirational` per topic, verified against Lean 4 Mathlib periodically.
-
-## Navigation
-
-- **Self**: [AGENTS.md](AGENTS.md)
-- **Parent**: [../AGENTS.md](../AGENTS.md)
-- **Human README**: [README.md](README.md)
-- **Source that reads config**: [../src/AGENTS.md](../src/AGENTS.md)
-- **Settings reference**: [README.md](README.md)
+See [README.md](README.md) for the file schema and [SPEC.md](SPEC.md) for the
+ownership model.

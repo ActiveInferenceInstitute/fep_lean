@@ -52,11 +52,12 @@ def test_fep_all_lean_covers_all_yaml_topics() -> None:
     assert not errors, "\n".join(errors)
 
 
-def test_fep_all_lean_has_50_topics() -> None:
-    """fep_all.lean should contain exactly 50 topic namespaces."""
+def test_fep_all_lean_has_the_sealed_topic_count() -> None:
+    """The aggregate must contain exactly the generated catalogue namespaces."""
     lean_ids = _extract_lean_topic_ids(FEP_ALL.read_text(encoding="utf-8"))
-    assert len(lean_ids) == 50, (
-        f"Expected 50 topics, found {len(lean_ids)}: {sorted(lean_ids)}"
+    expected_ids = _load_yaml_topic_ids()
+    assert len(lean_ids) == len(expected_ids), (
+        f"Expected {len(expected_ids)} topics, found {len(lean_ids)}: {sorted(lean_ids)}"
     )
 
 

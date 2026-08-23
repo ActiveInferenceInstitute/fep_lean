@@ -1,4 +1,4 @@
-"""Tests for gauss.cli sad paths using genuine filesystem and environment mutation."""
+"""Tests for fep_lean.gauss.cli sad paths using genuine filesystem and environment mutation."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from gauss.cli import _require_gauss_from_env, check_gauss_cli
+from fep_lean.gauss.cli import _require_gauss_from_env, check_gauss_cli
 
 PROJ = Path(__file__).resolve().parent.parent
 

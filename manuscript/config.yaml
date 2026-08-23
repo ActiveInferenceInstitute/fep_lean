@@ -6,8 +6,8 @@
 paper:
   title: "Towards Lean 4 Formalization of the Free Energy Principle"
   subtitle: "AI-Driven Theorem Sketching and Verification for Active Inference and Bayesian Mechanics"
-  version: "1.0.0"
-  date: "2026-07-17"
+  version: "1.1.0"
+  date: "2026-08-21"
 
 authors:
   - name: "Daniel Ari Friedman"
@@ -17,8 +17,9 @@ authors:
     corresponding: true
 
 publication:
-  doi: "10.5281/zenodo.19699234"
-  journal: ""
+  # Work-level concept DOI; individual archived versions have distinct DOIs.
+  doi: "10.5281/zenodo.19699233"
+  journal: "Active Inference Journal"
   volume: ""
   pages: ""
 
@@ -36,9 +37,9 @@ keywords:
   - "information geometry"
   - "LLM-ITP integration"
   - "execution-integrity pipeline"
-  - "stochastic differential equations"
+  - "continuous-time Markov chains"
   - "measure theory formalization"
 
 metadata:
-  license: "Apache-2.0"
+  license: "CC-BY-4.0"
   language: "en"

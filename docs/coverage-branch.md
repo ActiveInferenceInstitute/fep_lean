@@ -1,7 +1,7 @@
 # Branch coverage
 
 Coverage is measured with `concurrency = ["multiprocessing"]` in `pyproject.toml`
-because `src/output/figures.py` uses `ProcessPoolExecutor` for chart generation.
+because `src/fep_lean/output/figures.py` uses `ProcessPoolExecutor` for chart generation.
 The `multiprocessing` concurrency setting is incompatible with `--cov-branch`
 (a known pytest-cov limitation: branch data is not collected from worker processes).
 
@@ -15,7 +15,7 @@ uv run pytest tests/ -q --cov=src --cov-branch --cov-report=term-missing \
   --ignore=tests/test_figure_generation.py
 ```
 
-This gives branch coverage for all source files except `src/output/figures.py`
+This gives branch coverage for all source files except `src/fep_lean/output/figures.py`
 (which is excluded from the branch run). The figure module has 100% line coverage
 and no branch-dependent logic, so the gap is negligible.
 

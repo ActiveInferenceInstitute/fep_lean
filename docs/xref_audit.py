@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit cross-reference integrity in the manuscript.
 
-For every ``*.md`` under ``projects/fep_lean/manuscript/`` the script:
+For every ``*.md`` under this checkout's ``manuscript/`` directory, the script:
 
 1. Collects pandoc anchor definitions (``{#id}``).
 2. Collects LaTeX label definitions (``\\label{id}``) inside displayed-equation
@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
         "--root",
         type=Path,
         default=DEFAULT_ROOT,
-        help="Manuscript directory to scan (default: projects/fep_lean/manuscript).",
+        help="Manuscript directory to scan (default: checkout manuscript/).",
     )
     parser.add_argument(
         "-v",

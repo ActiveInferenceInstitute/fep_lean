@@ -4,7 +4,7 @@
 
 The Free Energy Principle [@friston2010free; @parr2022active] rests on deep intersections of measure theory, stochastic calculus, differential geometry, and information theory. Informal mathematical proofs in this space — written in natural language with $\forall$ and $\exists$ symbols — are powerful but can harbor subtle errors: interchanging limits and expectations without justification, conflating almost-sure and sure convergence, or silently assuming absolute continuity of measures. When the FEP community claims that "variational free energy upper-bounds surprise," every step of the derivation must be airtight — yet in practice verification depends on peer review by a small number of domain experts.
 
-**Lean 4** is an interactive theorem prover (ITP) that eliminates this bottleneck. Every inference step is machine-checked against foundational axioms. A theorem proven in Lean produces a *proof object* — a computational certificate that any independent verifier can validate in milliseconds. If Lean accepts a proof, the mathematical claim is correct *by construction*, modulo the foundational axioms of the Calculus of Inductive Constructions.
+**Lean 4** is an interactive theorem prover (ITP) that makes this bottleneck explicit. Every elaborated inference step is checked by Lean's kernel against declared axioms and definitions. Acceptance therefore certifies the exact formal statement under the recorded toolchain and trust base; it does not by itself certify that the statement faithfully represents the intended scientific claim. That second obligation is why this project records a separate semantic disposition and assumption review.
 
 For Active Inference, this yields:
 
@@ -134,7 +134,7 @@ theorem fep001_union_bound {α : Type*} [MeasurableSpace α]
 end FEP001
 ```
 
-This three-line proof is a real (sorry-free) catalogue row: every implicit assumption of the informal claim has been made explicit (the type, its σ-algebra, and the two sets), and the inequality is discharged by a single pre-verified Mathlib4 lemma. The `FEP001` namespace prevents name collisions in the {{total_topics}}-topic aggregate build, and `open MeasureTheory` brings `Measure` and `measure_union_le` into scope without fully-qualified names. This is the template every catalogue sketch follows.
+This three-line proof is a real (sorry-free) catalogue row: every implicit assumption of the informal claim has been made explicit (the type, its σ-algebra, and the two sets), and the inequality is discharged by a single pre-verified Mathlib4 lemma. The `FEP001` namespace prevents name collisions in the {{total_topics}}-topic aggregate build, and `open MeasureTheory` brings `Measure` and `measure_union_le` into scope without fully-qualified names. This is the template every catalogue body follows.
 
 ### Concrete Example: Informal vs Formal ELBO {#sec:concrete_example_informal_vs_formal_elbo}
 
@@ -143,30 +143,31 @@ This three-line proof is a real (sorry-free) catalogue row: every implicit assum
 > *Theorem*. The Evidence Lower Bound maximizes model evidence: $\log p(s) \geq -F[q, p]$.
 > *Proof*. By definition, $F = \KL[q \| p(\psi|s)] - \log p(s)$. Since KL divergence is non-negative, the result follows immediately by rearranging terms. ∎
 
-**Formal (Lean 4 with Mathlib4 `{{mathlib_tag}}`)**:
+**Formal kernel used by fep-002 (Lean 4 with Mathlib4 `{{mathlib_tag}}`)**:
 
 ```lean
-import Mathlib.MeasureTheory.Measure.MeasureSpace
-import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.InformationTheory.KullbackLeibler.Basic
 
-theorem elbo_bound {α : Type*} [MeasurableSpace α]
-    (q p_prior p_likelihood : Measure α)
-    [q.IsFiniteMeasure] [p_posterior.IsFiniteMeasure]
-    (habs : q ≪ p_posterior) :
-    Real.log (marginal_likelihood p_prior p_likelihood) ≥
-      -variational_free_energy q p_prior p_likelihood := by
-  -- 1. Unfold definitions
-  unfold variational_free_energy
-  unfold marginal_likelihood
-  -- 2. Apply KL non-negativity
-  have h_kl : klDiv q p_posterior ≥ 0 := measure_theory.klDiv_nonneg habs
-  -- 3. Rearrange via linear arithmetic
-  linarith [h_kl]
+namespace FEP002
+variable {α : Type*} [MeasurableSpace α]
+open MeasureTheory
+open scoped ENNReal
+
+noncomputable def fep002_variationalFreeEnergy
+    (q posterior : Measure α) (surprisal : ENNReal) : ENNReal :=
+  surprisal + InformationTheory.klDiv q posterior
+
+theorem fep002_vfe_ge_surprisal
+    (q posterior : Measure α) (surprisal : ENNReal) :
+    surprisal ≤ fep002_variationalFreeEnergy q posterior surprisal := by
+  simp only [fep002_variationalFreeEnergy]
+  exact le_add_right (le_refl surprisal)
+end FEP002
 ```
 
-The formal version forces the researcher to confront every implicit assumption: Which spaces are we working over (`Type*`)? Are those spaces measurable (`[MeasurableSpace α]`)? Are the measures finite (`IsFiniteMeasure`)? Is the variational distribution absolutely continuous with respect to the true posterior (`q ≪ p_posterior`)?
+The topic-row version fixes the measurable space, both measures, the order of KL arguments, and the nonnegative extended-real codomain. Its inequality is deliberately narrower than the informal theorem: it treats surprisal and posterior as inputs rather than constructing them from a joint model. The separate finite `GenerativeModel` foundation closes that bridge for one normalized finite carrier by constructing evidence and posterior, proving Bayes reconstruction, and deriving posterior-form VFE and its evidence bound. Keeping the two declarations separate makes the difference between a native measure-level remainder theorem and a finite model theorem visible in their types.
 
-**Catalogue note.** The illustrative blocks above may use explicit `import` lines for pedagogy. The {{total_topics}} committed topic bodies in `scripts/catalogue_sketches.py` (`SKETCHES`) carry their own targeted `import Mathlib.…` lines (typically one to four per topic); [`LeanVerifier._wrap_lean_code`](../src/verification/lean_verifier.py) treats a leading `import` as a signal to pass the body through unchanged rather than prepending the shared preamble (§\ref{sec:native_lean_4_compilation_and_zero_direct_verification}; Appendix B).
+**Catalogue note.** The {{total_topics}} committed bodies in the family modules under `src/fep_lean/catalogue/bodies/` carry targeted `import Mathlib.…` lines. The validated registry fixes their order and source identity. [`LeanVerifier._wrap_lean_code`](../src/fep_lean/verification/lean_verifier.py) preserves a body with leading imports and supplies the shared preamble only when imports are absent (§\ref{sec:native_lean_4_compilation_and_zero_direct_verification}; Appendix B).
 
 ### Reading Type Error Messages {#sec:reading_type_error_messages}
 

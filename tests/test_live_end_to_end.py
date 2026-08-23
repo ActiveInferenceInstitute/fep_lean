@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from pipeline.core import PipelineResult
-from pipeline.orchestrator import run_single_topic
+from fep_lean.pipeline.core import PipelineResult
+from fep_lean.pipeline.orchestrator import run_single_topic
 
 PROJ = Path(__file__).resolve().parent.parent
 

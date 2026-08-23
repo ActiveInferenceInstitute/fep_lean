@@ -1,31 +1,36 @@
 # fep_lean/src/
 
-**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
+**Version**: v1.1.0 | **Status**: Active | **Last Updated**: August 2026
 
-Data model, validation, verification, and pipeline execution for the FEP Lean project.
+The installable package is rooted at `src/fep_lean/`; `src/` is only the
+standard packaging layout and is not itself importable.
 
 ## Directory Structure
-To support isolation, reusability, and testing, the source is divided into six domain-aligned subpackages. For backward compatibility, the top-level `src/__init__.py` re-exports all major public entrypoints.
+The package is divided into seven principal domain-aligned subpackages. The public root
+`fep_lean/__init__.py` re-exports the stable high-level entrypoints. There are
+no compatibility modules named `catalogue`, `pipeline`, or `output`.
 
 | Subpackage | Responsibility | Key Exports |
 |---|---|---|
-| `catalogue/` | Data model layer | `FEPTopicCatalogue`, `TopicEntry` |
-| `verification/` | Lean 4 / Lake verification | `LeanVerifier`, `run_validation_checks` |
-| `gauss/` | OpenGauss SQLite & Runner | `OpenGaussClient`, `GaussRunner` |
-| `llm/` | LLM API interface (Hermes) | `HermesExplainer`, `HermesConfig` |
-| `output/` | Artifact generation | `Reporter`, `build_manuscript_vars`, `write_all_catalogue_figures` |
-| `pipeline/` | Orchestration (4-stage DAG) | `FEPPipeline`, `run_pipeline`, `run_single_topic` |
+| `fep_lean/catalogue/` | Typed semantic and catalogue model | `FEPTopicCatalogue`, `SemanticDisposition` |
+| `fep_lean/formal/` | Packaged cross-topic Lean resources | `formal_projection_drift` |
+| `fep_lean/verification/` | Lean 4 / Lake verification and declaration audit | `LeanVerifier`, `run_formalism_audit` |
+| `fep_lean/gauss/` | OpenGauss SQLite & Runner | `OpenGaussClient`, `GaussRunner` |
+| `fep_lean/llm/` | LLM API interface (Hermes) | `HermesExplainer`, `HermesConfig` |
+| `fep_lean/output/` | Evidence and artifact generation | `validate_native_lean_receipt`, `build_formalism_atlas`, `Reporter` |
+| `fep_lean/pipeline/` | Orchestration (4-stage DAG) | `FEPPipeline`, `run_pipeline`, `run_single_topic` |
 
 ## Imports
 
 Internal modules use qualified subpackage imports for modularity:
 
 ```python
-from catalogue.topics import FEPTopicCatalogue
-from verification.lean_verifier import LeanVerifier
+from fep_lean.catalogue import FEPTopicCatalogue
+from fep_lean.verification import LeanVerifier
 ```
 
-With `src/` on `PYTHONPATH` (default for this project’s `uv run` and tests). Packaged installs may use the `fep_lean.*` namespace instead.
+The `fep_lean.*` namespace is required both from a checkout and an installed
+wheel. Tests include an isolated wheel/import/CLI smoke to pin that contract.
 
 ## See also
 

@@ -1,161 +1,131 @@
-# Reporter — fep_lean Output Generation
+# Report bundles and provenance
 
-**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
+`fep_lean.output.reporter.Reporter` writes one timestamped report directory for
+one pipeline result. It refuses to reuse an existing run directory, so an
+explicit `run_id` cannot overwrite earlier evidence.
 
-## Overview
-
-`output/reporter.py` (`Reporter`) writes the timestamped directory under `output/reports/run_*/`. It is invoked from `pipeline/orchestrator.run_pipeline` via `Reporter.generate(catalogue, pipeline_result)` after `FEPPipeline.run()` completes.
-
-Template **Stage 02** (`scripts/02_run_analysis.py` from the repo root) must finish the analysis scripts that feed `run_pipeline` so `PipelineResult` and the report bundle stay consistent with the same catalogue run. If Stage 02 kills a script on timeout, downstream stages may see partial or stale inputs — see [troubleshooting.md](troubleshooting.md).
-
----
-
-## Output Directory Structure
+## Bundle layout
 
 ```text
-output/reports/run_YYYYMMDD_HHMMSS/
-├── index.md                 ← Master report: pipeline summary + stage table
-├── summary.json             ← Machine-readable PipelineResult
-├── hermes_report.md         ← Per-topic Hermes explanation status
-├── lean_report.md           ← Per-topic Lean 4 compilation status
-├── validation_report.md     ← 13 environment check details
-└── topics/                  ← Per-topic `fep-NNN.md` (full catalogue row)
+output/reports/run_YYYYMMDD_HHMMSS_microseconds/
+├── index.md
+├── summary.json
+├── hermes.md
+├── lean.md
+├── validation.md
+├── verification_manifest.json
+├── run_manifest.json
+└── topics/
+    └── fep-NNN.md
 ```
 
+`summary.json` carries the serialized pipeline result, selected topic rows,
+catalogue summary, source/config digests, receipt-schema version, configured
+Lean and Mathlib pins, the actual compiler version, the resolved 40-character
+Mathlib revision, and a hash map for every other artifact. It deliberately
+excludes its own digest to avoid a self-referential value.
 
+`run_manifest.json` is the compact run contract: mode, completion, catalogue
+and verified counts, warning count, capabilities, verification source,
+clean-Lean and zero-warning predicates, failure reason, source/config digests,
+toolchain, and topic rows.
 
----
+`verification_manifest.json` is a topic-result projection. Its presence does
+not make a run claim-ready; validation reconciles the entire canonical topic
+evidence row with both the run manifest and summary, including provider/session
+identity, exact refined and compiled Lean, compiled-source digest, actual
+compiler version, direct Hermes compile result, and every warning.
 
-## File Contents
+The Markdown files are human-readable projections:
 
-### `index.md` — Master Report
+- `index.md`: status, mode, selection counts, stage table, and metrics;
+- `hermes.md`: model, cache, explanation, refined source, and direct-compile
+  information per selected topic;
+- `lean.md`: structured compilation statistics;
+- `validation.md`: the mode-dependent named capability checks;
+- `topics/fep-NNN.md`: one selected topic's Hermes and final verification
+  provenance.
 
-Sections:
+Catalogue mode normally has no topic verification rows. Its bundle can be
+structurally valid while `verified_topics` remains zero.
 
-1. **Header**: Run timestamp, pipeline status (`ok` / `partial` / `error`), total duration
-2. **Stage table**: Step name, status (✅/❌/⏭️), message, duration
-3. **Summary stats**: topics ok/error, Hermes successes, Lean compile ok, duration
-4. **Quick links**: to the other report files and `topics/`
+## API
 
-Example stage table (names from `FEPPipeline`):
+```python
+from fep_lean.output import Reporter, ReportPaths, validate_report_receipt
 
-```markdown
-| Stage | Status | Message | Duration |
-|-------|--------|---------|----------|
-| Load Catalogue | ✅ ok | 50 topics | 0.017s |
-| Environment Validation | ✅ ok | 13 checks, 0 failed | 0.998s |
-| Gauss Sessions | ⏭️ skipped | workflows disabled | 0s |
-| Manuscript Artifacts | ✅ ok | vars + unified 09z formalism + figures | 0.004s |
+reporter = Reporter(
+    project_root,
+    run_id=None,
+    output_root=None,
+)
+paths: ReportPaths = reporter.generate(catalogue, pipeline_result)
+
+validation = validate_report_receipt(
+    paths.root,
+    require_complete=False,
+    project_root=project_root,
+)
 ```
 
-### `hermes_report.md` — Hermes Status
+`ReportPaths` exposes `root`, the five primary Markdown/JSON paths, and both
+manifest paths. `as_dict()` provides their string representation.
 
-Per-topic table with:
-- Topic ID and title
-- Hermes success (✅/❌) and model used
-- Explanation (first 200 chars)
-- Duration
+The default run ID includes microseconds. If a caller supplies a repeated ID,
+`generate` raises `FileExistsError` before any artifact is written.
 
-### `lean_report.md` — Lean Verification
+## Independent validation
 
-Per-topic table with:
-- Topic ID and title
-- `VerifyResult.status` (`compiles_clean` / `compiles_with_sorry` / `compile_error` / `skipped`)
-- Has `sorry` flag
-- Lean version
-- Duration
-
-### `validation_report.md` — Environment Checks
-
-Per-check section with pass/fail status for all **13** `run_validation_checks` results. The checks (declared at `src/verification/environment.py:328-343`) are:
-
-1. `math_inc_gauss_cli` — `gauss` (math-inc/OpenGauss) on PATH, `gauss doctor` passes
-2. `lean_cli` — `lean --version` resolves under elan/FEP overrides
-3. `open_gauss_config_dir` — `~/.gauss/` (or `$GAUSS_HOME`) is writable
-4. `lean_workspace` — `lean/lakefile.lean` and `lean-toolchain` exist
-5. `mathlib_built` — `.lake/build/lib/Mathlib.olean` is present
-6. `topics_yaml` — `config/topics.yaml` parses with 50 entries
-7. `project_layout` — `src/`, `tests/`, `scripts/`, `manuscript/` present
-8. `python_scientific_stack` — `numpy`, `matplotlib`, `pyyaml` importable
-9. `output_writable` — `output/` directory writable
-10. `manuscript_config` — `manuscript/config.yaml` parses
-11. `scripts_tests_layout` — thin-orchestrator script files exist
-12. `catalogue_loader` — `catalogue/topics.py` imports and loads the YAML
-13. `references_bib` — `manuscript/references.bib` present
-
-### `summary.json` — Machine-Readable Result
-
-Shape follows `PipelineResult.as_dict()` plus fields the reporter may add when serializing:
-
-```json
-{
-  "status": "ok",
-  "total_duration": 52.3,
-  "run_dir": "output/reports/run_20260406_120000",
-  "stages": [
-    {"name": "Load Catalogue", "status": "ok", "duration_s": 0.017, "error": null}
-  ],
-  "lean_stats": {"total_processed": 0, "compiles_clean": 0, ...}
-}
-```
-
-### Independent receipt check
-
-`summary.json` records the artifact hash map, while the two manifests carry
-the selected-topic and verification rows. To verify a bundle independently of
-the process that produced it, run:
+Use the repository adapter or the Python API:
 
 ```bash
 uv run python scripts/verify_report_receipt.py output/reports/run_...
-uv run python scripts/verify_report_receipt.py output/reports/run_... --require-complete
+uv run python scripts/verify_report_receipt.py \
+  output/reports/run_... --require-complete
+uv run python scripts/verify_report_receipt.py \
+  output/reports/run_... --project-root /path/to/fep_lean --require-complete
 ```
 
-The checker is read-only. It recomputes each listed SHA-256 digest, rejects
-absolute or traversal paths, and reconciles mode, completion, selected-topic
-counts, topic IDs, clean verification flags, and the run/toolchain digests.
-Only the second command can accept a receipt as claim-ready evidence, and only
-for a non-empty complete `full` run.
+The validator:
 
----
+- requires the report directory, mandatory artifacts, and exactly one hashed
+  `topics/fep-NNN.md` file for every full-mode row;
+- rejects absolute paths, traversal, malformed SHA-256 values, hash drift,
+  unlisted files, missing topic files, and unexpected topic files;
+- validates summary, capability, selection, and topic-row types;
+- reconciles run ID, mode, completion, catalogue count, verified count,
+  complete topic evidence rows, source/config digests, and toolchain fields;
+- always recomputes repository digests against the repository root selected by
+  the adapter (or the explicit `project_root` supplied to the Python API);
+- reconciles warning lists and counts and rejects warnings in a complete full
+  claim;
+- requires each claim row to bind a successful Hermes session and nonempty
+  model identity, direct Hermes-refined compilation, byte-identical refined and
+  final Lean, the SHA-256 digest of that final source, and actual Lean version
+  output matching the configured pin;
+- binds the exact Mathlib Git revision from `lean/lake-manifest.json`, not only
+  the human-readable release tag;
+- derives `claim_ready` independently of the producing process.
 
-## `Reporter` API
+A bundle is claim-ready only when it is a non-empty complete `full` run whose
+selected rows, clean Lean counts, Hermes provenance, manifests, and artifacts
+all reconcile with zero warnings. `catalogue` completion and a native Lean
+receipt are separate evidence classes.
 
-```python
-class Reporter:
-    def __init__(self, project_root: Path, run_id: str | None = None) -> None
+## Failure boundary
 
-    def generate(
-        self,
-        catalogue: FEPTopicCatalogue,
-        result: PipelineResult,
-    ) -> ReportPaths
+Full-mode capability or topic failure prevents a successful report at the
+pipeline boundary. If a partial bundle is explicitly generated for diagnosis,
+its manifests preserve the incomplete state and validator errors rather than
+promoting it to evidence.
 
-@dataclass
-class ReportPaths:
-    index_md: Path
-    summary_json: Path
-    hermes_md: Path
-    lean_md: Path
-    validation_md: Path   # path to validation_report.md on disk
-    topics_dir: Path
-
-    def all_paths(self) -> list[Path]
-    def as_dict(self) -> dict[str, str]
-```
-
----
-
-## Design Rules
-
-1. **Never overwrite**: Each run creates a new timestamped `run_YYYYMMDD_HHMMSS/` directory.
-2. **Partial-safe**: If Hermes/Lean stages were skipped, their reports show the skip reason.
-3. **No external deps**: Reports are written with stdlib only (no Jinja, no pandas).
-4. **Self-contained**: Each run directory is fully self-contained — no symlinks, no shared state.
-
----
+Report directories may contain provider-derived text and session identifiers.
+They never contain provider keys by design, but inspect a bundle before sharing
+it outside the operator boundary.
 
 ## Navigation
 
-- [← Hermes](hermes.md)
-- [Pipeline →](pipeline.md)
-- [← docs/README.md](README.md)
+- [Hermes](hermes.md)
+- [Pipeline](pipeline.md)
+- [Public API](api.md)
+- [Documentation index](README.md)

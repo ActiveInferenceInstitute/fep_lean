@@ -5,8 +5,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LEAN_DIR="${FEP_LEAN_DIR:-$SCRIPT_DIR/../lean}"
-# projects/fep_lean/scripts -> ../../.. -> repository root
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 if [[ ! -f "$LEAN_DIR/lean-toolchain" ]]; then
   echo "error: expected $LEAN_DIR/lean-toolchain" >&2

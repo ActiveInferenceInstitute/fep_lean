@@ -6,11 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import FEPTopicCatalogue, TopicEntry
-from gauss.client import OpenGaussClient
-from gauss.runner import GaussRunner
-from llm.hermes import HermesConfig, HermesExplainer, HermesResult
-from verification.lean_verifier import LeanVerifier
+from fep_lean.catalogue.topics import FEPTopicCatalogue, TopicEntry
+from fep_lean.gauss import runner as runner_module
+from fep_lean.gauss.client import OpenGaussClient
+from fep_lean.gauss.runner import GaussRunner
+from fep_lean.llm.hermes import HermesConfig, HermesExplainer, HermesResult
+from fep_lean.verification.lean_verifier import LeanVerifier, VerifyResult
 
 PROJ = Path(__file__).resolve().parent.parent
 
@@ -22,7 +23,13 @@ class FixedHermes(HermesExplainer):
         super().__init__(HermesConfig(enabled=True, api_key="test-key-not-used"))
         self._fixed = result
 
-    def explain_topic(self, topic: TopicEntry, *, preamble: str = "") -> HermesResult:  # type: ignore[override]
+    def explain_topic(
+        self,
+        topic: TopicEntry,
+        *,
+        preamble: str = "",
+        request_lean: bool = True,
+    ) -> HermesResult:
         return self._fixed
 
 
@@ -138,13 +145,55 @@ class _CountingHermes(HermesExplainer):
         self._cfg = HermesConfig(enabled=False, api_key="")
         self.call_count = 0
 
-    def explain_topic(self, topic: TopicEntry, *, preamble: str = "") -> HermesResult:  # type: ignore[override]
+    def explain_topic(
+        self,
+        topic: TopicEntry,
+        *,
+        preamble: str = "",
+        request_lean: bool = True,
+    ) -> HermesResult:
         self.call_count += 1
         return HermesResult(
             success=True,
             model_used="fixture",
             explanation="fixture explanation",
-            refined_lean_sketch="theorem fixtureCached : True := True.intro\n",
+            refined_lean_sketch=topic.lean_sketch,
+            topic_id=topic.id,
+        )
+
+
+class _PreambleAwareHermes(HermesExplainer):
+    """Obey the stage directive exactly, exposing contradictory prompt order."""
+
+    def __init__(self) -> None:
+        super().__init__(HermesConfig(enabled=True, api_key="test-key-not-used"))
+        self.preambles: list[str] = []
+        self.requests_lean: list[bool] = []
+        self.sketches: list[str] = []
+
+    def explain_topic(
+        self,
+        topic: TopicEntry,
+        *,
+        preamble: str = "",
+        request_lean: bool = True,
+    ) -> HermesResult:
+        self.preambles.append(preamble)
+        self.requests_lean.append(request_lean)
+        self.sketches.append(topic.lean_sketch)
+        if not request_lean:
+            return HermesResult(
+                success=True,
+                model_used="fixture",
+                explanation="The already-compiled theorem is clear.",
+                refined_lean_sketch="",
+                topic_id=topic.id,
+            )
+        return HermesResult(
+            success=True,
+            model_used="fixture",
+            explanation="Refined theorem.",
+            refined_lean_sketch=topic.lean_sketch,
             topic_id=topic.id,
         )
 
@@ -163,6 +212,40 @@ def test_run_topic_uses_cache_on_second_call(tmp_path: Path) -> None:
     assert hermes.call_count == 1
 
 
+def test_prompt_change_invalidates_the_hermes_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    monkeypatch.setattr(lean, "check_lake_available", lambda: True)
+    monkeypatch.setattr(
+        lean,
+        "verify_sketch",
+        lambda topic_id, _sketch: VerifyResult(
+            topic_id=topic_id,
+            compiles=True,
+            has_sorry=False,
+        ),
+    )
+    hermes = _CountingHermes()
+    runner = GaussRunner(
+        lean,
+        hermes,
+        OpenGaussClient(gauss_home=tmp_path / "g"),
+        PROJ,
+    )
+    topic = _topic()
+
+    runner.run_topic(topic)
+    monkeypatch.setitem(
+        runner_module._WORKFLOW_PREAMBLES,
+        "verify",
+        "TASK: Return the same Lean contract with this changed prompt.",
+    )
+    runner.run_topic(topic)
+
+    assert hermes.call_count == 2
+
+
 def test_stage_results_empty_for_verify(tmp_path: Path) -> None:
     """verify workflow always produces an empty stage_results list."""
     lean = LeanVerifier(PROJ / "lean", PROJ)
@@ -178,13 +261,9 @@ def test_stage_results_empty_for_verify(tmp_path: Path) -> None:
 # ── Review workflow stage_results test ───────────────────────────────────────
 
 
-def test_run_topic_review_workflow_populates_stage_results(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_run_topic_review_workflow_populates_stage_results(tmp_path: Path) -> None:
     """workflow='review' appends a 'review_commentary' entry to stage_results
     when the refined sketch compiles successfully."""
-    monkeypatch.setenv("FEP_LEAN_GAUSS_WORKFLOWS", "1")
-
     lean = LeanVerifier(PROJ / "lean", PROJ)
     # A sketch that will compile so verify_res.compiles is True (triggers review pass)
     hermes = _CountingHermes()
@@ -203,17 +282,248 @@ def test_run_topic_review_workflow_populates_stage_results(
     assert hermes.call_count == 2
 
 
+def test_review_refines_before_requesting_commentary(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The first review turn must still request Lean; commentary comes second."""
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    monkeypatch.setattr(lean, "check_lake_available", lambda: True)
+    monkeypatch.setattr(
+        lean,
+        "verify_sketch",
+        lambda topic_id, _sketch: VerifyResult(
+            topic_id=topic_id,
+            compiles=True,
+            has_sorry=False,
+        ),
+    )
+    hermes = _PreambleAwareHermes()
+    client = OpenGaussClient(gauss_home=tmp_path / "g")
+    runner = GaussRunner(lean, hermes, client, PROJ)
+
+    result = runner.run_topic(_topic(), workflow="review")
+
+    assert result.success is True
+    assert len(hermes.preambles) == 2
+    assert "Do NOT produce a new ```lean block" not in hermes.preambles[0]
+    assert "Do NOT produce a new ```lean block" in hermes.preambles[1]
+    assert hermes.requests_lean == [True, False]
+    assert hermes.sketches[1] == result.refined_lean_sketch
+    turns = client.export_session(result.session_id)["turns"]
+    assert [turn["turn_index"] for turn in turns] == list(range(len(turns)))
+    assert [turn["role"] for turn in turns].count("system") == 2
+    review_turns = turns[-2:]
+    assert [turn["role"] for turn in review_turns] == ["user", "assistant"]
+    assert result.refined_lean_sketch in review_turns[0]["content"]
+    assert "without rewriting" in review_turns[0]["content"]
+
+
+def test_run_topic_fails_closed_when_provider_weakens_canonical_lean(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    monkeypatch.setattr(lean, "check_lake_available", lambda: True)
+    monkeypatch.setattr(
+        lean,
+        "verify_sketch",
+        lambda topic_id, _sketch: VerifyResult(
+            topic_id=topic_id,
+            compiles=True,
+            has_sorry=False,
+        ),
+    )
+    hermes = FixedHermes(
+        HermesResult(
+            success=True,
+            model_used="fixture",
+            explanation="I weakened the theorem.",
+            refined_lean_sketch=(
+                "namespace FEP001\n"
+                "theorem fep001_variationalUpperBound_eq_iff : True := True.intro\n"
+                "end FEP001\n"
+            ),
+            topic_id="fep-001",
+        )
+    )
+    runner = GaussRunner(
+        lean,
+        hermes,
+        OpenGaussClient(gauss_home=tmp_path / "g"),
+        PROJ,
+    )
+
+    result = runner.run_topic(_topic(), workflow="verify")
+
+    assert result.success is False
+    assert result.semantic_contract_preserved is False
+    assert result.hermes_lean_compiles is False
+    assert result.verification_source == "canonical_semantic_fallback"
+    assert "non-comment Lean token contract" in result.error
+
+
+def test_review_commentary_failure_fails_requested_workflow(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    class ReviewFailureHermes(_PreambleAwareHermes):
+        def explain_topic(
+            self,
+            topic: TopicEntry,
+            *,
+            preamble: str = "",
+            request_lean: bool = True,
+        ) -> HermesResult:
+            if not request_lean or "Do NOT produce" in preamble:
+                self.preambles.append(preamble)
+                self.requests_lean.append(request_lean)
+                self.sketches.append(topic.lean_sketch)
+                return HermesResult(
+                    success=False,
+                    model_used="fixture",
+                    error="review transport failed",
+                    topic_id=topic.id,
+                )
+            return super().explain_topic(
+                topic, preamble=preamble, request_lean=request_lean
+            )
+
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    monkeypatch.setattr(lean, "check_lake_available", lambda: True)
+    monkeypatch.setattr(
+        lean,
+        "verify_sketch",
+        lambda topic_id, _sketch: VerifyResult(
+            topic_id=topic_id,
+            compiles=True,
+            has_sorry=False,
+        ),
+    )
+    runner = GaussRunner(
+        lean,
+        ReviewFailureHermes(),
+        OpenGaussClient(gauss_home=tmp_path / "g"),
+        PROJ,
+    )
+
+    result = runner.run_topic(_topic(), workflow="review")
+
+    assert result.success is False
+    assert result.stage_results[0]["error"] == "review transport failed"
+    assert result.error == "review transport failed"
+
+
+def test_review_commentary_rejects_a_prose_stage_lean_rewrite(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    class RewritingReviewHermes(_PreambleAwareHermes):
+        def explain_topic(
+            self,
+            topic: TopicEntry,
+            *,
+            preamble: str = "",
+            request_lean: bool = True,
+        ) -> HermesResult:
+            result = super().explain_topic(
+                topic,
+                preamble=preamble,
+                request_lean=request_lean,
+            )
+            if not request_lean:
+                result.refined_lean_sketch = (
+                    "theorem forbiddenReviewRewrite : True := True.intro\n"
+                )
+            return result
+
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    monkeypatch.setattr(lean, "check_lake_available", lambda: True)
+    monkeypatch.setattr(
+        lean,
+        "verify_sketch",
+        lambda topic_id, _sketch: VerifyResult(
+            topic_id=topic_id,
+            compiles=True,
+            has_sorry=False,
+        ),
+    )
+    runner = GaussRunner(
+        lean,
+        RewritingReviewHermes(),
+        OpenGaussClient(gauss_home=tmp_path / "g"),
+        PROJ,
+    )
+
+    result = runner.run_topic(_topic(), workflow="review")
+
+    assert result.success is False
+    assert "prose-only" in result.stage_results[0]["error"]
+    assert "forbiddenReviewRewrite" not in result.final_lean_sketch
+
+
+def test_compiler_warning_is_a_strict_topic_failure(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    monkeypatch.setattr(lean, "check_lake_available", lambda: True)
+    monkeypatch.setattr(
+        lean,
+        "verify_sketch",
+        lambda topic_id, _sketch: VerifyResult(
+            topic_id=topic_id,
+            compiles=True,
+            has_sorry=False,
+            warnings=["fixture.lean:1:0: warning: declaration uses 'sorry'"],
+        ),
+    )
+    client = OpenGaussClient(gauss_home=tmp_path / "g")
+    runner = GaussRunner(lean, _CountingHermes(), client, PROJ)
+
+    result = runner.run_topic(_topic())
+
+    assert result.success is False
+    assert result.status == "failed"
+    assert result.lean_warnings == [
+        "fixture.lean:1:0: warning: declaration uses 'sorry'"
+    ]
+    assert "warning" in result.error
+
+
+def test_review_commentary_is_not_requested_for_warning_bearing_lean(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    lean = LeanVerifier(PROJ / "lean", PROJ)
+    monkeypatch.setattr(lean, "check_lake_available", lambda: True)
+    monkeypatch.setattr(
+        lean,
+        "verify_sketch",
+        lambda topic_id, _sketch: VerifyResult(
+            topic_id=topic_id,
+            compiles=True,
+            has_sorry=False,
+            warnings=["fixture.lean:1:0: warning: declaration uses 'sorry'"],
+        ),
+    )
+    hermes = _PreambleAwareHermes()
+    runner = GaussRunner(
+        lean,
+        hermes,
+        OpenGaussClient(gauss_home=tmp_path / "g"),
+        PROJ,
+    )
+
+    result = runner.run_topic(_topic(), workflow="review")
+
+    assert result.success is False
+    assert result.stage_results == []
+    assert hermes.requests_lean == [True]
+
+
 # ── Error capture tests ──────────────────────────────────────────────────────
 
 
 def test_topic_run_result_error_uses_skip_reason_when_errors_empty(
-    tmp_path: pytest.fixture,
-    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     """When verify_res.errors is empty but compilation fails (timeout/no-lake),
     the runner must populate error from skip_reason or stdout rather than empty string."""
-    monkeypatch.setenv("FEP_LEAN_GAUSS_WORKFLOWS", "1")
-
     lean = LeanVerifier(PROJ / "lean", PROJ)
     hermes = _CountingHermes()
     client = OpenGaussClient(gauss_home=tmp_path / "g")

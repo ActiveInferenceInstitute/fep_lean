@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-import gauss.cli as gauss_cli
+import fep_lean.gauss.cli as gauss_cli
 
 pytestmark = pytest.mark.timeout(180)
 

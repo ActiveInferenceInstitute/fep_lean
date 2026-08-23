@@ -1,4 +1,4 @@
-"""Tests for verification.preflight — real subprocesses, no direct execution."""
+"""Tests for fep_lean.verification.preflight — real subprocesses, no direct execution."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from verification.preflight import _run_version, run_preflight
+from fep_lean.verification.preflight import _run_version, run_preflight
 
 PROJ = Path(__file__).resolve().parent.parent
 
@@ -55,8 +55,8 @@ def test_preflight_main_cli_smoke() -> None:
     code = (
         "import sys\n"
         "sys.path.insert(0, 'src')\n"
-        "sys.argv = ['fep-lean-preflight']\n"
-        "from verification.preflight import main\n"
+        "sys.argv = ['fep-lean preflight']\n"
+        "from fep_lean.verification.preflight import main\n"
         "main()\n"
     )
     r = subprocess.run(
@@ -76,8 +76,8 @@ def test_preflight_main_require_gauss(
     """Exercise main() directly, failing via missing gauss."""
     monkeypatch.setenv("PATH", str(tmp_path))
     monkeypatch.setenv("FEP_LEAN_SKIP_FALLBACKS", "1")
-    monkeypatch.setattr(sys, "argv", ["fep-lean-preflight", "--require-gauss"])
-    from verification.preflight import main
+    monkeypatch.setattr(sys, "argv", ["fep-lean preflight", "--require-gauss"])
+    from fep_lean.verification.preflight import main
 
     with pytest.raises(SystemExit) as exc:
         main()
@@ -88,7 +88,7 @@ def test_run_preflight_happy_path(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """A partial tree remains a strict full-mode failure."""
-    from verification import preflight
+    from fep_lean.verification import preflight
 
     monkeypatch.setattr(preflight, "project_root", lambda: tmp_path / "proj")
     bin_dir = tmp_path / "bin"

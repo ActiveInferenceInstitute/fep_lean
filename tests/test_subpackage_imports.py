@@ -1,81 +1,124 @@
-"""Test verifying that all subpackages are importable standalone."""
+"""Test the installed ``fep_lean`` package surface."""
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
+
+import tomllib
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_root_package_init_importable():
-    """Import the src/__init__.py as a package to cover its re-exports."""
-    proj_root = Path(__file__).resolve().parent.parent
-    src_parent = str(proj_root)
-    added = src_parent not in sys.path
-    if added:
-        sys.path.insert(0, src_parent)
-    try:
-        import src
+    """The distribution name is also the one importable root package."""
+    import fep_lean
 
-        assert src.__version__
-        # Spot-check a few re-exported names
-        assert hasattr(src, "FEPTopicCatalogue")
-        assert hasattr(src, "LeanVerifier")
-        assert hasattr(src, "HermesExplainer")
-        assert hasattr(src, "FEPPipeline")
-        assert hasattr(src, "Reporter")
-        assert len(src.__all__) > 10
-    finally:
-        if added:
-            sys.path.remove(src_parent)
+    assert fep_lean.__version__
+    assert hasattr(fep_lean, "FEPTopicCatalogue")
+    assert hasattr(fep_lean, "LeanVerifier")
+    assert hasattr(fep_lean, "HermesExplainer")
+    assert hasattr(fep_lean, "FEPPipeline")
+    assert hasattr(fep_lean, "Reporter")
+    assert hasattr(fep_lean, "SemanticDisposition")
+    assert hasattr(fep_lean, "TheoremMaturityAudit")
+    assert hasattr(fep_lean, "validate_native_lean_receipt")
+    assert hasattr(fep_lean, "render_manuscript")
+    assert hasattr(fep_lean, "manuscript_projection_drift")
+    assert hasattr(fep_lean, "build_formalism_atlas")
+    assert hasattr(fep_lean, "build_formal_kernel_dashboard")
+    assert hasattr(fep_lean, "run_formalism_audit")
+    assert len(fep_lean.__all__) > 10
+
+
+def test_runtime_version_matches_distribution_metadata() -> None:
+    """The public runtime version must not drift from the wheel metadata."""
+    import fep_lean
+
+    metadata = tomllib.loads(
+        (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    assert fep_lean.__version__ == metadata["project"]["version"]
 
 
 def test_catalogue_imports():
-    from catalogue.topics import FEPTopicCatalogue
+    from fep_lean.catalogue import (
+        FEPTopicCatalogue,
+        SemanticDisposition,
+        TheoremMaturityAudit,
+    )
 
     assert FEPTopicCatalogue is not None
+    assert SemanticDisposition.FORMALIZED.value == "formalized"
+    assert TheoremMaturityAudit is not None
 
 
 def test_verification_imports():
-    from verification.lean_verifier import LeanVerifier
+    from fep_lean.verification.lean_verifier import LeanVerifier
 
     assert LeanVerifier is not None
 
 
 def test_gauss_imports():
-    from gauss.client import OpenGaussClient
+    from fep_lean.gauss.client import OpenGaussClient
 
     assert OpenGaussClient is not None
 
 
 def test_llm_imports():
-    from llm.hermes import HermesExplainer
+    from fep_lean.llm.hermes import HermesExplainer
 
     assert HermesExplainer is not None
 
 
 def test_output_imports():
-    from output.manuscript import (
+    from fep_lean.output import (
+        ManuscriptRenderError,
+        ReleaseBundleError,
+        build_formal_kernel_dashboard,
+        build_formalism_atlas,
         build_manuscript_vars,
+        build_numerical_witness_receipt,
+        build_python_acceptance_receipt,
+        build_release_bundle,
         build_typeset_equations_markdown,
         build_unified_formalism_appendix_markdown,
+        manuscript_projection_drift,
+        render_manuscript,
+        render_publication_manuscript,
+        validate_native_lean_receipt,
+        validate_release_bundle,
+        write_formal_kernel_dashboard,
+        write_formalism_atlas,
         write_manuscript_vars,
-        write_typeset_equations_markdown,
         write_unified_formalism_appendix_markdown,
     )
 
     assert callable(build_manuscript_vars)
+    assert callable(build_formalism_atlas)
+    assert callable(build_formal_kernel_dashboard)
     assert callable(write_manuscript_vars)
     assert callable(write_unified_formalism_appendix_markdown)
     assert callable(build_typeset_equations_markdown)
-    assert callable(write_typeset_equations_markdown)
     assert callable(build_unified_formalism_appendix_markdown)
+    assert callable(manuscript_projection_drift)
     assert callable(write_unified_formalism_appendix_markdown)
-    from output.reporter import Reporter
+    assert callable(render_manuscript)
+    assert callable(render_publication_manuscript)
+    assert callable(validate_native_lean_receipt)
+    assert callable(build_numerical_witness_receipt)
+    assert callable(build_python_acceptance_receipt)
+    assert callable(build_release_bundle)
+    assert callable(validate_release_bundle)
+    assert callable(write_formalism_atlas)
+    assert callable(write_formal_kernel_dashboard)
+    assert issubclass(ManuscriptRenderError, ValueError)
+    assert issubclass(ReleaseBundleError, ValueError)
+    from fep_lean.output.reporter import Reporter
 
     assert Reporter is not None
 
 
 def test_pipeline_imports():
-    from pipeline.core import FEPPipeline
+    from fep_lean.pipeline.core import FEPPipeline
 
     assert FEPPipeline is not None

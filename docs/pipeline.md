@@ -12,10 +12,16 @@ turns an unavailable service into a successful-looking partial run. Catalogue
 mode records the Gauss stage as `not_run`, writes a report marked
 `catalogue`, and reports zero verified topics.
 
+A full row is verified only when Hermes completed the requested workflow and
+the final Lean source compiled with neither `sorry` nor warnings. The `review`
+workflow is ordered: Lean refinement, native compilation, then prose-only
+review of that exact compiled source. Both provider turns are persisted in the
+SQLite session, and a failed commentary turn fails the requested workflow.
+
 ## Programmatic use
 
 ```python
-from pipeline.orchestrator import run_pipeline, run_single_topic
+from fep_lean.pipeline import run_pipeline, run_single_topic
 
 offline = run_pipeline(mode="catalogue")
 strict = run_pipeline(mode="full", topic_filter=["fep-001"])
@@ -27,6 +33,9 @@ and SHA-256 artifact hashes. The in-memory result remains the source for the
 report, so serialized topic fields must stay aligned with `TopicRunResult`.
 
 After a report exists, run [`verify_report_receipt.py`](../scripts/verify_report_receipt.py)
-to independently recompute its hashes and reconcile the manifests. A receipt
-is claim-ready only when `--require-complete` accepts a non-empty full-mode run;
-catalogue receipts remain offline artifacts with zero verified topics.
+to independently recompute its complete artifact inventory and reconcile the
+manifests. A receipt is claim-ready only when `--require-complete` accepts a
+non-empty full-mode run whose Hermes session/model, direct compile result,
+exact compiled Lean digest, actual compiler version, resolved Mathlib revision,
+and one-per-topic Markdown roster all agree with the live source tree.
+Catalogue receipts remain offline artifacts with zero verified topics.

@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from catalogue.topics import FEPTopicCatalogue
-from gauss.client import OpenGaussClient
-from gauss.runner import GaussRunner, _prefetch_enabled
-from llm.hermes import HermesConfig, HermesExplainer, HermesResult
-from verification.lean_verifier import LeanVerifier
+from fep_lean.catalogue.topics import FEPTopicCatalogue
+from fep_lean.gauss.client import OpenGaussClient
+from fep_lean.gauss.runner import GaussRunner, _prefetch_enabled
+from fep_lean.llm.hermes import HermesConfig, HermesExplainer, HermesResult
+from fep_lean.verification.lean_verifier import LeanVerifier
 
 PROJ = Path(__file__).resolve().parent.parent
 TOPICS = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
@@ -23,7 +23,9 @@ class _CountingHermes(HermesExplainer):
         super().__init__(cfg)
         self.explain_calls = 0
 
-    def explain_topic(self, topic, *, preamble: str = "") -> HermesResult:  # type: ignore[override]
+    def explain_topic(
+        self, topic, *, preamble: str = "", request_lean: bool = True
+    ) -> HermesResult:
         self.explain_calls += 1
         return super().explain_topic(topic, preamble=preamble)
 
@@ -69,7 +71,7 @@ def test_prefetch_batch_matches_serial_topic_ids(
     monkeypatch.delenv("FEP_LEAN_PREFETCH", raising=False)
     serial = runner_prefetch.run_topics_batch(subset)
     # Fresh runner for prefetch path (separate DB in tmp_path to avoid
-    # polluting the repo tree — see projects/fep_lean/.gitignore guard).
+    # polluting the checkout — see the project-root .gitignore guard).
     cfg = HermesConfig(enabled=True, api_key="")
     h2 = _CountingHermes(cfg)
     lean = LeanVerifier(PROJ / "lean", PROJ)

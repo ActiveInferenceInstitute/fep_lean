@@ -17,6 +17,12 @@
 
 % ── Code Listings ────────────────────────────────────────────────
 \usepackage{listings}
+\usepackage{fvextra}
+\RecustomVerbatimEnvironment{Highlighting}{Verbatim}{
+  commandchars=\\\{\},
+  breaklines=true,
+  breakanywhere=true
+}
 \lstset{
   basicstyle=\ttfamily\footnotesize,
   breaklines=true,
@@ -58,10 +64,12 @@
 % the document begins (also covers any later override by the template).
 \PassOptionsToPackage{colorlinks=true,linkcolor=fepred,urlcolor=fepred,citecolor=fepred,anchorcolor=fepred}{hyperref}
 \AtBeginDocument{\hypersetup{colorlinks=true,linkcolor=fepred,urlcolor=fepred,citecolor=fepred,anchorcolor=fepred}}
-\usepackage{cleveref}
+% Pandoc loads bookmark (and therefore hyperref) after header includes. Queue
+% cleveref after bookmark so cross-references are defined in the preamble and
+% retain the package ordering required by cleveref.
+\AddToHook{package/bookmark/after}{\RequirePackage{cleveref}}
 
-% ── Pipeline & Styling ───────────────────────────────────────────
-\usepackage[ruled,vlined]{algorithm2e}
+% ── Styled theorem/code panels ───────────────────────────────────
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
 \tcbset{
@@ -103,23 +111,18 @@
 \newcommand{\gen}[1]{p(#1)}
 \newcommand{\rec}[1]{q(#1)}
 
-% Unicode-capable mono font for Lean code listings.
-% Pandoc's Highlighting (fancyvrb) environment defaults to \ttfamily = lmtt,
-% which lacks Lean's full Greek + math glyph set (alpha mu psi nu sigma int
-% partial vdash much divides). JuliaMono is purpose-built for Julia/Lean
-% source rendering and covers every glyph used by the catalogue (verified
-% 29/29 against the Lean-glyph audit; DejaVuSansMono misses much/divides/
-% blacksquare). Ships with TeX Live 2026.
+% Unicode-capable mono font for Lean code listings. Pandoc's Highlighting
+% (fancyvrb) environment defaults to \ttfamily = lmtt, which lacks the Greek
+% and mathematical glyphs used in the catalogue. FreeSerif covers the complete
+% audited prose glyph set; FreeMono preserves fixed-width code. XeTeX character
+% transitions supply the four mathematical-script carrier names that FreeMono
+% does not contain, without changing the spacing of the surrounding code.
 \usepackage{fontspec}
-\setmonofont{JuliaMono-Regular}[
-  Path             = /usr/local/texlive/2026/texmf-dist/fonts/truetype/public/juliamono/,
-  Extension        = .ttf,
-  UprightFont      = *,
-  BoldFont         = JuliaMono-Bold,
-  ItalicFont       = JuliaMono-RegularItalic,
-  BoldItalicFont   = JuliaMono-BoldItalic,
-  Scale            = MatchLowercase,
-]
+\setmainfont{FreeSerif}
+\setmonofont{FreeMono}[Scale=MatchLowercase]
+\usepackage{ucharclasses}
+\newfontfamily\leanunicodefont{FreeSerif}
+\setTransitionsFor{MathematicalAlphanumericSymbols}{\leanunicodefont}{}
 
 % Math font for unicode-math: Latin Modern Math has full BMP coverage
 % including U+2223 (\mid), U+226A/226B (\ll/\gg), and the Greek/blackboard

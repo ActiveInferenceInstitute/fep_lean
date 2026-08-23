@@ -6,15 +6,16 @@ from pathlib import Path
 
 import pytest
 
-from pipeline.core import PipelineResult
-from pipeline.orchestrator import project_root, run_pipeline, run_single_topic
+from fep_lean.catalogue.schema import load_catalogue_metadata
+from fep_lean.pipeline.core import PipelineResult
+from fep_lean.pipeline.orchestrator import project_root, run_pipeline, run_single_topic
 
 PROJ = Path(__file__).resolve().parent.parent
 
 
 @pytest.fixture(autouse=True)
 def isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.delenv("PROJECT_DIR", raising=False)
+    monkeypatch.delenv("FEP_LEAN_PROJECT_ROOT", raising=False)
     monkeypatch.setenv("FEP_LEAN_OUTPUT_ROOT", str(tmp_path / "output"))
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
@@ -24,10 +25,10 @@ def test_project_root_default() -> None:
     assert project_root().resolve() == PROJ.resolve()
 
 
-def test_project_root_uses_project_dir(
+def test_project_root_uses_package_specific_override(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setenv("PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("FEP_LEAN_PROJECT_ROOT", str(tmp_path))
     assert project_root().resolve() == tmp_path.resolve()
 
 
@@ -36,6 +37,13 @@ def test_run_single_topic_unknown() -> None:
     assert isinstance(result, PipelineResult)
     assert result.status == "error"
     assert "unknown topic" in result.failure_reason
+
+
+def test_run_single_topic_catalogue_mode() -> None:
+    result = run_single_topic("fep-001", mode="catalogue")
+    assert result.complete is True
+    assert result.catalogue_topics == 1
+    assert result.run_dir
 
 
 def test_run_pipeline_writes_catalogue_report() -> None:
@@ -50,8 +58,12 @@ def test_run_pipeline_writes_catalogue_report() -> None:
 
 def test_run_pipeline_area_filter() -> None:
     result = run_pipeline(mode="catalogue", area_filter="FEP")
+    expected_topics = sum(
+        row.area == "FEP"
+        for row in load_catalogue_metadata(PROJ / "config" / "catalogue_metadata.yaml")
+    )
     assert result.complete is True
-    assert result.catalogue_topics == 14
+    assert result.catalogue_topics == expected_topics
 
 
 def test_run_pipeline_full_fails_without_capabilities() -> None:

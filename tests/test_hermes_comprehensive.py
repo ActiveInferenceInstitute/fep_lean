@@ -1,4 +1,4 @@
-"""Comprehensive tests for llm.hermes — zero direct, real network/os testing."""
+"""Comprehensive tests for fep_lean.llm.hermes — zero direct, real network/os testing."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from llm.hermes import (
+from fep_lean.llm.hermes import (
     HermesAPIError,
     HermesConfig,
     HermesExplainer,
@@ -172,7 +172,7 @@ class TestLoadGaussDotenv:
 
     def setup_method(self) -> None:
         """Expand allowed dotenv keys for test coverage of arbitrary variables."""
-        from llm.hermes import HermesConfig
+        from fep_lean.llm.hermes import HermesConfig
 
         HermesConfig._ALLOWED_DOTENV_KEYS = frozenset(
             {
@@ -279,15 +279,24 @@ class TestKeyAffinityValidation:
         cfg = HermesConfig.from_settings(settings_path=Path("/nonexistent"))
         assert cfg.enabled is False
 
-    def test_correct_key_stays_enabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-correct-key")
+    def test_correct_key_stays_enabled_without_logging_key_material(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        key = "sk-or-v1-correct-key"
+        monkeypatch.setenv("OPENROUTER_API_KEY", key)
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.setenv("GAUSS_HOME", "/tmp/__no_gauss__")
+        caplog.set_level("INFO", logger="fep_lean.llm.hermes")
 
         cfg = HermesConfig.from_settings(settings_path=Path("/nonexistent"))
         assert cfg.enabled is True
-        assert cfg.api_key == "sk-or-v1-correct-key"
+        assert cfg.api_key == key
+        assert "OPENROUTER_API_KEY" in caplog.text
+        assert key not in caplog.text
+        assert key[:12] not in caplog.text
 
 
 class TestCallAPI:

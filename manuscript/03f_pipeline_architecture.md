@@ -2,126 +2,82 @@
 
 ### The Central Execution and Orchestration DAG {#sec:the_6_step_directed_acyclic_graph}
 
-The shipped analysis path is driven by `src/pipeline/orchestrator.py::run_pipeline`: environment validation, manuscript-variable regeneration, figure generation, optional Gauss workflows (`FEP_LEAN_GAUSS_WORKFLOWS=1`) that run Hermes plus `lake env lean` per topic via `GaussRunner`, and a timestamped export bundle. The executable order is documented in `docs/pipeline.md` within the `fep_lean` project tree.
+The architecture is organized around evidence boundaries rather than one undifferentiated success flag:
+
+```text
+maintained metadata + semantic review + Lean bodies
+                         |
+                         v
+             generated catalogue/package data
+                 |                    |
+                 v                    v
+        native Lean receipt      optional full run
+                 |                    |
+                 +---------+----------+
+                           v
+                 checked manuscript build
+```
+
+Catalogue generation is offline. Native verification requires the pinned Lean workspace. Full mode additionally requires the declared Hermes and OpenGauss capabilities. Manuscript rendering consumes validated evidence but cannot create it.
 
 ### Expression Lifecycle: YAML → Manuscript → Lake {#sec:expression_lifecycle_yaml_to_lake}
 
-A single chain ties informal claims to what the PDF and the compiler see:
+The direction of ownership is fixed:
 
-1. **Authoring and storage.** Each topic is a row in `config/topics.yaml` (`id`, `lean_sketch`, `mathlib_status`, `nl`, …). Bulk regeneration runs through `scripts/_maint_build_topics_catalogue.py` and `scripts/catalogue_sketches.py`, as noted in the catalogue headers.
-2. **Toolchain pin.** Lean and Mathlib4 versions are fixed by `lean/lean-toolchain` and `lean/lakefile.lean` inside the Lake workspace used for `lake env lean`.
-3. **Manuscript artifacts.** The `Manuscript Artifacts` stage in `src/pipeline/core.py` writes `manuscript/manuscript_vars.yaml` (carrying catalogue counts, per-area counts, per-topic fields, and the `verify.*` status block) and regenerates `manuscript/09z_unified_formalism_catalogue.md`: for each `fep-NNN`, a **Lean sketch** subsection and a **Typeset statement signatures** subsection (one LaTeX `equation` environment per `theorem`, with `\label{eq:fep-NNN-k}` and `aligned` inside when needed). LaTeX rows prefer `LATEX_EQUATIONS` from `scripts/catalogue_sketches.py` at render time, with YAML `latex_equations` as fallback. The former split appendices B and C are one physical chapter; `\ref{sec:appendix_b_full_topic_lean_catalogue}` and `\ref{sec:appendix_c_latex_equations}` both resolve there. Do not duplicate those bodies elsewhere.
-4. **PDF injection.** During combined Markdown-to-LaTeX rendering, the template renderer (`infrastructure/rendering/_pdf_combined_renderer.py` at the repository root) substitutes `{{…}}` placeholders from `manuscript_vars.yaml`. Run the pipeline or `write_manuscript_vars` before rendering so that placeholders resolve.
-5. **Optional native check.** When verification is enabled, `src/verification/lean_verifier.py` checks each sketch with `lake env lean` inside the Lake project; aggregates land in `verification_manifest.json` and then feed the `verify.*` fields in `manuscript_vars.yaml` after variables are regenerated.
+1. `config/catalogue_metadata.yaml`, `config/theorem_maturity.yaml`, `config/formalism_novelty.yaml`, and the family-owned `fep_lean.catalogue.bodies` modules are maintained inputs.
+2. The catalogue generator joins metadata, semantic review, and bodies strictly by stable topic ID, validates every required novelty bridge against the maintained composition leaves, and writes checkout and wheel data from identical bytes.
+3. Native verification reads the generated catalogue, invokes Lean, and may write a digest-bound receipt.
+4. Manuscript variables are projected from the catalogue plus validated receipts.
+5. The renderer validates all placeholders before writing numbered chapters to a separate build directory.
 
-Appendix §\ref{sec:appendix_comprehensive_formalisms_overview} summarizes the catalogue appendix and the reader affordances it provides; it does not replace steps 1–3.
-
-![Linearized view of the shipped 6-step orchestrator flow. The four recorded `PipelineResult.stages` (Load Catalogue → Environment Validation → Gauss Sessions → Manuscript Artifacts) are followed by two post-`run()` steps (JSONL export and the timestamped report bundle under `output/reports/run_*/`) that `run_pipeline` performs after `FEPPipeline.run` returns. Stage 3 (Gauss Sessions) is opt-in via `FEP_LEAN_GAUSS_WORKFLOWS=1` and is the only stage whose wall-clock depends on OpenRouter latency; the other five stages each complete in under one second on a warm workspace. The figure reveals that the pipeline's cost profile is dominated by a single opt-in stage, making the default (thin) path essentially I/O-bound.](../output/figures/pipeline_dag.png){#fig:pipeline_dag width=100%}
+Generated YAML, aggregate Lean, coverage reports, manuscript variables, and appendices are projections; hand edits to them are not a valid repair.
 
 ### Sequence Diagram: Single Topic Execution {#sec:sequence_diagram_single_topic_execution}
 
-Extended workflows can still follow the multi-turn pattern catalogue NL → Lean sketch → validation request → Hermes. The template-integrated path exports per-topic markdown directly from the YAML catalogue into `output/reports/run_*/topics/` without requiring SQLite. In **thin mode** (default, `FEP_LEAN_GAUSS_WORKFLOWS` unset), the pipeline flows YAML catalogue entries directly into per-topic Markdown reports without any LLM or compiler calls. In **agentic mode** (`FEP_LEAN_GAUSS_WORKFLOWS=1`), each topic additionally traverses the Hermes→Lean→SQLite path before the Markdown report is written.
-
-![Sequence diagram for single-topic execution. In extended (Gauss-enabled) mode the pipeline creates an OpenGauss session, sends the topic to Hermes for LLM explanation and validation via OpenRouter, verifies the refined sketch with `lake env lean`, writes JSON artifacts to `$GAUSS_HOME/fep_artifacts/`, and closes the session in SQLite. In thin mode the catalogue YAML flows directly to per-topic Markdown reports without LLM or Lean calls.](../output/figures/execution_sequence.png){#fig:sequence_diagram width=80%}
+For native verification, one selected topic follows catalogue load → isolated temporary source → `lake env lean` → structured result. In full mode, Hermes may propose or explain a sketch before native checking, but the kernel outcome remains decisive. A failed or unavailable provider cannot be converted into a native or full success through baseline substitution.
 
 ### Persistent State: Dual-Mode Storage {#sec:persistent_state_sqlite_schema}
 
-State persistence depends on the pipeline mode.
-
-**Lightweight mode** (default, `FEP_LEAN_GAUSS_WORKFLOWS` unset) uses file-based run bundles only:
-
-- `output/reports/run_YYYYMMDD_HHMMSS/` holds `index.md`, `summary.json`, `hermes_report.md`, `lean_report.md`, `validation_report.md`, and `topics/*.md`. Bulk session JSONL, when exported, lives under `$GAUSS_HOME/fep_artifacts/` rather than in the run directory.
-- `output/reports/gauss_doctor_last.json` is optional and appears after a successful `gauss doctor`.
-- `manuscript/manuscript_vars.yaml` receives the injected catalogue statistics used during rendering.
-
-**Full agentic mode** (`FEP_LEAN_GAUSS_WORKFLOWS=1`) instantiates `GaussRunner` (from `src/gauss/runner.py`) driving an `OpenGaussClient`, which writes to a strict SQLite session store at `$GAUSS_HOME/fep_lean_state.db` (default `~/.gauss/`). Orchestration milestones — sessions, LLM turns, compiled artifacts, and verification logs — are mapped from native Python `PipelineResult` dataclasses into five SQL tables (`sessions`, `turns`, `artifacts`, `logs`, `hermes_cache`), all configured with Write-Ahead Logging (WAL) and strict constraints. See [opengauss.md](../docs/opengauss.md) for the internal schema design.
-
-When present, `verification_manifest.json` (under the same run tree) summarizes the native compilation sweep.
+Offline catalogue mode needs no external state. Native receipts are standalone JSON artifacts. Full mode may persist session and model interaction state through OpenGauss-compatible SQLite storage, while its publication contract is the independently validated report directory. The distinction lets readers verify compiler evidence without trusting a database or provider.
 
 #### Per-topic audit trail {#sec:per_topic_audit_trail}
 
-For each topic, readers can consult the exported `topics/<id>.md` and `summary.json` for run-scoped machine-readable data; the full catalogue rows remain canonical in `config/topics.yaml`. In full agentic mode, Hermes transcripts are stored in the SQLite `turns` table and exported as per-session JSON artifacts under `$GAUSS_HOME/fep_artifacts/`.
+Canonical topic content lives in the generated package catalogue; semantic review lives in the maintained maturity source. Native receipt rows add compiler status, warnings, admissions, elapsed time, and toolchain identity. Full report rows add provider and orchestration provenance. The layers are linked by topic ID and digests, not by copied prose.
 
 #### Run-level artifacts {#sec:run_level_artifacts}
 
-Each `output/reports/run_YYYYMMDD_HHMMSS/` folder contains `index.md`, `summary.json`, `hermes_report.md`, `lean_report.md`, `validation_report.md`, and `topics/*.md`, and adds `verification_manifest.json` whenever a verification sweep has been executed.
+The report validator, rather than this manuscript, owns the exact artifact roster. It rejects missing required files, unsafe paths, hash mismatches, disagreement among summary/run/verification manifests, incomplete topic rosters, and drift from the live source tree.
 
-### SQLite Schema: Five Tables {#sec:sqlite_schema_five_tables}
+### SQLite Storage Boundaries {#sec:sqlite_schema_five_tables}
 
-When `FEP_LEAN_GAUSS_WORKFLOWS=1`, the pipeline persists state in `$GAUSS_HOME/fep_lean_state.db` (default `~/.gauss/`). The schema contains five tables:
-
-| Table | Key Columns | Purpose |
-|-------|-------------|---------|
-| `sessions` | `id`, `topic_id`, `model`, `status`, `hermes_success`, `lean_compiles`, `duration_s`, `created_at` | One row per topic per run |
-| `turns` | `id`, `session_id`, `turn_index`, `role`, `content`, `tokens` | LLM dialogue: system, user, assistant, assistant_reasoning |
-| `artifacts` | `id`, `session_id`, `artifact_type`, `path`, `content` | JSON artifacts with Hermes and `VerifyResult` fields |
-| `logs` | `id`, `session_id`, `level`, `message`, `timestamp` | Per-topic diagnostic log |
-| `hermes_cache` | `id`, `cache_key`, `response`, `model`, `created_at`, `expires_at` | SHA-256 keyed response cache |
-
-**Key design decisions:**
-
-- WAL (Write-Ahead Logging) is enabled for concurrent read/write safety.
-- `hermes_cache` uses `SHA-256(topic_id + lean_sketch + model + stage)` as its key, so cache hits avoid redundant OpenRouter calls.
-- `sessions.lean_compiles` is a boolean derived from `VerifyResult.compiles`.
+The optional persistence layer separates sessions, dialogue turns, artifacts, logs, and cached provider responses. This separation exists so a compiler result is not reconstructed from an LLM transcript and a cached provider response is not mistaken for a fresh run. The schema in `fep_lean.gauss.client` is canonical; duplicating its columns here would invite drift.
 
 ### Environment Variable Reference {#sec:environment_variable_reference}
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `OPENROUTER_API_KEY` | — | Required for live Hermes calls |
-| `FEP_LEAN_GAUSS_WORKFLOWS` | `0` | Set to `1` to enable Hermes + Lean workflow |
-| `HERMES_MODEL` | `{{hermes.primary_model}}` | Override primary LLM model (current pipeline default) |
-| `HERMES_429_MAX_RETRIES` | `2` | Max retries on HTTP 429 per model before advancing chain |
-| `HERMES_NETWORK_MAX_RETRIES` | `2` | Max retries on transient network errors |
-| `HERMES_MAX_MODEL_ATTEMPTS` | `6` | Max models to try from fallback chain |
-| `FEP_LEAN_VERIFY_TIMEOUT` | `300` | Seconds before `lake env lean` subprocess is killed |
-| `GAUSS_HOME` | `~/.gauss` | Directory for SQLite DB and artifacts |
-| `GAUSS_DEFAULT_MODEL` | — | Fallback model if `HERMES_MODEL` unset |
-| `LOG_LEVEL` | `1` | 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR |
+Environment variables configure credentials, provider budgets, timeouts, and storage locations. The supported names and defaults belong to the configuration and CLI documentation. Two principles matter for reproducibility:
 
-**PYTHONPATH ordering requirement.** `projects/fep_lean/src` *must* appear before `infrastructure/` on `PYTHONPATH`, because `infrastructure/llm/` would otherwise shadow `projects/fep_lean/src/llm/` under Python's first-match-wins module resolution. Correct invocation:
+- credentials enable full mode but do not alter native theorem truth;
+- changing a timeout or model invalidates any claim that a previous full receipt describes the new configuration.
 
-```bash
-PYTHONPATH=projects/fep_lean/src:.:infrastructure \
-  FEP_LEAN_GAUSS_WORKFLOWS=1 \
-  uv run python projects/fep_lean/scripts/01_fep_catalogue_and_figures.py
-```
+The package now uses the unambiguous `fep_lean` namespace, so correctness no longer depends on placing collision-prone top-level modules such as `catalogue`, `pipeline`, or `output` first on `PYTHONPATH`.
 
 ### Representative Run Statistics {#sec:pipeline_run_statistics}
 
-| Metric | Value |
-|--------|-------|
-| Total topics | {{total_topics}} |
-| Hermes API successes | {{hermes.success_count}}/{{hermes.processed}} (run `{{hermes.run_id}}`; cache hits {{hermes.cache_hits}}) |
-| Lean compilation successes | **Catalogue baseline** (`scripts/03_lean_verify_only.py`): **{{compile_rate.total}}**; **Hermes-assisted live run** (`{{verify.run_id}}`): **{{compile_rate.total}} clean, {{verify.sorry_count}} sorry, {{verify.compiles_false}} errors** — see §\ref{sec:live_verification_error_taxonomy} |
-| Wall-clock time | ≈{{verify.duration_min}} min for {{total_topics}} topics with live Hermes at `HermesConfig.timeout_s=150` and `FEP_LEAN_VERIFY_TIMEOUT=300` (measured `{{verify.run_id}}`; provider-dependent) |
-| Mean time per topic | ≈{{hermes.mean_topic_s}} s mean across the recorded run (LLM-dominated: Hermes HTTP + ~1–2 s `lake env lean`; reasoning models such as `{{hermes.primary_model}}` push this into the minutes-per-topic range, while non-reasoning chat models historically median ≈25 s. See §\ref{sec:execution_metrics_the_definitive_run}) |
-| Primary model | {{hermes.primary_model}} (full distribution: {{hermes.models_used}}; OpenRouter chain advances: {{hermes.model_fallback_count}}/{{hermes.processed}}; reasons: {{hermes.chain_advance_reasons_summary}} — see §\ref{sec:three_classes_of_fallback}) |
-| Same-model network retries | {{hermes.network_retry_count}} (HTTP 429 / transient transport, bounded by `HERMES_429_MAX_RETRIES`+`HERMES_NETWORK_MAX_RETRIES`; see §\ref{sec:three_classes_of_fallback}) |
-| Hermes-refined Lean compiled directly | {{hermes.hermes_lean_compiles_count}}/{{hermes.processed}} (a refined sketch that fails `lake env lean` is recorded as a topic failure — no baseline substitution; see §\ref{sec:three_classes_of_fallback}) |
-| Mean tokens per topic | {{hermes.tokens_mean}} tokens (bounded by `HermesConfig.max_tokens=16384`; run `{{hermes.run_id}}`) |
-| {{total_topics}}-topic total tokens | {{hermes.tokens_total}} (run `{{hermes.run_id}}`) |
+No unvalidated run is called representative. The renderer reports native evidence `{{verify.evidence_kind}}` with `{{verify.compiles_true}}/{{verify.topics_with_result}}` compiler successes, {{verify.warning_count}} warnings, and {{verify.sorry_count}} admissions. It reports full readiness as `{{full.claim_ready}}`; Hermes fields remain unavailable unless that predicate is true.
 
 ### Execution Metrics: Representative Run {#sec:execution_metrics_the_definitive_run}
 
-Wall-clock for a full {{total_topics}}-topic run is dominated by OpenRouter latency whenever Hermes is live. The table below is illustrative; substitute numbers from a specific `summary.json` when citing concrete figures.
-
-| Metric | Verified Orchestrator Profile |
-|--------|----------------------------------|
-| Total duration | ~{{verify.duration_min}} minutes for {{total_topics}} topics with live Hermes (`{{hermes.primary_model}}`, run `{{verify.run_id}}`); reasoning models dominate wall-clock and are provider/queue dependent. The `ANALYSIS_SCRIPT_TIMEOUT_SEC` per-script cap defaults to 7200 s (2 h); set `0` for unlimited. |
-| Mean time per topic | ~{{hermes.mean_topic_s}} s for the recorded run (reasoning models dominate wall-clock; the isolated `lake env lean` is ~1–2 s on a warm cache) |
-| Compiler latency | ~1–2 s per sketch with narrow Mathlib4 imports; substantially longer with a blanket `import Mathlib` |
-| Hermes success share | 0/N when Hermes is skipped or every call fails; up to N/N with a valid key and successful responses (N is the number of topics processed) |
-
-When `verification_manifest.json` exists, its compile-rate fields feed the `verify.*` entries in `manuscript_vars.yaml`. Regenerate those variables after any native sweep so the file reflects the newest manifest under `output/reports/run_*/` or your configured report root.
+For receipt `{{verify.run_id}}`, recorded native compiler time is {{verify.duration_seconds}} seconds in total and {{verify.mean_topic_s}} seconds per result. Provider latency, if present in a claim-ready full receipt, is reported independently. These observations are machine-specific and are not extrapolated into general performance bounds.
 
 ### Reproducibility Checklist {#sec:reproducibility_checklist}
 
-From the `fep_lean` project root:
+From the project root:
 
-1. **Python environment.** `uv sync` (dependencies are declared in `pyproject.toml`; this package has no `requirements.txt`).
-2. **Lean workspace.** Run `./scripts/_maint_bootstrap_lean_toolchain.sh` (or `uv run fep-lean setup`, which wraps it). Optional: `PYTHONPATH=src uv run python scripts/03_lean_verify_only.py` runs the Lean batch check locally across every sketch.
-3. **Run bundle.** From the project root, `PYTHONPATH=src uv run python scripts/01_fep_catalogue_and_figures.py` or `scripts/02_run_single_topic.py`. From the monorepo root, `uv run python scripts/02_run_analysis.py --project fep_lean`. See `pipeline/orchestrator.py` for the programmatic entrypoints.
-4. **Full run with live Hermes and verification.** Export `OPENROUTER_API_KEY`, set `export FEP_LEAN_GAUSS_WORKFLOWS=1`, and ensure `gauss.verify_lean: true` in `config/settings.yaml` (the default in the shipped file).
+1. synchronize the locked Python environment with `uv sync --locked`;
+2. explicitly prepare the pinned Lean workspace with `uv run fep-lean setup` when its cache is absent;
+3. regenerate and drift-check catalogue, aggregate Lean, semantic audit, and coverage projections;
+4. run `uv run fep-lean verify --fail-on-warnings --receipt output/native-verification.json` for native evidence;
+5. generate manuscript variables, run the placeholder and theorem-reference audits, and render to `output/manuscript/`;
+6. run full mode only when its external capabilities and credentials are intentionally supplied, then validate its report before citing it.
 
-Hermes natural-language wording may vary between runs; the Lean compiler output for a fixed sketch under a pinned toolchain is fully reproducible.
+Hermes wording may vary. A fixed Lean source under the pinned toolchain is reproducible; a native receipt additionally binds that result to the current catalogue bytes.

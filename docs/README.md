@@ -1,6 +1,10 @@
 # Documentation map
 
 - [Getting started](getting-started.md) — install, catalogue mode, and strict mode.
+- [FEP background](fep-background.md) — conceptual orientation with explicit formalization boundaries.
+- [Formal-kernel methods](formal-kernel-methods.md) — shared carriers, theorem scope, validation ladder, and visualization contract.
+- [155-topic expansion chapter](../manuscript/04i_formalism_catalogue_155.md) — finite risk, policy trees, native blankets, exponential-family duality, continuous time, and evidence boundaries.
+- [Topic reference](topics-reference.md) — canonical owners, inspection, and receipt semantics.
 - [Pipeline](pipeline.md) — stages, modes, and result contract.
 - [CLI reference](cli-reference.md) — canonical command surface.
 - [Configuration](configuration.md) — settings and environment overrides.
@@ -10,10 +14,16 @@
 - [Testing](testing.md) — local and CI validation.
 - [Cold start](cold-start-and-cleanup.md) — disposable output cleanup.
 - [Theorem maturity audit](theorem-maturity-audit.md) — semantic scope review beyond compilation.
+- [Formalism coverage](formalism-coverage.md) — generated breadth, declarations, imports, and semantic gaps.
+- [Interactive formalism atlas](formalism-atlas.html) — offline searchable graph separating derivational formal edges, checked formal pairings, and conceptual relations, with accessible tables.
+- [Static formalism atlas](formalism-atlas.svg) — deterministic publication-safe projection of the same graph.
+- [Interactive formal-kernel dashboard](formal-kernel-dashboard.html) — deterministic numerical witnesses for selected checked laws.
+- [Static formal-kernel dashboard](formal-kernel-dashboard.svg) — publication-safe projection of the numerical witness view.
 - [Quality-gate decision](quality.md) — Ruff baseline, ownership, and staged policy.
-- [Test suite review](test-suite-review.md) — structure, coverage, parallelism, and anti-pattern audit.
-- [Mahakala adversarial review](mahakala-review.md) — multi-wave red-team, deception detection, and persona-based review.
+- [Test suite review](test-suite-review.md) — dated historical snapshot, retained as review provenance.
+- [Mahakala adversarial review](mahakala-review.md) — dated historical adversarial-review snapshot.
 - [Publication](development.md) — documentation and rendered-artifact gates.
 
-All paths in this directory resolve within this repository. Generated files are
-created by `uv run fep-lean catalogue` before manuscript cross-reference checks.
+All paths in this directory resolve within this repository. Catalogue-derived
+manuscript inputs are created by `uv run fep-lean catalogue`; coverage, atlas,
+dashboard, and manuscript-render checks each retain a separate freshness gate.

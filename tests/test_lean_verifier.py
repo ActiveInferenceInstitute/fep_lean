@@ -1,4 +1,4 @@
-"""Tests for lean_verifier — real LeanVerifier behaviour with full Mathlib4.
+"""Tests for lean_verifier — real LeanVerifier behavior with full Mathlib4.
 
 All tests use real objects.  Tests requiring lean/lake on PATH are skipped
 gracefully when the tools are unavailable (respects sandboxed CI).
@@ -7,7 +7,7 @@ The verifier is configured with the real fep_lean/lean/ workspace which
 now has Mathlib4 as a Lake dependency.  A one-time setup is required before
 compilation tests can pass:
 
-    cd projects/fep_lean/lean
+    cd lean
     lake exe cache get && lake build
 
 See ``scripts/_maint_bootstrap_lean_toolchain.sh`` (or ``cd lean && lake exe cache get && lake build``).
@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from verification.lean_verifier import (
+from fep_lean.verification.lean_verifier import (
     LeanVerifier,
     VerifyResult,
     _find_exe,
@@ -178,6 +178,20 @@ def test_sanitize_lean_block_strips_late_imports():
     assert "import Mathlib.Data.Finset.Max" not in result
     assert "theorem t" in result
     assert "namespace Foo" in result
+
+
+def test_sanitize_lean_block_preserves_comment_lines_beginning_with_import():
+    """Ordinary prose beginning with ``import`` must not be parsed as a command."""
+    code = (
+        "import Mathlib\n"
+        "namespace Foo\n"
+        "/-- A positive product law satisfies the\n"
+        "importance-weighted Jensen bound. -/\n"
+        "theorem t : True := True.intro\n"
+        "end Foo"
+    )
+
+    assert _sanitize_lean_block(code) == code
 
 
 # ── verify_sketch (without lake) ──────────────────────────────────────────────

@@ -1,10 +1,18 @@
-# Quality-gate decision record (updated 2026-07-31)
+# Quality-gate decision record (updated 2026-08-19)
 
-**Decision date:** 2026-07-31<br>
+**Decision date:** 2026-08-19<br>
 **Owner:** fep_lean repository maintainers<br>
-**Decision:** Ruff check is blocking (0 lint findings); Ruff format has 55-file debt (informational).
+**Decision:** Ruff lint and formatting are both blocking zero-debt gates.
 
-## Revision 4 — 2026-07-31 (current)
+## Revision 5 — 2026-08-19 (current)
+
+CI now runs both `ruff check src tests scripts docs` and
+`ruff format --check src tests scripts docs` without `--exit-zero` or a shell
+fallback. The repository is clean under the pinned development dependency.
+Any future exception belongs in the reviewed `pyproject.toml` rule policy, not
+in an informational CI wrapper.
+
+## Revision 4 — 2026-07-31 (superseded)
 
 Ruff is pinned at `>=0.15.0`. Both `ruff check` (lint) and `ruff format --check`
 (format) are clean — zero findings across `src/`, `tests/`, `scripts/`, `docs/`.
@@ -20,14 +28,13 @@ informational pending verification that the format pass is stable on CI runners.
 3. ✅ **Run `ruff format` on the 55 remaining files** to clear the format debt, then
    promote `ruff format --check` to a blocking gate. (Done: 55 files reformatted,
    format check clean locally.)
-4. ☐ **Remove `--exit-zero` from CI format step** once format pass is validated on
-   CI runners. Update `ci.yml` to run `ruff format --check` without `|| echo "..."`.
+4. ✅ **Remove the CI format fallback and make the clean format check blocking.**
+   (Completed in revision 5.)
 
 ### CI state
 
 - `ruff check src tests scripts docs` — blocking (removed `--exit-zero`)
-- `ruff format --check src tests scripts docs` — informational (`--exit-zero`) pending
-  step 3
+- `ruff format --check src tests scripts docs` — blocking
 
 ## Revision 3 — 2026-07-31 (superseded)
 

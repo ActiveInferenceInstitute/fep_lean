@@ -4,130 +4,40 @@
 from __future__ import annotations
 
 import argparse
-import re
 import sys
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
-
-import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
-if str(ROOT / "scripts") not in sys.path:
-    sys.path.insert(0, str(ROOT / "scripts"))
-
 AUDIT_PATH = ROOT / "config" / "theorem_maturity.yaml"
 OUTPUT_PATH = ROOT / "docs" / "theorem-maturity-audit.md"
-EXPECTED_IDS = tuple(f"fep-{index:03d}" for index in range(1, 51))
-REQUIRED_FIELDS = (
-    "id",
-    "primary_theorem",
-    "invariant",
-    "assumption_review",
-    "non_vacuity",
-    "acceptance_probe",
-    "disposition",
-)
-ALLOWED_DISPOSITIONS = {
-    "proxy",
-    "conditional_proxy",
-    "structural_proxy",
-    "scope_gap",
-    "assumption_gap",
-}
-
-
-def load_audit(path: Path = AUDIT_PATH) -> dict[str, Any]:
-    """Load the maintained audit data without writing any files."""
-    try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError) as exc:
-        raise ValueError(f"cannot read theorem maturity audit {path}: {exc}") from exc
-    if not isinstance(data, dict):
-        raise TypeError("theorem maturity audit must be a YAML object")
-    return data
-
-
-def _theorem_names(body: str) -> set[str]:
-    return set(re.findall(r"^\s*theorem\s+([A-Za-z0-9_]+)\s*", body, re.MULTILINE))
-
-
-def _source_sketches() -> dict[str, str]:
-    from catalogue_sketches import SKETCHES
-
-    return SKETCHES
 
 
 def validate_audit(root: Path = ROOT) -> dict[str, Any]:
-    """Validate coverage, required review fields, and theorem-name parity."""
-    path = root / "config" / "theorem_maturity.yaml"
-    data = load_audit(path)
-    errors: list[str] = []
-    if data.get("schema_version") != 1:
-        errors.append("schema_version must be 1")
-    if not str(data.get("review_date", "")).strip():
-        errors.append("review_date is required")
-    for field in ("native_evidence", "status_policy"):
-        if not str(data.get(field, "")).strip():
-            errors.append(f"{field} is required")
+    """Return package-validated rows in the Markdown renderer's input shape."""
+    from fep_lean.catalogue.semantics import load_theorem_maturity
+    from fep_lean.catalogue.topics import FEPTopicCatalogue
 
-    from catalogue.topics import FEPTopicCatalogue
-
-    try:
-        catalogue = FEPTopicCatalogue.from_yaml(root / "config" / "topics.yaml")
-    except Exception as exc:
-        errors.append(f"catalogue validation failed: {exc}")
-        catalogue = None
-
-    raw_topics = data.get("topics")
-    if not isinstance(raw_topics, list):
-        errors.append("topics must be a list")
-        raw_topics = []
-    rows = [row for row in raw_topics if isinstance(row, dict)]
-    if len(rows) != len(raw_topics):
-        errors.append("every audit topic must be an object")
-    ids = [str(row.get("id", "")) for row in rows]
-    if ids != list(EXPECTED_IDS):
-        errors.append(
-            "audit topic IDs must be exactly fep-001 through fep-050 in order"
-        )
-    if catalogue is not None and ids != [topic.id for topic in catalogue.topics]:
-        errors.append("audit topic IDs do not match config/topics.yaml")
-
-    sketches = _source_sketches()
-    for row in rows:
-        topic_id = str(row.get("id", "<missing>"))
-        missing = [
-            field for field in REQUIRED_FIELDS if not str(row.get(field, "")).strip()
-        ]
-        if missing:
-            errors.append(f"{topic_id}: missing review fields: {', '.join(missing)}")
-        disposition = row.get("disposition")
-        if disposition not in ALLOWED_DISPOSITIONS:
-            errors.append(f"{topic_id}: unsupported disposition {disposition!r}")
-        theorem = str(row.get("primary_theorem", ""))
-        body = sketches.get(topic_id, "")
-        if not body:
-            errors.append(f"{topic_id}: missing source sketch")
-        elif theorem not in _theorem_names(body):
-            errors.append(
-                f"{topic_id}: primary theorem {theorem!r} is not in the source sketch"
-            )
-        probe = str(row.get("acceptance_probe", ""))
-        if "native Lean compile" not in probe:
-            errors.append(
-                f"{topic_id}: acceptance_probe must name a native Lean compile"
-            )
-
-    if errors:
-        raise ValueError("theorem maturity audit failed:\n- " + "\n- ".join(errors))
+    audit = load_theorem_maturity(root / "config" / "theorem_maturity.yaml")
+    catalogue = FEPTopicCatalogue.from_yaml(root / "config" / "topics.yaml")
+    if [record.id for record in audit.records] != [
+        topic.id for topic in catalogue.topics
+    ]:
+        raise ValueError("audit topic IDs do not match config/topics.yaml")
+    rows = []
+    for record in audit.records:
+        row = asdict(record)
+        row["disposition"] = record.disposition.value
+        rows.append(row)
     return {
-        "schema_version": data["schema_version"],
-        "review_date": data["review_date"],
-        "native_evidence": data["native_evidence"],
-        "status_policy": data["status_policy"],
+        "schema_version": audit.schema_version,
+        "review_date": audit.review_date,
+        "native_evidence": audit.native_evidence,
+        "status_policy": audit.status_policy,
         "topics": rows,
     }
 
@@ -153,7 +63,8 @@ def render_markdown(data: dict[str, Any]) -> str:
         f"**Native evidence boundary:** {data['native_evidence']}",
         "",
         "A `scope_gap` or `assumption_gap` is an honest follow-up boundary, not a",
-        "compiler failure. No catalogue row was relabelled by this review.",
+        "compiler failure. Dispositions are maintained mathematical judgments,",
+        "not values inferred from successful compilation.",
         "",
         "## Status-change policy",
         "",
@@ -164,6 +75,7 @@ def render_markdown(data: dict[str, Any]) -> str:
         "",
         "## Dispositions",
         "",
+        "- `formalized`: the primary theorem directly states the maintained narrowed invariant.",
         "- `proxy`: useful foundational formal fact, with a narrower scope than the prose.",
         "- `conditional_proxy`: meaningful conditional fact whose hypotheses are explicit.",
         "- `structural_proxy`: type, set, metric, or algebra closure fact used as an anchor.",
@@ -199,7 +111,8 @@ def render_markdown(data: dict[str, Any]) -> str:
             "",
             "- [Maintained audit data](../config/theorem_maturity.yaml)",
             "- [Catalogue metadata](../config/topics.yaml)",
-            "- [Lean body source](../scripts/catalogue_sketches.py)",
+            "- [Lean body registry](../src/fep_lean/catalogue/registry.py)",
+            "- [Family-owned Lean bodies](../src/fep_lean/catalogue/bodies/)",
             "- [Native verification command](cli-reference.md)",
             "",
         ]
@@ -212,11 +125,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--write", action="store_true", help="write the generated Markdown projection"
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="fail without writing when the generated projection is stale",
+    )
     args = parser.parse_args(argv)
     data = validate_audit()
+    if args.write and args.check:
+        parser.error("--write and --check are mutually exclusive")
     if args.write:
         OUTPUT_PATH.write_text(render_markdown(data), encoding="utf-8")
         print(f"Wrote {OUTPUT_PATH}")
+    elif args.check:
+        expected = render_markdown(data)
+        try:
+            current = OUTPUT_PATH.read_text(encoding="utf-8")
+        except OSError:
+            current = ""
+        if current != expected:
+            print(f"STALE: {OUTPUT_PATH.relative_to(ROOT)}", file=sys.stderr)
+            return 1
+        print("OK: theorem maturity projection is current")
     else:
         print(f"OK: {len(data['topics'])} theorem-maturity rows validated")
     return 0

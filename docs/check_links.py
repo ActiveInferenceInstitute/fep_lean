@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate internal markdown links (and optionally anchors) under ``projects/fep_lean/docs/``.
+"""Validate internal Markdown links and optional anchors under ``docs/``.
 
 Features
 --------
@@ -10,7 +10,7 @@ Features
 - **New**: ``--strict`` validates that a ``#anchor`` actually exists in the
   target markdown (heading slugs and explicit HTML ``id="..."`` attributes).
 - **New**: exits with code ``1`` if any issue is found (suitable for CI).
-- **New**: ``--include-root`` also scans sibling docs (``projects/fep_lean/README.md``,
+- ``--include-root`` also scans repository-root documents (``README.md``,
   ``AGENTS.md``, ``SPEC.md``, ``PAI.md``) to catch link rot at the project level.
 
 After editing anchors in cross-link hubs such as ``pipeline.md`` or ``configuration.md``,

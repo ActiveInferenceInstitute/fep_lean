@@ -7,7 +7,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from pipeline.core import FEPPipeline, PipelineResult, StepResult, _max_topics_from_env
+from fep_lean.pipeline.core import (
+    FEPPipeline,
+    PipelineResult,
+    StepResult,
+    _max_topics_from_env,
+)
 
 PROJ = Path(__file__).resolve().parent.parent
 
@@ -111,6 +116,41 @@ def test_topic_metrics_use_clean_compilation() -> None:
     assert result.hermes_count == 2
     assert result.lean_verified_count == 2
     assert result.lean_compile_ok == 1
+
+
+def test_full_pipeline_rejects_compiling_topic_with_warnings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pipeline = FEPPipeline(PROJ, output_root=tmp_path / "output")
+    warning = SimpleNamespace(
+        topic_id="fep-001",
+        success=False,
+        hermes_success=True,
+        lean_compiles=True,
+        lean_has_sorry=False,
+        lean_warnings=["fixture warning"],
+        error="fixture warning",
+    )
+    warning.as_dict = lambda: vars(warning).copy()
+    monkeypatch.setattr(
+        "fep_lean.pipeline.core.run_validation_checks",
+        lambda *_args, **_kwargs: {
+            "status": "ok",
+            "failed_count": 0,
+            "checks": [],
+        },
+    )
+    monkeypatch.setattr(
+        pipeline, "_run_gauss", lambda _workflow: {"results": [warning]}
+    )
+    monkeypatch.setattr(pipeline, "_write_artifacts", dict)
+
+    result = pipeline.run(mode="full", topic_filter=["fep-001"])
+
+    assert result.complete is False
+    assert result.verified_topics == 0
+    assert result.lean_stats["warning_count"] == 1
+    assert result.lean_stats["warning_logs"] == ["fep-001: fixture warning"]
 
 
 def test_invalid_mode_rejected() -> None:

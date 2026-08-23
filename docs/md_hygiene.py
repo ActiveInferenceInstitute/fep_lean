@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lint markdown hygiene under ``projects/fep_lean/docs/``.
+"""Lint Markdown hygiene under this checkout's ``docs/`` directory.
 
 Checks (in order)
 -----------------

@@ -1,15 +1,15 @@
 ---
 title: fep_lean Ideal State Assessment
 status: active
-phase: local-readiness
-updated: 2026-07-31
+phase: catalogue-155-local-acceptance-pending
+updated: 2026-08-21
 ---
 
 # fep_lean Ideal State Assessment
 
 ## Problem
 
-`fep_lean` combines a 50-row catalogue, generated Lean source, a pinned
+`fep_lean` combines a 155-row catalogue, generated Lean source, a pinned
 Lean/Mathlib workspace, Hermes model calls, OpenGauss persistence, manuscript
 projections, and strict run reports. The repository must distinguish a
 deterministic offline catalogue from real theorem verification. A green local
@@ -28,11 +28,13 @@ success report.
 
 This assessment covers the standalone repository boundary:
 
-- SSOT parity among `config/topics.yaml`, `scripts/catalogue_sketches.py`, and
-  `lean/FepSketches/fep_all.lean`.
+- Typed authoring parity among the roster/family metadata, semantic and novelty
+  review, authored relations, family-owned canonical bodies, and their
+  generated YAML/Lean/documentation projections.
 - Python dependency installation, tests, coverage, type checking, and local
   subprocess/file/database behavior.
-- Exact Lean 4.29.0 and Mathlib `v4.29.0` acquisition and compilation.
+- Exact Lean 4.33.1 and Mathlib `v4.33.1` acquisition and compilation, plus a
+  fail-closed audit against the newest stable release pair.
 - Hermes, OpenGauss, SQLite session lifecycle, report provenance, and generated
   manuscript artifacts.
 - Documentation links, cross-references, pinned dependency claims, and this
@@ -44,7 +46,7 @@ This assessment covers the standalone repository boundary:
 - Changing the parent HumOS repository or any sibling repository.
 - Treating catalogue mode, a cached response, or a generated manuscript value
   as proof that a theorem was verified.
-- Supplying, inventing, or storing provider credentials.
+- Printing, inventing, or storing provider credentials.
 - Making mathematical claims stronger than the source theorem statements and
   the compiler evidence support.
 
@@ -52,16 +54,19 @@ This assessment covers the standalone repository boundary:
 
 | ID | Criterion | Required evidence |
 | --- | --- | --- |
-| ISA-01 | The 50-topic catalogue is complete and parity-safe. | The SSOT tests pass; the aggregate generator is deterministic and leaves no diff. |
+| ISA-01 | The sealed topic roster and family registry are complete and parity-safe. | Registry/SSOT tests pass; the aggregate generator is deterministic and leaves no diff. |
 | ISA-02 | Offline mode is deterministic and honest. | `uv run fep-lean catalogue` completes, emits reproducible artifacts, and reports `verified_topics: 0`. |
 | ISA-03 | The local Python boundary is reproducible. | `uv sync --locked --extra dev`, `uv pip check`, the coverage gate, and `uv run mypy src` pass. |
-| ISA-04 | The pinned Lean workspace is real, not merely configured. | Direct pinned Lean/Lake version probes, Mathlib cache/build, `lake build FepSketches`, and a 50-topic native compile sweep pass. |
+| ISA-04 | The pinned Lean workspace is real, not merely configured. | Direct pinned Lean/Lake version probes, Mathlib cache/build, `lake build FepSketches`, an exact sealed-roster native compile sweep, and the declaration/axiom audit pass. |
 | ISA-05 | Full mode is fail-closed. | Preflight requires Gauss, writable state, exact Lean/Lake/Mathlib, and Hermes credentials; any failure returns an error without a successful report. |
 | ISA-06 | The live full path is end-to-end. | A permitted Hermes provider answers a bounded smoke run, OpenGauss persists and closes sessions, Lean verifies each selected topic, and the report/manifest agree. |
-| ISA-07 | Reports are provenance-safe. | Selected-topic denominators, source/config digests, nested artifact hashes, verification source, and completion state are internally consistent. |
+| ISA-07 | Reports are provenance-safe. | Selected-topic identities and denominators, source/config and compiled-source digests, the preserved Lean declaration contract, toolchain revision, nested artifact hashes, verification source, and completion state are internally consistent. |
 | ISA-08 | Generated manuscript projections use the requested output root. | A custom output-root run cannot consume a stale report from the default `output/reports` tree. |
 | ISA-09 | Operator documentation matches behavior. | Link, Markdown hygiene, pin, and cross-reference audits pass after catalogue generation; counts and setup commands are current. |
 | ISA-10 | Every primary theorem proxy has a non-vacuity and assumption-strength review on record. | `config/theorem_maturity.yaml` has a `non_vacuity` field for every topic, and the generated `docs/theorem-maturity-audit.md` renders it. The `non_vacuity` entry documents whether the statement has a real witness or is structural/vacuous; topics with `non_vacuity: structural` or `non_vacuity: witnessed` are accepted; topics missing the field are flagged. |
+| ISA-11 | Scientific relations and capability history are explicit. | The typed loader validates every authored edge, every gap row has a `blocked_by` edge, derivational `formal` edges are acyclic, both theorem-backed kinds resolve leaf-owned declarations that use both endpoints, `formal_pairing` does not imply dependence, capability evidence resolves, and shared imports are reported separately. |
+| ISA-12 | Manuscript claims fail closed. | Theorem-reference, bibliography/citation, placeholder, receipt, and source-to-build rendering audits pass; authored Markdown is never modified by rendering. |
+| ISA-13 | Formal breadth and depth are inspectable without a second semantic source. | Coverage JSON/Markdown and the offline SVG/HTML atlas are deterministic projections of the same canonical join, conserve every node/edge, and pass drift/accessibility tests; the numerical dashboard independently renders every typed family witness and preserves its non-proof evidence label. |
 
 ## Anti-criteria
 
@@ -90,15 +95,26 @@ needed:
 
 ```bash
 uv sync --locked --extra dev
-uv run python scripts/_maint_build_fep_all_lean.py
+uv run python scripts/_maint_build_topics_catalogue.py --check
+uv run python scripts/_maint_build_fep_all_lean.py --check
+uv run python scripts/_maint_build_formal_modules.py --check
+uv run python scripts/theorem_maturity_audit.py --check
+uv run python scripts/build_formalism_coverage.py --check
+uv run fep-lean atlas --check
+uv run fep-lean dashboard --check
+uv run python docs/pin_audit.py --check-latest
 uv run pytest tests/ -q --cov=src --cov-fail-under=89
 uv run mypy src
 uv run fep-lean catalogue
 uv run fep-lean setup
-uv run fep-lean verify
+uv run fep-lean verify --fail-on-warnings --receipt output/native-verification.json
+uv run python scripts/audit_formalisms.py --receipt output/formalism-audit.json
+uv run python docs/theorem_ref_audit.py
+uv run python docs/citation_audit.py
+uv run python scripts/render_manuscript.py --check
 uv run python docs/check_links.py --strict --include-root
 uv run python docs/md_hygiene.py --strict
-uv run python docs/pin_audit.py
+uv run python docs/pin_audit.py --check-latest
 uv run python docs/xref_audit.py
 uv run fep-lean preflight
 ```
@@ -112,7 +128,7 @@ mechanism:
 cd lean
 lake build FepSketches
 cd ..
-FEP_LEAN_CATALOGUE_COMPILE_TEST=1 uv run pytest tests/test_catalogue_sketches_compile.py -q --no-cov
+FEP_LEAN_CATALOGUE_COMPILE_TEST=1 uv run pytest tests/test_catalogue_bodies_compile.py -q --no-cov
 uv run fep-lean run --topic fep-001
 uv run fep-lean run
 ```
@@ -125,25 +141,39 @@ open in [TODO.md](TODO.md).
 
 ## Current assessment
 
-The deterministic catalogue path, Python tests, strict type gate, report
-regressions, OpenGauss CLI installation, and exact Lean workspace are locally
-exercised. The pinned Lean 4.29.0/Mathlib v4.29.0 workspace builds
-successfully, and the native 50-topic sweep passes with no compile errors or
-`sorry` results. The maintained theorem-maturity audit separately records the
-semantic scope and assumption review for every primary theorem without treating
-compilation as a stronger FEP claim. The CLI setup path is repeatable and `preflight` confirms all
-local capabilities except the missing Hermes provider credential.
+The maintained schema-2 roster now spans `fep-001` through `fep-155` in 20
+families. Canonical bodies are family-owned and merged by one validated
+registry; formal resources are split into manifested foundations and leaf
+composition modules behind an import-only aggregate. The generated coverage
+and theorem-maturity projections own the live declaration, relation,
+capability, import, and semantic-disposition totals. The maturity ledger
+contains direct formalizations as well as conditional and structural proxies;
+compilation cannot erase those reviewed boundaries.
 
-Full mode remains intentionally blocked at one external boundary:
-`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY` is not configured. A topic run
-fails closed with `complete: false`, `verified_topics: 0`, and no report
-directory. Therefore ISA-01 through ISA-04, the fail-closed branch of ISA-05,
-and ISA-07 through ISA-09 have local evidence after the documented gates pass;
-ISA-05's successful-credential branch, ISA-06, and the final complete-run
-provenance receipt remain open in [TODO.md](TODO.md).
+ISA-04 is closed for the current 155-topic source. The exact sealed-roster
+native receipt independently validates 155/155 topics under Lean 4.33.1 and the
+locked Mathlib revision with zero failures, warnings, or `sorry`. The separate
+schema-4 declaration/axiom receipt resolves all 823 required declarations,
+including 699 evidence declarations, with zero warnings, no `sorryAx`, and no
+untrusted axiom. The schema-3 Python receipt and schema-4 Chrome replay bind the
+current test, coverage, atlas, dashboard, and screenshot evidence to the same
+checkout; neither substitutes for the Lean receipts or changes a maturity
+disposition.
+
+The three provider reports created on 2026-08-20, including
+`output/reports/run_20260820_183143_709998`, remain historical evidence for
+their recorded 50-topic source snapshots. They cannot close ISA-06 or the
+provider-backed portion of ISA-07 for the current 155-topic source. A new full
+Hermes/OpenGauss receipt must pass independent live-source validation before
+its results are described as current. No provider secret is stored in the
+repository. Neither compilation nor provider execution establishes the FEP as
+a physical theory or authorizes publication.
 
 ## Release boundary
 
-This repository is ready for a local full-verification claim only after ISA-01
-through ISA-09 have evidence in the same checkout and the final `main` worktree
-diff is inspected. This task does not authorize publication.
+This repository supports the current 155-topic native, formal-resource
+declaration, and trusted-axiom claims recorded above. It does not support a
+current 155-topic provider claim until ISA-06 and the provider-backed parts of
+ISA-07 have fresh evidence for these exact bytes. Historical provider receipts
+remain useful provenance but do not cross that boundary. The final worktree
+must also be inspected before any separately authorized publication.

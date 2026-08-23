@@ -1,5 +1,292 @@
 # Changelog
 
+## 1.1.0 — 2026-08-21
+
+### 155-topic formalism expansion and local acceptance
+
+- Extended the maintained schema-2 roster beyond `fep-120` through `fep-155`,
+  yielding 155 stable topics in 20 families across the five established areas.
+  The five new families cover finite-sample Laplace/Brier risk, closed-loop
+  policy trees and treewise EFE, finite-to-native blanket transfer, finite
+  exponential-family dual geometry, and exact two-state continuous-time
+  thermodynamics.
+- Added one reusable foundation and one seven-theorem composition leaf for each
+  family. The new rows name explicit assumptions and non-vacuity boundaries:
+  nonzero Laplace bias, a strict Boolean feedback advantage, a correlated
+  nondegenerate blanket model satisfying native `CondIndepFun`, positive and
+  zero Fisher-information witnesses, and a strictly decreasing nonstationary
+  Lyapunov example.
+- Expanded the typed numerical dashboard from ten to fifteen family witnesses.
+  Each witness now owns multiple typed checks with independent tolerances;
+  acceptance is their conjunction plus a named boundary observation.
+- Added the authored 155-topic manuscript chapter with theorem names,
+  assumptions, composition bridges, evidence-plane boundaries, and primary
+  sources for Brier risk, sophisticated inference, information geometry, and
+  the pinned Lean/Mathlib releases.
+- The current schema-4 formalism audit independently validates all 823 required
+  formal-resource declarations, including 699 evidence declarations, under
+  Lean 4.33.1 and the locked Mathlib revision with zero warnings, no `sorryAx`,
+  and no untrusted axiom. The current native receipt validates the exact 155
+  topic roster with zero failures, warnings, or `sorry`; the schema-3 Python
+  receipt binds the complete canonical collected-node roster, records zero
+  failures or errors, and enforces the maintained 89% line-coverage floor;
+  and the schema-4 browser receipt replays six accepted
+  screenshots against all 20 families and 15 typed numerical witnesses. The
+  retained 50-topic provider report remains historical and is not promoted to
+  current full-mode evidence.
+
+### Prior 120-topic expansion and family-owned formal sources
+
+- Advanced the schema-2 roster seal from `fep-050` through `fep-120`, yielding
+  120 reviewed topics in 15 families across the five established areas. The
+  expansion adds measure-theoretic Bayesian inversion, variational duality and
+  information bounds, controlled and temporal inference, causal interventions,
+  generalized predictive coding, path thermodynamics, geometric optimization,
+  collective inference, and learning/model-evidence families.
+- Replaced the monolithic body owner with family modules under
+  `src/fep_lean/catalogue/bodies/`. One explicit registry validates namespace,
+  declaration, ordering, uniqueness, and roster parity; theorem signatures are
+  projected separately from the canonical bodies.
+- Added a maintained novelty ledger for every expansion row. Each record names
+  earlier nearest topics, its invariant and carrier delta, and a required
+  `FEPComposed` bridge. Cross-topic witnesses now live in manifested leaf
+  composition modules, with `composed.lean` reduced to an import-only aggregate.
+- Added explicit finite path-law, fluctuation, Jarzynski, reversible-dissipation,
+  categorical Fisher, Cramér--Rao, natural-gradient, mirror-descent,
+  Bregman-projection, replicator, collective-agent, consensus, concentration,
+  PAC-Bayes, posterior-concentration, regret, and Bayes-factor surfaces with
+  named support and non-vacuity boundaries.
+- The generated coverage, maturity audit, atlas, dashboard, and manuscript
+  projections own all live counts. The 50-topic native, declaration, and full
+  reports below are retained as historical evidence for their exact source
+  snapshot and do not bind the expanded roster.
+
+### Prior 120-topic acceptance evidence (historical source snapshot)
+
+- Migrated the exact reproducibility pins to the newest stable pair, Lean
+  4.33.1 and Mathlib `v4.33.1`, with resolved Mathlib revision
+  `0df444a360eaa60ab8c11dca51a86af692955474`. Added a fail-closed networked
+  latest-compatible-pair audit to pull-request CI and a scheduled weekly check;
+  newer Lean-only patches remain visibly pending until a matching Mathlib tag
+  exists, and release candidates or nightlies never replace the stable compiler.
+- Updated the canonical calculus bodies for Lean 4.33's stricter elaboration,
+  replaced deprecated square-root imports, migrated fep-036 from the retired
+  PMF binomial API to Mathlib's measure-valued binomial distribution, and made
+  every affected topic compile independently rather than borrowing aggregate
+  imports. The complete `FepSketches` closure builds warning-free in 8,732 jobs.
+- The source-bound native schema-4 receipt independently validates 120/120
+  topics with zero warnings, zero `sorry`, and a 334.632-second duration under
+  Lean 4.33.1 and the resolved pinned Mathlib revision.
+- The schema-4 declaration audit independently resolves 647/647 audited
+  declarations, including 558 structured evidence declarations, with zero
+  warnings, no `sorryAx`, and trusted axiom policy version 1.
+- The complete Python suite passes with 744 tests passed, 22 skipped, and
+  90.62% coverage. Strict MyPy, Ruff, formatting, lock/install compatibility,
+  projection freshness, manuscript rendering, links, pins, cross-references,
+  theorem references, and 73-entry citation coverage were green for that
+  snapshot.
+- Six retained standalone, desktop, and mobile atlas/dashboard captures passed
+  fresh unprimed visual review. The browser receipt verifies all five areas,
+  15 families, 120 topics, 98 scientific relations, 43 satisfied capabilities,
+  ten numerical witnesses, search/filter/keyboard behavior, zero external
+  assets, and no body overflow.
+- No new provider run was made for the expanded source. The retained 50-topic
+  full report and two earlier one-topic smokes remain historical evidence only.
+
+### Prior 50-topic semantic milestone (historical source snapshot)
+
+- Deepened all 50 catalogue rows to directly formalized, deliberately bounded
+  topic scopes. The final fep-036 promotion adds Mathlib's finite binomial PMF,
+  an outcome-indexed Laplace prior, exact shrinkage, consistency transfer from
+  convergent empirical frequencies, and posterior closure while explicitly
+  excluding an unproved LLN, finite-sample risk, or marginal-likelihood claim.
+- Added exact theorem families for native posterior inversion, normalized
+  filtering and hierarchy; Bernoulli Fisher information, natural gradient,
+  Fisher--Rao distance, and Hellinger divergence; measurable semigroups,
+  quadratic convergence, finite stationary currents, Gaussian entropy and
+  Helmholtz calculus, finite stick conservation, and matrix message passing.
+- Expanded the canonical composed module to 22 declaration-witnessed seams
+  spanning inference, information geometry, policy choice, dynamics,
+  thermodynamics, and partition-energy conservation. The generated capability
+  ledger now resolves all 33 retained nodes without erasing broader scientific
+  limitations that remain outside those bounded capabilities.
+- Expanded the joined formal surface to 412 theorems, 175 definitions, 10
+  abbreviations, and 8 structures: 257 topic theorems plus 155 theorems in six
+  foundation modules and the composed module. The authored graph now contains
+  20 theorem-witnessed formal relations and 8 conceptual relations, with all
+  33 retained capabilities satisfied at their deliberately bounded scopes.
+
+### Prior publication and validation surfaces
+
+- Added a semantic-closure manuscript chapter that embeds the generated SVG
+  atlas, links its offline interactive counterpart, and presents the six
+  executable theorem strands plus the seven-layer validation contract.
+- Made manuscript rendering copy and rewrite declared atlas assets into the
+  build tree and fail closed before writing when a referenced visual is
+  missing. Zero-valued relation and capability buckets are now retained in the
+  manuscript variable schema so placeholders cannot disappear at closure.
+- Reconciled the manuscript and background documentation with the live native
+  posterior, Bernoulli geometry, finite NESS, response, entropy-production,
+  Gaussian, and Landauer theorems while preserving the continuous,
+  multidimensional, empirical, and microscopic boundaries.
+- Removed copied fallback-table counts from the atlas renderer. The accessible
+  node and relation summaries now derive from the live graph, and regression
+  tests pin their parity.
+- Applied an independent desktop/mobile visual critique: the evidence inspector
+  now precedes a bounded pan viewport, canonical totals remain visible outside
+  the scroll plane, graph typography renders at a readable scale, panning is
+  explicitly signposted, and every thin edge has a wide transparent pointer
+  target. Exact 1440x900 and 390x844 acceptance captures are retained with the
+  closed rationale.
+
+### Prior independent failure-seam hardening
+
+- Repaired `review` as an ordered two-turn workflow: the first provider turn
+  must emit refinable Lean, the exact compiled result is supplied to a
+  contradiction-free prose-only review prompt, both turns are persisted and
+  separately cached, and review failure now fails the requested workflow.
+- Propagated native Lean warning lists through `TopicRunResult`, pipeline
+  completion/statistics, summary/run/verification manifests, Markdown reports,
+  and independent receipt reconciliation. A warning-bearing full row can no
+  longer be counted as verified.
+- Made declaration evidence fail closed when Lean exits zero but omits one or
+  more `#print axioms` results. The multiline parser now handles Lean's hard
+  wrapping, normalizes the complete canonical declaration closure, and the
+  validator independently checks return code, counts, resolution, axiom parity,
+  warnings, `sorryAx`, toolchain, digest, and failure state.
+- Made the installed console boundary explicit: imports/resources and help are
+  wheel-native, while substantive commands require and validate a source
+  checkout. The isolated-wheel smoke now proves both the fail-closed no-root
+  path and a real explicit-root `atlas --check` command.
+- Bound the repository report-receipt adapter to a live source root by default
+  and exposed `--project-root` for explicit independent validation.
+
+### Historical 50-topic evidence state
+
+The following receipts and counts describe the earlier source snapshot that
+they hash. They are not current acceptance evidence for the 155-topic cut.
+
+- The historical coverage and theorem-maturity projections for that source
+  snapshot recorded all 50 bounded semantic dispositions as
+  `formalized`, 48 distinct Mathlib imports, 104 topic-import edges, 28 authored
+  relations, and 33/33 satisfied retained capabilities.
+- The source-bound native schema-3 receipt independently validates 50/50 topics
+  with zero warnings, zero `sorry`, and a 100.446-second duration. The
+  schema-4 formalism receipt independently resolves 262/262 declarations,
+  including 243 evidence declarations, with zero warnings, no `sorryAx`, and
+  trusted axiom policy version 1. The aggregate Lake target completes 8,257
+  jobs cleanly.
+- The owner-manifest-2 full report
+  `output/reports/run_20260820_183143_709998` independently validates as
+  schema 3, source-bound, complete, and claim-ready. Gemini 3.7 Flash completed
+  all 50 selected topics: 50 Hermes successes, 50 preserved semantic
+  declaration contracts, and 50 direct provider Lean compiles, with zero
+  warnings, zero `sorry`, and zero network retries.
+- The full run used 133,519 tokens and completed in 496.386 seconds, including
+  418.745 seconds of Gauss sessions and 75.37 seconds of manuscript artifacts.
+  Independent receipt validation checked all 56 hashed artifacts without an
+  error.
+- Two bounded one-topic OpenRouter/Hermes full-mode smokes completed against
+  earlier source snapshots: `fep-001` with Kimi K2.6 and `fep-002` with Gemini
+  3.7 Flash. Each selected topic passed its then-current provider, Gauss, and
+  Lean path. The present validator rejects both report directories because
+  they predate the current report-receipt schema and their source/configuration
+  digests no longer match the live tree. They are not claim-ready evidence for
+  the final source or the complete 50-topic catalogue.
+- `FEP-FULL-002` and `FEP-PROV-003` are complete. No provider secret is tracked;
+  commit, push, and publication remain separately unauthorized.
+
+## Unreleased — 2026-08-19
+
+### Package and canonical ownership
+
+- Replaced collision-prone loose top-level modules with one installable
+  `fep_lean` namespace, package-relative imports, packaged catalogue data, and
+  an isolated wheel/import/console-script contract.
+- Split maintained catalogue metadata, semantic review, canonical Lean bodies,
+  and generated projections into typed single-owner seams. Regeneration now
+  preserves the checkout and wheel catalogue bytes deterministically.
+- Added a strictly validated authored formalism graph with explicit
+  `conceptual`, `formal`, and `blocked_by` edge kinds. Formal edges require
+  qualified Lean witnesses, and capability nodes retain open/partial/satisfied
+  resolution history with declaration evidence. Its generated coverage report
+  records 50 topics, 227 topic theorems, 18 definitions, 15 abbreviations, 37
+  distinct Mathlib imports, 98 topic-import edges, 31 authored relations, 3
+  composed theorems, and 14 capability nodes.
+
+### Formal kernel and semantic depth
+
+- Replaced scalar KL stand-ins in fep-002 and fep-014 with pinned Mathlib
+  `InformationTheory.klDiv` facts, including native nonnegativity,
+  self/zero characterization, VFE bounds, and the composition-product chain
+  rule. The absent-at-pin data-processing theorem remains an explicit gap.
+- Replaced fep-048's implication-shaped premise with Mathlib's native
+  `ContractingWith` fixed-point API, a satisfiable real-line halving witness,
+  unique-zero theorem, and convergence of every halving iterate.
+- Added direct quadratic Bregman identity/nonnegativity/zero characterization
+  to fep-029 and normalized finite Boltzmann–Gibbs weights to fep-031.
+- Added native conditional-independence symmetry/non-vacuity (fep-009),
+  reversible-Markov-kernel invariance (fep-010), binary entropy
+  maximum/equality (fep-030), and strict two-point Jensen for logarithm
+  (fep-035).
+- Added the canonical packaged `FEPComposed` module. Its witnessed theorems
+  compose fep-002 with fep-014's KL chain rule and fep-031's two-state
+  zero-inverse-temperature Gibbs law with fep-030's binary entropy maximum.
+- Removed all project-owned Lean warnings without suppression and made warning
+  rejection part of the native verifier and CI contract.
+- Reclassified only the exact narrowed results supported by source. The current
+  semantic census is 9 `formalized`, 13 `conditional_proxy`, 6
+  `structural_proxy`, 5 `proxy`, and 17 explicit `scope_gap` rows.
+
+### Evidence, manuscript, and audit integrity
+
+- Added atomic, source-digest-bound native Lean receipts and kept their
+  `native_claim_ready` predicate distinct from catalogue completion and
+  claim-ready full Hermes/OpenGauss reports.
+- Replaced in-place manuscript substitution with fail-closed source-to-build
+  rendering. Missing, stale, partial, or tampered evidence renders explicit
+  unavailability rather than zero-valued success prose.
+- Added deterministic formalism coverage, theorem-reference, citation, and
+  placeholder audits to CI. All 59 bibliography entries are both indexed and
+  cited, and every canonical `fepNNN_*` manuscript reference resolves.
+- Added a deterministic, offline formalism atlas rendered from the same
+  coverage join: a publication-safe SVG plus searchable, filterable,
+  keyboard-accessible HTML with complete node/edge tables. The evidence-first
+  view defaults to theorem-witnessed edges, exposes non-color status labels and
+  line-style semantics, wraps topic titles, labels proved compositions, and
+  expands its inspector only on demand.
+- Added a native formalism audit that resolves every primary and graph-evidence
+  declaration, records `#print axioms` results, and fails on stale projection,
+  compiler errors, warnings, timeouts, or `sorryAx`.
+- Reconciled the manuscript and background documentation with the exact Lean
+  statements, semantic dispositions, evidence classes, and primary sources;
+  removed completed-Hermes, universal-FEP, KL-availability, thermodynamic,
+  NESS, information-geometric, and dependency overclaims.
+
+### Local acceptance
+
+- Full Python/coverage gate: 409 collected, 406 passed, 3 intentionally
+  skipped, 90.77% coverage against the 89% floor.
+- Mypy passed for 39 source files; Ruff and format checks passed for all 157
+  checked files; lock and installed-dependency checks passed.
+- Wheel and source distributions built successfully with the packaged
+  catalogue and canonical composed Lean source.
+- Aggregate Lean build completed 8,251 jobs with no project warning.
+- The independently validated native receipt records 50/50 clean topics, zero
+  warnings, zero `sorry`, Lean/Mathlib v4.29.0, and 106.732 seconds.
+- The declaration audit resolves 56/56 primary/composed declarations and all
+  12 evidence declarations, with no warnings or `sorryAx`.
+- All generator, link, Markdown, pin, cross-reference, theorem, citation, and
+  manuscript-placeholder gates passed. Catalogue mode remained honest at zero
+  verified topics.
+
+### Still externally gated
+
+- Full preflight passes every local capability and fails only because neither
+  `OPENROUTER_API_KEY` nor `ANTHROPIC_API_KEY` is configured. The live
+  Hermes/OpenGauss smoke, complete run, and final full-report receipt remain
+  open; no credential, provider call, commit, push, or publication occurred.
+
 ## Unreleased — 2026-07-31
 
 ### Verified in the local audit
@@ -65,7 +352,7 @@
   captured at `.ruff_baseline.txt`, CI runs `ruff check` and `ruff format
   --check` in informational mode. Staged debt plan has deadlines.
 - **CI**: Added `mypy src`, `ruff check`, and `ruff format --check` steps.
-- **src/gauss/runner.py**: Removed misleading `FEP_LEAN_GAUSS_WORKFLOWS=1`
+- **src/fep_lean/gauss/runner.py**: Removed misleading `FEP_LEAN_GAUSS_WORKFLOWS=1`
   docstring claims (gate was documented but never implemented in code).
 - **lean/.lake/packages/**: Removed stale corrupt Mathlib cache directory
   `mathlib.corrupt-20260730`.

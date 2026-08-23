@@ -13,10 +13,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
 import yaml
 
-from catalogue.topics import FEPTopicCatalogue
-from output.manuscript import build_manuscript_vars
+import fep_lean.output.manuscript as manuscript_module
+from fep_lean.catalogue.topics import FEPTopicCatalogue
+from fep_lean.output.manuscript import build_manuscript_vars
 
 PROJ = Path(__file__).resolve().parent.parent
 SKIP = {
@@ -50,7 +52,10 @@ def _flatten(data: object, prefix: str = "") -> dict[str, str]:
     return flat
 
 
-def test_every_manuscript_token_has_a_producer() -> None:
+def test_every_manuscript_token_has_a_producer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(manuscript_module, "_count_test_cases", lambda *a, **k: 0)
     catalogue = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
     variables = build_manuscript_vars(catalogue, PROJ)
     flat = _flatten(variables)
@@ -71,9 +76,13 @@ def test_every_manuscript_token_has_a_producer() -> None:
     assert not missing, f"Manuscript tokens without a producer: {missing}"
 
 
-def test_manuscript_vars_yaml_is_current(tmp_path: Path) -> None:
+def test_manuscript_vars_yaml_is_current(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The generated manuscript_vars.yaml must contain the same tokens a
     fresh ``build_manuscript_vars`` produces (no stale generator output)."""
+    monkeypatch.setattr(manuscript_module, "_count_test_cases", lambda *a, **k: 0)
     catalogue = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
     fresh = build_manuscript_vars(catalogue, PROJ)
     committed = yaml.safe_load(

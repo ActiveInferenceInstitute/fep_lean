@@ -2,7 +2,7 @@
 
 References are in `manuscript/references.bib`. Inline `[@key]` resolved by Pandoc citeproc during rendering. See `docs/_generated/canonical_facts.md` for pipeline status.
 
-<!-- Citation groups — auto-synced to manuscript/references.bib (60 entries, all cited).
+<!-- Citation groups — auto-synced to manuscript/references.bib (79 entries, all cited).
      Grouping mirrors the `% ──` section headers in the bib file; rebuild with
      `uv run python -c "from pathlib import Path; import re; …"` if it drifts.
 
@@ -30,9 +30,10 @@ References are in `manuscript/references.bib`. Inline `[@key]` resolved by Pando
   Active Inference Toolkits (1)
     heins2022pymdp             — Heins, Millidge, Demekas et al. 2022: pymdp — A Python library for active inference (JOSS)
 
-  Bayesian Mechanics (6)
+  Bayesian Mechanics (7)
     dacosta2023bayesian        — Da Costa, Parr, Sajid, Veselic, Neberath & Friston 2023: Active inference on discrete state-spaces
     dacosta2024bayesian        — Da Costa, Friston, Heins & Pavliotis 2024: Bayesian mechanics of synaptic learning under the FEP
+    dacosta2021stationary      — Da Costa, Friston, Heins & Pavliotis 2021: Bayesian mechanics for stationary processes
     sakthivadivel2023bayesian  — Sakthivadivel 2023: On Bayesian mechanics — a physics of and by beliefs
     friston2024path            — Friston, Da Costa et al. 2023: Path integrals, particular kinds, and strange things (BibTeX key friston2024path)
     friston2016active          — Friston, FitzGerald, Rigoli, Schwartenbeck, O'Doherty & Pezzulo 2016: Active inference and learning
@@ -70,6 +71,17 @@ References are in `manuscript/references.bib`. Inline `[@key]` resolved by Pando
     amari2016information       — Amari 2016: Information Geometry and Its Applications (Springer)
     amari1998natural           — Amari 1998: Natural gradient works efficiently in learning (Neural Computation)
 
+  Collective Inference and Consensus (3)
+    heins2022spin              — Heins, Klein, Demekas, Aguilera & Buckley 2022: Spin glass systems as collective active inference
+    friston2024federated       — Friston, Parr, Heins et al. 2024: Federated inference and belief sharing
+    olfatisaber2007consensus   — Olfati-Saber, Fax & Murray 2007: Consensus and cooperation in networked multi-agent systems
+
+  Concentration Inequalities (1)
+    hoeffding1963probability   — Hoeffding 1963: Probability inequalities for sums of bounded random variables
+
+  Expanded Formalism Foundations (1)
+    rokhlin1949fundamental     — Rokhlin 1949: On the fundamental ideas of measure theory
+
   Deep Temporal Models (1)
     friston2018deep            — Friston, Parr & de Vries 2018: The graphical brain — belief propagation and active inference
 
@@ -82,11 +94,10 @@ References are in `manuscript/references.bib`. Inline `[@key]` resolved by Pando
     aguilera2022particular     — Aguilera, Millidge, Tschantz & Buckley 2022: How particular is the physics of the FEP?
 
   EFE Debate (1)
-    maheu2026reframing         — Maheu, Bhatt, Da Costa et al. 2026: Reframing the Expected Free Energy debate
+    millidge2021whence         — Millidge, Tschantz & Buckley 2021: Whence the Expected Free Energy?
 
-  Formalization landmarks (4)
+  Formalization landmarks (3)
     champion2026reframing      — Champion et al. 2026: Reframing the Expected Free Energy — four formulations and a unification
-    lean_slt2026               — Lean SLT project 2026: Statistical Learning Theory in Lean 4 / Mathlib4 (work in progress)
     pfr2023lean                — Polynomial Freiman–Ruzsa in Lean 4 (teorth/pfr; arXiv:2311.05762)
     scholze2022liquid          — Scholze & Commelin 2022: Liquid Tensor Experiment (Lean)
 
@@ -118,6 +129,27 @@ References are in `manuscript/references.bib`. Inline `[@key]` resolved by Pando
     mehtaMetaIT2021            — Mehta, Affeldt, Garrigue & Sakaguchi 2021: A Library for Formalized Information Theory in Isabelle/HOL
     paulson2022thermo          — Paulson 2022: Formalized Statistical Mechanics in Isabelle/HOL (AFP)
     deepseek2025proverv2       — Xin et al. 2025: DeepSeek-Prover-V2
+
+  Domain-Specific Languages / Notation (1)
+    smekal2023gnn              — Smékal & Friedman 2023: Generalized Notation Notation for Active Inference Models
+
+  Expanded Formalism Foundations (8)
+    donsker1975asymptotic      — Donsker & Varadhan 1975: Asymptotic evaluation of Markov-process expectations, I
+    burda2016importance        — Burda, Grosse & Salakhutdinov 2016: Importance Weighted Autoencoders
+    todorov2006linearly        — Todorov 2006: Linearly-solvable Markov decision problems
+    kappen2005path             — Kappen 2005: Path integrals and symmetry breaking for optimal control
+    baum1970maximization       — Baum, Petrie, Soules & Weiss 1970: Finite Markov-chain inference
+    rosas2020causal            — Rosas et al. 2020: Causal blankets — theory and algorithmic framework
+    friston2009predictive      — Friston & Kiebel 2009: Predictive coding under the free-energy principle
+    mcallester1999pac          — McAllester 1999: Some PAC-Bayesian theorems
+
+  155-Topic Expansion Foundations (6)
+    brier1950verification      — Brier 1950: Verification of forecasts expressed in terms of probability
+    friston2020sophisticated   — Friston, Da Costa, Hafner, Hesp & Parr 2020: Sophisticated Inference
+    amari1983foundation        — Amari 1983: A foundation of information geometry
+    lean4330release            — Lean FRO 2026: Lean 4.33.0 release notes
+    lean4331release            — Lean FRO 2026: Lean 4.33.1 release
+    mathlib4331release         — Mathlib Community 2026: Mathlib v4.33.1 release
 -->
 
 <div id="refs"></div>

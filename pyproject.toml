@@ -1,16 +1,18 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "fep_lean"
-version = "1.0.0"
+version = "1.1.0"
 description = "FEP Lean4 catalogue, OpenGauss-oriented session model, manuscript artifacts"
+license = "CC-BY-4.0"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.24.0",
     "matplotlib>=3.7.0",
     "pyyaml>=6.0",
+    "typing-extensions>=4.4.0",
 ]
 
 [project.optional-dependencies]
@@ -26,13 +28,14 @@ dev = [
 ]
 
 [project.scripts]
-fep-lean = "cli:main"
+fep-lean = "fep_lean.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["fep_lean*"]
 
-[tool.setuptools]
-py-modules = ["cli", "_paths"]
+[tool.setuptools.package-data]
+fep_lean = ["data/*.yaml", "formal/*.lean", "formal/compositions/*.lean"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
@@ -52,7 +55,6 @@ filterwarnings = [
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["tests/*", "src/__init__.py"]
 # Figure generation uses ProcessPoolExecutor (spawn); trace worker processes.
 # Branch coverage: see docs/coverage-branch.md.
 concurrency = ["multiprocessing"]

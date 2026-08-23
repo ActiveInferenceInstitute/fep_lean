@@ -1,17 +1,53 @@
-# Configuration Modules Specification
+# Configuration specification
 
-**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
+The `config/` directory contains runtime settings and maintained publication
+inputs. It does not contain executable code.
 
-**Layer**: Config | **Role**: Parameter definitions
+## Ownership
 
-## Purpose
-The `config/` directory holds declarative **YAML** files that govern runtime behavior of the `fep_lean` orchestrator: OpenGauss session defaults, Hermes-related settings, and the 50-topic catalogue.
+| File | Contract |
+| --- | --- |
+| `settings.yaml` | Standalone project, Gauss, output, and Hermes defaults; environment overrides remain external |
+| `catalogue_metadata.yaml` | Schema-2 roster seal, family, identity, title, area, Mathlib hints, and syntactic maturity |
+| `theorem_maturity.yaml` | Semantic invariant, assumptions, non-vacuity, acceptance probe, primary theorem, and disposition |
+| `formalism_novelty.yaml` | Expansion-row nearest topics, invariant, carrier delta, and required composition bridge |
+| `formalism_relations.yaml` | Explicit reviewed topic relations and retained capability status/evidence |
+| `topics.yaml` | Generated join; never an authoring source |
 
-## Components
-1. `settings.yaml`: Controls operational variables (GAUSS_HOME, model IDs, force reload flags).
-2. `topics.yaml`: The definitive catalogue of 50 canonical FEP/AI/BM theorem topics to be formalized.
+Canonical Lean bodies live in family modules under
+`src/fep_lean/catalogue/bodies/`. The validated `registry.py` merger and
+`latex.py` theorem-signature projection join them with the maintained topic
+inputs and write both checkout and package-data YAML.
 
-## Operating Contracts
-- All YAML files must successfully validate at load-time (schema checks).
-- No executable code (`.py`) is permitted in this directory.
-- Modifications to `topics.yaml` must preserve the 50-topic sequence for regression tracking.
+## Validation rules
+
+- Topic IDs match the `catalogue_metadata.yaml` roster seal, are ordered and
+  unique, and belong to exactly one declared family.
+- Maintained mappings reject missing and unknown fields.
+- A primary theorem must resolve in its canonical Lean body.
+- Semantic disposition is independent of `mathlib_status` and compilation.
+- Relation edges require a rationale; `blocked_by` targets capabilities, while
+  `formal`, `formal_pairing`, and `conceptual` target known topics. The two
+  theorem-backed kinds require a qualified declaration witness. A `formal`
+  edge records a derivation or identification; `formal_pairing` records a
+  checked conjunction without implication. Conceptual and blocker edges
+  forbid witnesses.
+- Capability status is open, partial, or satisfied. Partial/satisfied nodes
+  require sorted declaration evidence, and satisfied nodes cannot remain
+  blocker targets.
+- Every semantic gap has an explicit blocker, derivational-formal edges are
+  acyclic, and shared imports never imply a scientific relation.
+- Every novelty row points backward to an earlier topic and names a resolvable
+  `FEPComposed` bridge in a manifested leaf composition module.
+- Runtime settings never contain provider credentials.
+
+## Projection checks
+
+```bash
+uv run python scripts/_maint_build_topics_catalogue.py --check
+uv run python scripts/theorem_maturity_audit.py --check
+uv run python scripts/build_formalism_coverage.py --check
+uv run fep-lean atlas --check
+```
+
+Remove `--check` only after intentionally changing a maintained owner.

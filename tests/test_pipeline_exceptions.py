@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from pipeline.core import FEPPipeline
+from fep_lean.pipeline.core import FEPPipeline
 
 
 def test_pipeline_missing_catalogue(tmp_path: Path) -> None:

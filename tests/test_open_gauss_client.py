@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from gauss.client import OpenGaussClient
+from fep_lean.gauss.client import OpenGaussClient
 
 
 @pytest.fixture()

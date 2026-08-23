@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from output.reporter import validate_report_receipt
+from fep_lean.output.reporter import validate_report_receipt
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -21,9 +21,17 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="require a complete, non-empty full-mode receipt suitable for a verification claim",
     )
+    parser.add_argument(
+        "--project-root",
+        type=Path,
+        default=Path(__file__).resolve().parent.parent,
+        help="live fep_lean checkout whose source/config digests must match",
+    )
     args = parser.parse_args(argv)
     receipt = validate_report_receipt(
-        args.report_root, require_complete=args.require_complete
+        args.report_root,
+        require_complete=args.require_complete,
+        project_root=args.project_root.resolve(),
     )
     print(json.dumps(receipt, indent=2))
     return 0 if receipt["valid"] else 1

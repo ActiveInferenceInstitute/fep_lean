@@ -4,8 +4,18 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import ClassVar
 
-import cli
+from fep_lean import cli
+from fep_lean._paths import project_root_errors
+from fep_lean.verification._toolchain import pinned_lean_semver, read_toolchain_pin
+
+PROJ = Path(__file__).resolve().parent.parent
+_TOOLCHAIN_PIN = read_toolchain_pin(PROJ / "lean")
+assert _TOOLCHAIN_PIN is not None
+_PINNED_LEAN_VERSION = pinned_lean_semver(_TOOLCHAIN_PIN)
+assert _PINNED_LEAN_VERSION is not None
+_FIXTURE_LEAN_VERSION = f"Lean (version {_PINNED_LEAN_VERSION}, fixture, Release)"
 
 
 class _Result:
@@ -14,6 +24,44 @@ class _Result:
 
     def as_dict(self) -> dict[str, bool]:
         return {"complete": self.complete}
+
+
+def _make_checkout_root(root: Path) -> None:
+    for relative, content in (
+        ("config/topics.yaml", "topics: []\n"),
+        ("config/settings.yaml", "{}\n"),
+        ("lean/lean-toolchain", "leanprover/lean4:v4.29.0\n"),
+        (
+            "lean/lakefile.lean",
+            'package FepSketches\nrequire mathlib from git "fixture" @ "v4.29.0"\n',
+        ),
+        (
+            "lean/lake-manifest.json",
+            '{"packages":[{"name":"mathlib","rev":"' + "a" * 40 + '"}]}\n',
+        ),
+        ("manuscript/config.yaml", "{}\n"),
+        ("src/fep_lean/__init__.py", "\n"),
+        ("src/fep_lean/catalogue/registry.py", "BODIES = {}\n"),
+    ):
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+
+
+def test_project_root_contract_identifies_checkout_assets(tmp_path: Path) -> None:
+    assert project_root_errors(tmp_path)
+    _make_checkout_root(tmp_path)
+    assert project_root_errors(tmp_path) == ()
+
+
+def test_main_rejects_substantive_command_outside_checkout(
+    tmp_path: Path, capsys
+) -> None:
+    code = cli.main(["--project-root", str(tmp_path), "catalogue"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["status"] == "error"
+    assert "--project-root" in payload["failure_reason"]
 
 
 def test_build_parser_registers_all_commands() -> None:
@@ -28,6 +76,8 @@ def test_build_parser_registers_all_commands() -> None:
     )
     assert parser.parse_args(["run", "--workflow", "review"]).workflow == "review"
     assert parser.parse_args(["topic", "fep-001"]).topic_id == "fep-001"
+    assert parser.parse_args(["atlas", "--check"]).check is True
+    assert parser.parse_args(["dashboard", "--check"]).check is True
     assert parser.parse_args(["report"]).command == "report"
 
 
@@ -86,6 +136,8 @@ def test_setup_rejects_invalid_timeout(monkeypatch, tmp_path: Path) -> None:
 
 
 def test_verify_command_is_lean_only(monkeypatch, tmp_path: Path, capsys) -> None:
+    _make_checkout_root(tmp_path)
+
     class Topic:
         def __init__(self) -> None:
             self.id = "fep-001"
@@ -128,6 +180,131 @@ def test_verify_command_is_lean_only(monkeypatch, tmp_path: Path, capsys) -> Non
     assert payload["results"][0]["lean_file"] is None
 
 
+def test_verify_can_write_native_receipt(monkeypatch, tmp_path: Path, capsys) -> None:
+    class Topic:
+        id = "fep-001"
+        area = "FEP"
+        lean_sketch = "theorem fixture : True := True.intro"
+
+    class Catalogue:
+        topics: ClassVar[list[Topic]] = [Topic()]
+
+    class CatalogueLoader:
+        from_yaml = staticmethod(lambda _path: Catalogue())
+
+    class Result:
+        compiles = True
+        has_sorry = False
+        lean_version = _FIXTURE_LEAN_VERSION
+
+        def as_dict(self) -> dict[str, object]:
+            return {
+                "topic_id": "fep-001",
+                "compiles": True,
+                "has_sorry": False,
+                "warnings": [],
+                "errors": [],
+                "lean_version": self.lean_version,
+            }
+
+    class Verifier:
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        def check_mathlib_built(self) -> tuple[bool, str]:
+            return True, "fixture"
+
+        def verify_batch(self, _items: list[tuple[str, str]]) -> list[Result]:
+            return [Result()]
+
+    monkeypatch.setattr(cli, "FEPTopicCatalogue", CatalogueLoader)
+    monkeypatch.setattr(cli, "LeanVerifier", Verifier)
+    receipt = tmp_path / "receipts" / "native.json"
+
+    code = cli.main(
+        [
+            "--project-root",
+            str(PROJ),
+            "verify",
+            "--topic",
+            "fep-001",
+            "--receipt",
+            str(receipt),
+        ]
+    )
+
+    assert code == 0
+    assert json.loads(receipt.read_text(encoding="utf-8"))["kind"] == "native-lean"
+    assert json.loads(capsys.readouterr().out)["receipt"] == str(receipt)
+
+
+def test_verify_warning_counts_align_with_strict_native_receipt(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    class Topic:
+        id = "fep-001"
+        area = "FEP"
+        lean_sketch = "theorem fixture : True := True.intro"
+
+    class Catalogue:
+        topics: ClassVar[list[Topic]] = [Topic()]
+
+    class CatalogueLoader:
+        from_yaml = staticmethod(lambda _path: Catalogue())
+
+    class Result:
+        compiles = True
+        has_sorry = False
+        warnings: ClassVar[list[str]] = ["declaration uses a warning-producing option"]
+        lean_version = _FIXTURE_LEAN_VERSION
+
+        def as_dict(self) -> dict[str, object]:
+            return {
+                "topic_id": "fep-001",
+                "compiles": True,
+                "has_sorry": False,
+                "warnings": self.warnings,
+                "errors": [],
+                "lean_version": self.lean_version,
+            }
+
+    class Verifier:
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        def check_mathlib_built(self) -> tuple[bool, str]:
+            return True, "fixture"
+
+        def verify_batch(self, _items: list[tuple[str, str]]) -> list[Result]:
+            return [Result()]
+
+    monkeypatch.setattr(cli, "FEPTopicCatalogue", CatalogueLoader)
+    monkeypatch.setattr(cli, "LeanVerifier", Verifier)
+    receipt = tmp_path / "receipts" / "native.json"
+
+    code = cli.main(
+        [
+            "--project-root",
+            str(PROJ),
+            "verify",
+            "--topic",
+            "fep-001",
+            "--fail-on-warnings",
+            "--receipt",
+            str(receipt),
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
+    assert code == 1
+    assert payload["complete"] is False
+    assert payload["compiled_without_sorry_topics"] == 1
+    assert payload["verified_topics"] == 0
+    assert receipt_payload["verified_topics"] == 0
+    assert receipt_payload["complete"] is False
+
+
 def test_main_dispatches_pipeline_commands(monkeypatch) -> None:
     calls: list[tuple[str, dict[str, object]]] = []
 
@@ -156,6 +333,48 @@ def test_main_dispatches_pipeline_commands(monkeypatch) -> None:
     assert calls[3] == ("pipeline", {"mode": "catalogue"})
 
 
+def test_atlas_command_writes_and_checks_projection(
+    monkeypatch, tmp_path: Path
+) -> None:
+    _make_checkout_root(tmp_path)
+    svg = tmp_path / "docs" / "formalism-atlas.svg"
+    html = tmp_path / "docs" / "formalism-atlas.html"
+    monkeypatch.setattr(cli, "write_formalism_atlas", lambda _root: (svg, html))
+    monkeypatch.setattr(cli, "atlas_projection_drift", lambda _root: ())
+
+    assert cli.main(["--project-root", str(tmp_path), "atlas"]) == 0
+    assert cli.main(["--project-root", str(tmp_path), "atlas", "--check"]) == 0
+
+
+def test_atlas_check_reports_stale_projection(monkeypatch, tmp_path: Path) -> None:
+    _make_checkout_root(tmp_path)
+    stale = tmp_path / "docs" / "formalism-atlas.svg"
+    monkeypatch.setattr(cli, "atlas_projection_drift", lambda _root: (stale,))
+
+    assert cli.main(["--project-root", str(tmp_path), "atlas", "--check"]) == 1
+
+
+def test_dashboard_command_writes_and_checks_projection(
+    monkeypatch, tmp_path: Path
+) -> None:
+    _make_checkout_root(tmp_path)
+    svg = tmp_path / "docs" / "formal-kernel-dashboard.svg"
+    html = tmp_path / "docs" / "formal-kernel-dashboard.html"
+    monkeypatch.setattr(cli, "write_formal_kernel_dashboard", lambda _root: (svg, html))
+    monkeypatch.setattr(cli, "formal_kernel_dashboard_drift", lambda _root: ())
+
+    assert cli.main(["--project-root", str(tmp_path), "dashboard"]) == 0
+    assert cli.main(["--project-root", str(tmp_path), "dashboard", "--check"]) == 0
+
+
+def test_dashboard_check_reports_stale_projection(monkeypatch, tmp_path: Path) -> None:
+    _make_checkout_root(tmp_path)
+    stale = tmp_path / "docs" / "formal-kernel-dashboard.svg"
+    monkeypatch.setattr(cli, "formal_kernel_dashboard_drift", lambda _root: (stale,))
+
+    assert cli.main(["--project-root", str(tmp_path), "dashboard", "--check"]) == 1
+
+
 def test_main_preflight_returns_error_for_incomplete_root(
     monkeypatch, tmp_path: Path
 ) -> None:
@@ -175,8 +394,7 @@ def test_verify_rejects_unknown_topics(monkeypatch, tmp_path: Path, capsys) -> N
         def __init__(self) -> None:
             self.topics = [Topic()]
 
-    mkdir = tmp_path / "config"
-    mkdir.mkdir()
+    _make_checkout_root(tmp_path)
     monkeypatch.setattr(
         cli.FEPTopicCatalogue, "from_yaml", staticmethod(lambda _path: Catalogue())
     )
@@ -202,8 +420,7 @@ def test_verify_returns_error_when_no_topics_match(
         def __init__(self) -> None:
             self.topics = [Topic()]
 
-    mkdir = tmp_path / "config"
-    mkdir.mkdir()
+    _make_checkout_root(tmp_path)
     monkeypatch.setattr(
         cli.FEPTopicCatalogue, "from_yaml", staticmethod(lambda _path: Catalogue())
     )

@@ -2,7 +2,11 @@
 
 from pathlib import Path
 
-from verification.environment import run_validation_checks
+from fep_lean.verification.environment import (
+    CATALOGUE_VALIDATION_CHECK_NAMES,
+    FULL_VALIDATION_CHECK_NAMES,
+    run_validation_checks,
+)
 
 PROJ = Path(__file__).resolve().parent.parent
 
@@ -13,6 +17,9 @@ def test_catalogue_validation_is_read_only_capability_check() -> None:
     assert result["mode"] == "catalogue"
     assert result["failed_count"] == 0
     assert all(check["ok"] for check in result["checks"])
+    assert [check["name"] for check in result["checks"]] == list(
+        CATALOGUE_VALIDATION_CHECK_NAMES
+    )
 
 
 def test_full_validation_reports_missing_capabilities_without_building(
@@ -27,3 +34,6 @@ def test_full_validation_reports_missing_capabilities_without_building(
         for check in result["checks"]
     )
     assert any(check["name"] == "mathlib_built" for check in result["checks"])
+    assert [check["name"] for check in result["checks"]] == list(
+        FULL_VALIDATION_CHECK_NAMES
+    )

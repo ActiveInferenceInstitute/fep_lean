@@ -1,0 +1,19 @@
+name: Lean latest stable
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pin-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require the newest stable Lean-Mathlib release pair
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 docs/pin_audit.py --check-latest

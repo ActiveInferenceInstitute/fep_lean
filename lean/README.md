@@ -1,8 +1,14 @@
 # Lean workspace — FEP Sketches
 
-**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
+**Version**: v1.1.0 | **Status**: Active | **Last Updated**: August 2026
 
-Lake package with full **Mathlib4 v4.29.0** dependency (see `lakefile.lean` / `lake-manifest.json`).
+Lake package with full **Mathlib4 v4.33.1** dependency (see `lakefile.lean` / `lake-manifest.json`).
+
+The exact Lean and Mathlib tags track the newest stable compatible release pair.
+The repository does not float to release candidates or nightlies;
+`docs/pin_audit.py --check-latest` detects when a newer compatible pair is
+available and reports newer Lean-only patches as pending Mathlib support. A
+pair upgrade then requires the full migration and evidence cascade.
 
 ## One-Time Setup
 
@@ -26,14 +32,27 @@ lake build         # build FepSketches
 ## Manual Verification
 
 ```bash
-cd lean && lake build
+cd lean
+lake build FepSketches
 ```
 
-## Smoke Test
+The tracked `FepSketches/fep_all.lean` aggregate is regenerated from the
+family-owned canonical topic bodies. Every foundation, leaf-composition, and
+import-aggregate resource declared by `src/fep_lean/formal/manifest.py` has an
+exact workspace projection. From the project root, check both projection
+families:
 
 ```bash
-cd lean
-lake env lean FepSketches/Basic.lean
+uv run python scripts/_maint_build_fep_all_lean.py --check
+uv run python scripts/_maint_build_formal_modules.py --check
+```
+
+After `lake build FepSketches`, resolve every reviewed primary/evidence
+declaration and inspect evidence axioms with:
+
+```bash
+uv run python scripts/audit_formalisms.py \
+  --receipt output/formalism-audit.json
 ```
 
 ## Environment Variables

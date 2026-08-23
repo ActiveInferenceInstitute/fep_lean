@@ -1,9 +1,9 @@
 """Tests for ``scripts/_maint_build_fep_all_lean.py``.
 
-The generator is the single source of truth for ``lean/FepSketches/fep_all.lean``
-(which is gitignored). These tests guard the same invariants that
+The body registry is the source of truth for tracked ``lean/FepSketches/fep_all.lean``.
+These tests guard the same invariants that
 :mod:`tests.test_fep_all_lean_ssot` enforces on the materialized file, so a
-SKETCHES edit that breaks the SSOT contract fails fast in unit tests rather
+body-registry edit that breaks the SSOT contract fails fast in unit tests rather
 than only at the project-wide ``test_fep_all_lean_*`` gate.
 """
 
@@ -17,6 +17,13 @@ from pathlib import Path
 
 import pytest
 import yaml
+
+from fep_lean.catalogue.generation import (
+    hoisted_sketch_imports,
+    render_fep_all_lean,
+    topic_id_to_namespace,
+)
+from fep_lean.catalogue.registry import BODIES
 
 PROJ = Path(__file__).resolve().parent.parent
 SCRIPTS = PROJ / "scripts"
@@ -45,17 +52,18 @@ def _yaml_topic_ids() -> set[str]:
     return {t["id"] for t in data["topics"]}
 
 
-def test_write_aggregate_emits_50_topic_namespaces(
+def test_write_aggregate_emits_the_sealed_topic_namespaces(
     tmp_path: Path, generator_module
 ) -> None:
     fep_all_path, n = generator_module.write_aggregate(out_dir=tmp_path)
-    assert n == 50, f"expected 50 SKETCHES, got {n}"
+    expected_count = len(_yaml_topic_ids())
+    assert n == expected_count
     assert fep_all_path.is_file()
 
     text = fep_all_path.read_text(encoding="utf-8")
     namespaces = {f"fep-{m.group(1)}" for m in _NS_RE.finditer(text)}
-    assert len(namespaces) == 50, (
-        f"expected 50 fep_fepNNN namespaces, got {len(namespaces)}: "
+    assert len(namespaces) == expected_count, (
+        f"expected {expected_count} fep_fepNNN namespaces, got {len(namespaces)}: "
         f"{sorted(namespaces)}"
     )
 
@@ -92,18 +100,18 @@ def test_write_aggregate_no_non_comment_sorry(tmp_path: Path, generator_module) 
     )
 
 
-def test_write_aggregate_hoists_single_top_level_import(
+def test_write_aggregate_hoists_exact_distinct_import_union(
     tmp_path: Path, generator_module
 ) -> None:
-    """Per-sketch ``import Mathlib.*`` lines must be stripped; only the file-level
-    ``import Mathlib`` should remain. Avoids duplicate imports that would
-    otherwise litter the aggregate after every regeneration."""
+    """The aggregate preserves the canonical narrow dependency surface."""
     fep_all_path, _ = generator_module.write_aggregate(out_dir=tmp_path)
     text = fep_all_path.read_text(encoding="utf-8")
     import_lines = [ln for ln in text.splitlines() if ln.startswith("import ")]
-    assert import_lines == ["import Mathlib"], (
-        f"expected exactly one top-level `import Mathlib`, got: {import_lines}"
-    )
+    assert import_lines == list(hoisted_sketch_imports(BODIES))
+    assert len(import_lines) == len(set(import_lines))
+    assert "import Mathlib" not in import_lines
+    assert "import Mathlib.Probability.Kernel.Invariance" in import_lines
+    assert "import Mathlib.Analysis.SpecialFunctions.BinaryEntropy" in import_lines
 
 
 def test_regenerated_aggregate_is_the_only_library_target(
@@ -115,15 +123,22 @@ def test_regenerated_aggregate_is_the_only_library_target(
     assert not (tmp_path / "Basic.lean").exists()
 
 
-def test_topic_id_to_namespace_round_trips(generator_module) -> None:
-    assert generator_module._topic_id_to_namespace("fep-001") == "fep_fep001"
-    assert generator_module._topic_id_to_namespace("fep-050") == "fep_fep050"
+def test_topic_id_to_namespace_round_trips() -> None:
+    assert topic_id_to_namespace("fep-001") == "fep_fep001"
+    assert topic_id_to_namespace("fep-050") == "fep_fep050"
     with pytest.raises(ValueError):
-        generator_module._topic_id_to_namespace("not-a-topic")
+        topic_id_to_namespace("not-a-topic")
     with pytest.raises(ValueError):
-        generator_module._topic_id_to_namespace("fep-xyz")
+        topic_id_to_namespace("fep-xyz")
 
 
-def test_build_aggregate_rejects_empty_sketches(generator_module) -> None:
-    with pytest.raises(ValueError, match="SKETCHES is empty"):
-        generator_module._build_aggregate({})
+def test_build_aggregate_rejects_empty_body_registry() -> None:
+    with pytest.raises(ValueError, match="body registry is empty"):
+        render_fep_all_lean({})
+
+
+def test_aggregate_is_current_detects_drift(tmp_path: Path, generator_module) -> None:
+    path, _ = generator_module.write_aggregate(out_dir=tmp_path)
+    assert generator_module.aggregate_is_current(path)
+    path.write_text(path.read_text(encoding="utf-8") + "-- drift\n", encoding="utf-8")
+    assert not generator_module.aggregate_is_current(path)

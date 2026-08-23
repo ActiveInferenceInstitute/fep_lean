@@ -1,13 +1,14 @@
 # fep_lean/lean/
 
-**Version**: v1.0.0 | **Status**: Active | **Last Updated**: July 2026
+**Version**: v1.1.0 | **Status**: Active | **Last Updated**: August 2026
 
 Full **Lake** workspace with **Mathlib4** dependency for FEP theorem verification.
 
 ## Toolchain
 
-- **Lean**: `leanprover/lean4:v4.29.0` (see `lean-toolchain`)
-- **Mathlib**: `v4.29.0` — see `lake-manifest.json` `rev` (e.g. `8a178386ffc0f5fef0b77738bb5449d50efeea95` for the current lockfile)
+- **Lean**: `leanprover/lean4:v4.33.1` (see `lean-toolchain`)
+- **Mathlib**: `v4.33.1` — see `lakefile.lean` and the exact revision in
+  `lake-manifest.json`
 
 ## Layout
 
@@ -16,7 +17,7 @@ Full **Lake** workspace with **Mathlib4** dependency for FEP theorem verificatio
 | `lakefile.lean` | Lake package: declares `require mathlib` |
 | `lean-toolchain` | Pins Lean 4 toolchain version |
 | `lake-manifest.json` | Pins Mathlib4 git commit for reproducibility |
-| `FepSketches/` | Library root; temporary verification files written here |
+| `FepSketches/` | Library root containing generated `fep_all.lean` and `composed.lean`; verifier-owned temporary probes are removed |
 | `.lake/packages/mathlib/` | Downloaded Mathlib4 source (after `lake exe cache get`) |
 
 ## One-Time Setup (non-sandboxed terminal)
@@ -30,21 +31,21 @@ bash scripts/_maint_bootstrap_lean_toolchain.sh
 
 # Or manually:
 cd lean
-lake update           # fetch Mathlib4 @ v4.29.0 (see `lakefile.lean`)
+lake update           # fetch Mathlib4 @ v4.33.1 (see `lakefile.lean`)
 lake exe cache get    # download ~3 GB prebuilt .olean cache
 lake build            # build FepSketches against Mathlib
 ```
 
 ## Verification Workflow
 
-After setup, `LeanVerifier` in `src/verification/lean_verifier.py` calls:
+After setup, `LeanVerifier` in `src/fep_lean/verification/lean_verifier.py` calls:
 
 ```bash
 lake env lean FepSketches/_verify_{topic_id}_{random}.lean
 ```
 
-This inherits the full Mathlib4 environment so all 50 topic sketches
-with `import Mathlib.*` resolve correctly.
+This inherits the full Mathlib4 environment so every body in the sealed topic
+roster resolves its declared `import Mathlib.*` dependencies.
 
 ## macOS Sandbox Bypass
 
@@ -53,15 +54,28 @@ in sandboxed AI agent shells.  `LeanVerifier` bypasses this by:
 
 1. Setting `ELAN_HOME=/tmp/fep_lean_elan` (writable temp dir)
 2. Resolving `lake`/`lean` via direct toolchain path:
-   `~/.elan/toolchains/leanprover--lean4---v4.29.0/bin/lake`
+   `~/.elan/toolchains/leanprover--lean4---v4.33.1/bin/lake`
 3. Respecting `FEP_LEAN_LAKE_EXE` / `FEP_LEAN_LEAN_EXE` env overrides
 
-## Lessons Learned: Concurrency & Lock Contention
+## Concurrency boundary
 
-During pipeline hardening, attempting to parallelize `lake env lean` operations via multi-threading (`ThreadPoolExecutor`) triggered systemic failure. macOS ELAN sandbox proxies do not resolve isolated container paths efficiently when invoked simultaneously across 10+ subshells.
-This lock contention results in silent import masking—the `lean` parser successfully spins up but cannot load `Mathlib` files from the cache, wildly returning mathematical false positives (e.g., `unknown identifier 'measure_union_le'`).
+Run per-topic `lake env lean` checks serially. They share one Lake build tree,
+and concurrent verifier subprocesses have produced toolchain/cache contention
+and misleading missing-import failures in sandboxed environments. Parallelism
+belongs outside one workspace, not inside `LeanVerifier.verify_batch`.
 
-**The Agentic Rule**: Always execute formal theorem verification instances **serially** (`max_workers=1`). The minimal overhead of sequential processing strictly outweighs the orchestration deadlocks and non-deterministic logic anomalies caused by local thread saturation.
+`FepSketches/composed.lean` and `FepSketches/compositions/*.lean` are byte-exact
+projections of the manifested package resources; never edit the workspace
+copies. The composition leaves own cross-topic proofs, while `composed.lean` is
+their import-only aggregate. Formal relations may name only declarations that
+resolve through that aggregate. Validate both projection and axioms from the
+project root:
+
+```bash
+uv run python scripts/_maint_build_formal_modules.py --check
+uv run python scripts/audit_formalisms.py \
+  --receipt output/formalism-audit.json
+```
 
 ## See also
 
