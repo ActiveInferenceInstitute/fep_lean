@@ -863,7 +863,7 @@ theorem pragmaticValue_eq_negPragmaticCost
     (model : GenerativeModel Policy State Outcome) (policy : Policy) :
     pragmaticValue model policy = -pragmaticCost model policy := by
   unfold pragmaticValue pragmaticCost crossEntropy
-  simp [mul_comm, mul_comm, mul_left_comm]
+  simp [mul_comm]
 
 /-- **Expected free energy in ActiveInferenceSynthetic sign convention.**
 ``G(a) = -(pragmaticValue + epistemicValue)`` where the pragmatic term is

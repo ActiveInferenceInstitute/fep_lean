@@ -161,9 +161,8 @@ FORMAL_MODULES: tuple[FormalModule, ...] = (
         resource="ness_flow.lean",
         lean_module="FepSketches.ness_flow",
         role=FormalModuleRole.FOUNDATION,
+        declaration_namespace="FEP.NessFlow",
     ),
-    FormalModule(
-        resource="path_thermodynamics.lean",
     FormalModule(
         resource="path_thermodynamics.lean",
         lean_module="FepSketches.path_thermodynamics",

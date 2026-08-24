@@ -45,7 +45,7 @@ def test_formal_kernel_has_exact_manifested_declaration_closure() -> None:
     assert Counter(owners.values()) == {
         "FepSketches.finite_probability": 19,
         "FepSketches.finite_information": 25,
-        "FepSketches.active_inference": 41,
+        "FepSketches.active_inference": 44,
         "FepSketches.markov_blanket": 9,
         "FepSketches.information_geometry": 33,
         "FepSketches.statistical_convergence": 7,
@@ -56,6 +56,7 @@ def test_formal_kernel_has_exact_manifested_declaration_closure() -> None:
         "FepSketches.finite_markov_dynamics": 17,
         "FepSketches.causal_dynamics": 34,
         "FepSketches.predictive_coding": 30,
+        "FepSketches.ness_flow": 9,
         "FepSketches.path_thermodynamics": 18,
         "FepSketches.geometric_optimization": 25,
         "FepSketches.collective_inference": 13,
@@ -68,7 +69,7 @@ def test_formal_kernel_has_exact_manifested_declaration_closure() -> None:
         "FepSketches.smooth_information_geometry": 16,
         "FepSketches.continuous_time_markov": 72,
         "FepSketches.markov_semigroup": 10,
-        "FepSketches.scalar_gaussian_semigroup": 14,
+        "FepSketches.scalar_gaussian_semigroup": 15,
         "FepSketches.linear_gaussian_semigroup": 25,
         "FepSketches.fin4_gaussian_semigroup": 42,
         "FepSketches.gaussian_precision_conditioning": 25,
@@ -92,6 +93,7 @@ def test_formal_kernel_has_exact_manifested_declaration_closure() -> None:
         "FepSketches.compositions.gaussian_filter": 16,
         "FepSketches.compositions.gaussian_control": 19,
         "FepSketches.compositions.gaussian_grid_path": 11,
+        "FepSketches.compositions.smooth_reference_kernel": 30,
     }
 
 

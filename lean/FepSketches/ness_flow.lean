@@ -92,8 +92,8 @@ theorem detailed_balance_iff (ω : ℝ) (g : Fin 2 → ℝ) (hg : g 0 ≠ 0 ∨ 
     solenoidal ω g = 0 ↔ ω = 0 := by
   constructor
   · intro h
-    have h0 : solenoidal ω g 0 = 0 := by simpa [h] using rfl
-    have h1 : solenoidal ω g 1 = 0 := by simpa [h] using rfl
+    have h0 : solenoidal ω g 0 = 0 := by simp [h]
+    have h1 : solenoidal ω g 1 = 0 := by simp [h]
     simp [solenoidal] at h0 h1
     rcases hg with (hgx | hgy)
     · -- h1: -ω * g 0 = 0, which simp turned into ω = 0 ∨ g 0 = 0

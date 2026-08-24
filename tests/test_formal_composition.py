@@ -91,6 +91,7 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
         "finite_markov_dynamics.lean",
         "causal_dynamics.lean",
         "predictive_coding.lean",
+        "ness_flow.lean",
         "path_thermodynamics.lean",
         "geometric_optimization.lean",
         "collective_inference.lean",
@@ -132,6 +133,7 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
         "compositions/gaussian_filter.lean",
         "compositions/gaussian_control.lean",
         "compositions/gaussian_grid_path.lean",
+        "compositions/smooth_reference_kernel.lean",
     )
     aggregate_resources = ("composed.lean",)
     resources = (
@@ -159,6 +161,7 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
         "FEP.FiniteMarkovDynamics",
         "FEP.CausalDynamics",
         "FEP.PredictiveCoding",
+        "FEP.NessFlow",
         "FEP.PathThermodynamics",
         "FEP.GeometricOptimization",
         "FEP.CollectiveInference",
@@ -185,6 +188,7 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
         "FEPComposed.GaussianFilter",
         "FEPComposed.GaussianControl",
         "FEPComposed.GaussianGridPath",
+        "FEPComposed.SmoothReferenceKernel",
         None,
     )
     expected_resources_by_role = {
