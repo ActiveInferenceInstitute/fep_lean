@@ -884,7 +884,7 @@ plan ``(a_1, ..., a_T)`` starting from the initial belief equals the sum of
 per-step EFEs.  This is the exact finite-probability form of the
 ``evaluate_policy`` function in ``src/policy_planning.py``. -/
 theorem staticState_cumulativeEFE_decomposition
-    [DecidableEq State]
+    [DecidableEq State] [DecidableEq Policy]
     (model : GenerativeModel Policy State Outcome)
     (plan : List Policy)
     (hidentity : ∀ policy, model.transition policy = FiniteKernel.identity) :
@@ -892,12 +892,13 @@ theorem staticState_cumulativeEFE_decomposition
       ∑ policy ∈ plan.toFinset,
         expectedFreeEnergy model policy := by
   rw [cumulativeExpectedFreeEnergy]
-  induction plan generalizing (model.initialState) with
-  | nil => simp [cumulativeExpectedFreeEnergyFrom]
+  let init := model.initialState
+  induction plan generalizing init with
+  | nil => simp [cumulativeExpectedFreeEnergyFrom, init]
   | cons policy remainder ih =>
       have hide : model.transition policy = FiniteKernel.identity :=
         hidentity policy
-      simp [cumulativeExpectedFreeEnergyFrom, advanceState, hide,
+      simp [cumulativeExpectedFreeEnergyFrom, advanceState, hide, init,
         FiniteKernel.predictive_identity, withInitialState, ih]
 
 end FEP.ActiveInference

@@ -129,10 +129,12 @@ theorem entropyProduction_eq_zero_iff (precision ω γ : ℝ)
       (div_eq_zero_iff_eq_of_ne_zero (ne_of_gt hg)).mp this
     have h_nonzero : 2 * precision ≠ 0 := by nlinarith
     have hω2 : ω ^ 2 = 0 := by
-      apply mul_eq_zero.mp at hnum
-      rcases hnum with (h2 | hω2')
-      · exact False.elim (h_nonzero h2)
-      · exact hω2'
+      have hmul := mul_eq_zero.mp hnum
+      rcases hmul with (htwo | hprec_val)
+      · -- htwo: 2 * ω ^ 2 = 0; 2 ≠ 0, so ω ^ 2 = 0
+        nlinarith
+      · -- hprec_val: precision = 0; contradicts hp > 0
+        exfalso; nlinarith
     nlinarith [sq_nonneg ω]
   · intro h; subst h; simp [entropyProduction]
 

@@ -837,4 +837,68 @@ theorem symmetricBoolModel_policyPrior_changes_posterior (precision : ℝ) :
     rw [symmetricBoolModel_policyPosterior_eq_prior] <;>
     norm_num [trueBiasedPolicyPrior, falseBiasedPolicyPrior]
 
+/-! ## Bridge: pragmatic-epistemic decomposition matching the Python demonstration
+
+The ActiveInferenceSynthetic Python code (``src/expected_free_energy.py`` and
+``src/policy_planning.py``) defines the expected free energy of one action as
+
+``G(a) = -(E[ln P(o|a)] + I(s; o|a))``.
+
+The theorems below prove that the library's ``expectedFreeEnergy`` agrees with
+this sign convention and that the decomposition ties directly to the finite-KL
+nonnegativity and mutual-information identity already established.
+-/
+
+/-- Pragmatic value of a policy: the expected log-preference of the predicted
+outcome.  This is the ``pragmatic`` term used in the ActiveInferenceSynthetic
+Python code (positive when the predicted outcome aligns with preferences). -/
+noncomputable def pragmaticValue
+    (model : GenerativeModel Policy State Outcome) (policy : Policy) : ℝ :=
+  ∑ outcome : Outcome,
+    predictedOutcome model policy outcome *
+      Real.log (model.preferences outcome)
+
+/-- Pragmatic value = -pragmaticCost because cross-entropy is -E[ln P(o)]. -/
+theorem pragmaticValue_eq_negPragmaticCost
+    (model : GenerativeModel Policy State Outcome) (policy : Policy) :
+    pragmaticValue model policy = -pragmaticCost model policy := by
+  unfold pragmaticValue pragmaticCost crossEntropy
+  simp [Finset.mul_comm, mul_comm, mul_left_comm]
+
+/-- **Expected free energy in ActiveInferenceSynthetic sign convention.**
+``G(a) = -(pragmaticValue + epistemicValue)`` where the pragmatic term is
+the expected log-preference ``E[ln P(o)]`` and the epistemic term is the
+mutual information ``I(s; o)``. -/
+theorem expectedFreeEnergy_eq_negPragmaticValuePlusEpistemicValue
+    (model : GenerativeModel Policy State Outcome) (policy : Policy) :
+    expectedFreeEnergy model policy =
+      -(pragmaticValue model policy + epistemicValue model policy) := by
+  rw [pragmaticValue_eq_negPragmaticCost]
+  unfold expectedFreeEnergy
+  ring
+
+/-- **Static-state EFE decomposition.**  When the state transition is the
+identity (the hidden state does not change over the planning horizon, as in
+ActiveInferenceSynthetic's ``policy_planning.py``), the cumulative EFE over a
+plan ``(a_1, ..., a_T)`` starting from the initial belief equals the sum of
+per-step EFEs.  This is the exact finite-probability form of the
+``evaluate_policy`` function in ``src/policy_planning.py``. -/
+theorem staticState_cumulativeEFE_decomposition
+    [DecidableEq State] [DecidableEq Policy]
+    (model : GenerativeModel Policy State Outcome)
+    (plan : List Policy)
+    (hidentity : ∀ policy, model.transition policy = FiniteKernel.identity) :
+    cumulativeExpectedFreeEnergy model plan =
+      ∑ policy ∈ plan.toFinset,
+        expectedFreeEnergy model policy := by
+  rw [cumulativeExpectedFreeEnergy]
+  let init := model.initialState
+  induction plan generalizing init with
+  | nil => simp [cumulativeExpectedFreeEnergyFrom, init]
+  | cons policy remainder ih =>
+      have hide : model.transition policy = FiniteKernel.identity :=
+        hidentity policy
+      simp [cumulativeExpectedFreeEnergyFrom, advanceState, hide, init,
+        FiniteKernel.predictive_identity, withInitialState, ih]
+
 end FEP.ActiveInference
