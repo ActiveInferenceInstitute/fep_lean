@@ -837,8 +837,6 @@ theorem symmetricBoolModel_policyPrior_changes_posterior (precision : ℝ) :
     rw [symmetricBoolModel_policyPosterior_eq_prior] <;>
     norm_num [trueBiasedPolicyPrior, falseBiasedPolicyPrior]
 
-end FEP.ActiveInference
-
 /-! ## Bridge: pragmatic-epistemic decomposition matching the Python demonstration
 
 The ActiveInferenceSynthetic Python code (``src/expected_free_energy.py`` and

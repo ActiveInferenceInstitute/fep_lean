@@ -139,8 +139,7 @@ theorem entropyProduction_eq_zero_iff (precision ω γ : ℝ)
 /-- **The NESS flow signature.**  At equilibrium (`ω = 0`), the solenoidal
 current vanishes and entropy production is zero.  Out of equilibrium (`ω ≠ 0`),
 a persistent solenoidal drive sustains positive entropy production. -/
-theorem ness_signature (γ ω : ℝ) (g : Fin 2 → ℝ) (hg : g 0 ≠ 0 ∨ g 1 ≠ 0)
-    (hp : 0 < γ) (hprec : 0 < precision) (precision : ℝ) :
+theorem ness_signature (ω : ℝ) (g : Fin 2 → ℝ) (hg : g 0 ≠ 0 ∨ g 1 ≠ 0) :
     (solenoidal ω g = 0) ↔ (ω = 0) :=
   (detailed_balance_iff ω g hg).symm
 
