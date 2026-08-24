@@ -863,7 +863,7 @@ theorem pragmaticValue_eq_negPragmaticCost
     (model : GenerativeModel Policy State Outcome) (policy : Policy) :
     pragmaticValue model policy = -pragmaticCost model policy := by
   unfold pragmaticValue pragmaticCost crossEntropy
-  simp [Finset.mul_comm, mul_comm, mul_left_comm]
+  simp [mul_comm, mul_comm, mul_left_comm]
 
 /-- **Expected free energy in ActiveInferenceSynthetic sign convention.**
 ``G(a) = -(pragmaticValue + epistemicValue)`` where the pragmatic term is
@@ -889,16 +889,23 @@ theorem staticState_cumulativeEFE_decomposition
     (plan : List Policy)
     (hidentity : ∀ policy, model.transition policy = FiniteKernel.identity) :
     cumulativeExpectedFreeEnergy model plan =
-      ∑ policy ∈ plan.toFinset,
-        expectedFreeEnergy model policy := by
+      (plan.map (expectedFreeEnergy model)).sum := by
   rw [cumulativeExpectedFreeEnergy]
-  let init := model.initialState
-  induction plan generalizing init with
-  | nil => simp [cumulativeExpectedFreeEnergyFrom, init]
+  have h_advance_id (current : FiniteLaw State) (policy : Policy) :
+      advanceState model current policy = current := by
+    have hide : model.transition policy = FiniteKernel.identity := hidentity policy
+    simp [advanceState, hide, FiniteKernel.predictive_identity]
+  induction plan with
+  | nil => simp [cumulativeExpectedFreeEnergyFrom]
   | cons policy remainder ih =>
-      have hide : model.transition policy = FiniteKernel.identity :=
-        hidentity policy
-      simp [cumulativeExpectedFreeEnergyFrom, advanceState, hide, init,
-        FiniteKernel.predictive_identity, withInitialState, ih]
+      have h_adv : advanceState model model.initialState policy = model.initialState :=
+        h_advance_id model.initialState policy
+      rw [cumulativeExpectedFreeEnergyFrom, h_adv]
+      -- withInitialState model model.initialState is definitionally model
+      -- so EFE at this state equals EFE at the original model
+      have h_efe : expectedFreeEnergy (withInitialState model model.initialState) policy =
+          expectedFreeEnergy model policy := rfl
+      rw [h_efe, ih]
+      simp [List.sum_cons]
 
 end FEP.ActiveInference

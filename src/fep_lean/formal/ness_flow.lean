@@ -96,10 +96,12 @@ theorem detailed_balance_iff (ω : ℝ) (g : Fin 2 → ℝ) (hg : g 0 ≠ 0 ∨ 
     have h1 : solenoidal ω g 1 = 0 := by simpa [h] using rfl
     simp [solenoidal] at h0 h1
     rcases hg with (hgx | hgy)
-    · rcases eq_zero_or_eq_zero_of_mul_eq_zero h1 with (hω | hgx')
+    · -- h1: -ω * g 0 = 0, which simp turned into ω = 0 ∨ g 0 = 0
+      rcases h1 with (hω | hgx')
       · exact hω
       · exfalso; exact hgx hgx'
-    · rcases eq_zero_or_eq_zero_of_mul_eq_zero h0 with (hω | hgy')
+    · -- h0: ω * g 1 = 0, which simp turned into ω = 0 ∨ g 1 = 0
+      rcases h0 with (hω | hgy')
       · exact hω
       · exfalso; exact hgy hgy'
   · intro h; subst h; ext i; fin_cases i <;> simp [solenoidal]
@@ -107,7 +109,7 @@ theorem detailed_balance_iff (ω : ℝ) (g : Fin 2 → ℝ) (hg : g 0 ≠ 0 ∨ 
 /-- The denominator-cleared entropy production rate: `σ = 2·ω²·precision / γ`.
 At equilibrium (`ω = 0`) this is zero; out of equilibrium (`ω ≠ 0`) it is
 strictly positive for positive precision and γ. -/
-def entropyProduction (precision ω γ : ℝ) : ℝ :=
+noncomputable def entropyProduction (precision ω γ : ℝ) : ℝ :=
   2 * ω ^ 2 * precision / γ
 
 /-- **Entropy production is nonnegative,** for nonnegative precision and
@@ -125,8 +127,15 @@ theorem entropyProduction_eq_zero_iff (precision ω γ : ℝ)
   constructor
   · intro h
     have : 2 * ω ^ 2 * precision / γ = 0 := h
-    have hnum : 2 * ω ^ 2 * precision = 0 :=
-      (div_eq_zero_iff_eq_of_ne_zero (ne_of_gt hg)).mp this
+    have hnum : 2 * ω ^ 2 * precision = 0 := by
+      have hpos : γ ≠ 0 := ne_of_gt hg
+      have h' : 2 * ω ^ 2 * precision / γ = 0 := by
+        simpa [entropyProduction] using h
+      calc
+        2 * ω ^ 2 * precision = (2 * ω ^ 2 * precision / γ) * γ := by
+          field_simp [hpos]
+        _ = 0 * γ := by rw [h']
+        _ = 0 := by ring
     have h_nonzero : 2 * precision ≠ 0 := by nlinarith
     have hω2 : ω ^ 2 = 0 := by
       have hmul := mul_eq_zero.mp hnum
@@ -143,6 +152,6 @@ current vanishes and entropy production is zero.  Out of equilibrium (`ω ≠ 0`
 a persistent solenoidal drive sustains positive entropy production. -/
 theorem ness_signature (ω : ℝ) (g : Fin 2 → ℝ) (hg : g 0 ≠ 0 ∨ g 1 ≠ 0) :
     (solenoidal ω g = 0) ↔ (ω = 0) :=
-  (detailed_balance_iff ω g hg).symm
+  detailed_balance_iff ω g hg
 
 end FEP.NessFlow
