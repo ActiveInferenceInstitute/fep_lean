@@ -270,8 +270,9 @@ topics:
     measures, and obeys the composition-product chain rule for Markov kernels.
   assumption_review: Self-divergence uses SigmaFinite; zero-characterization and the
     chain rule use finite measures; the chain rule additionally requires Markov kernels.
-    No data-processing theorem is claimed because the pinned Mathlib revision does
-    not expose one.
+    The pin separately exposes native measure-KL data processing under a Markov kernel
+    as InformationTheory.klDiv_comp_right_le; fep-014 does not include that theorem
+    in its maintained theorem surface.
   non_vacuity: Equal finite measures witness zero KL, unequal finite measures exercise
     the zero-characterization, and distinct Markov kernels give a nontrivial conditional
     term in the chain rule.

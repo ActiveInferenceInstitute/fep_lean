@@ -12,10 +12,12 @@ abstract: >-
   Lean 4.33.1 / Mathlib 4.33.1 workspace compiles every row without proof
   holes.
 authors:
-  - family-names: Friedman
+  - &canonical-author
+    family-names: Friedman
     given-names: Daniel Ari
     email: daniel@activeinference.institute
     orcid: "https://orcid.org/0000-0001-6232-9096"
+    affiliation: Active Inference Institute
 version: "1.1.0"
 date-released: "2026-08-23"
 repository-code: "https://github.com/ActiveInferenceInstitute/fep_lean"
@@ -40,9 +42,7 @@ preferred-citation:
   type: article
   title: "Towards Lean 4 Formalization of the Free Energy Principle: AI-Driven Theorem Sketching and Verification for Active Inference and Bayesian Mechanics"
   authors:
-    - family-names: Friedman
-      given-names: Daniel Ari
-      orcid: "https://orcid.org/0000-0001-6232-9096"
+    - *canonical-author
   year: 2026
   journal: "Active Inference Journal"
   doi: "10.5281/zenodo.19699233"

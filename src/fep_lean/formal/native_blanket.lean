@@ -1,6 +1,7 @@
 import FepSketches.markov_blanket
 import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
 import Mathlib.Probability.Independence.Conditional
+import Mathlib.Probability.Kernel.Composition.Comp
 
 /-!
 # Finite laws as native measures and native Markov blankets
@@ -123,6 +124,24 @@ noncomputable instance embeddedKernel_isMarkovKernel
     (kernel : FiniteKernel α β) : IsMarkovKernel (embeddedKernel kernel) where
   isProbabilityMeasure state := embeddedLaw_isProbabilityMeasure (kernel.row state)
 
+/-- The authored finite identity kernel embeds as Mathlib's native identity
+kernel, not merely as a distributionally equivalent transition. -/
+@[simp]
+theorem embeddedKernel_identity [DecidableEq α] :
+    embeddedKernel (FiniteKernel.identity : FiniteKernel α α) = Kernel.id := by
+  classical
+  apply Kernel.ext
+  intro state
+  apply Measure.ext_of_singleton
+  intro target
+  rw [embeddedKernel_apply_singleton,
+    Kernel.id_apply, Measure.dirac_apply' _ (MeasurableSet.singleton target)]
+  by_cases htarget : target = state
+  · subst target
+    simp [FiniteKernel.identity, FiniteKernel.deterministic]
+  · simp [FiniteKernel.identity, FiniteKernel.deterministic,
+      htarget, Ne.symm htarget]
+
 /-- Embedding a finite prior-kernel joint is exactly Mathlib's native
 composition-product measure. -/
 theorem embeddedLaw_joint_eq_compProd
@@ -158,6 +177,25 @@ theorem embeddedPredictive_eq_comp
       ENNReal.ofReal_mul (prior.nonneg state), mul_comm]
   · intro state _
     exact mul_nonneg (prior.nonneg state) (kernel.nonneg state target)
+
+/-- Embedding preserves chronological finite-kernel composition exactly:
+`earlier` acts first and `later` acts second on both sides. -/
+@[simp]
+theorem embeddedKernel_comp {γ : Type*} [Fintype γ]
+    [MeasurableSpace γ] [DiscreteMeasurableSpace γ]
+    (later : FiniteKernel β γ) (earlier : FiniteKernel α β) :
+    embeddedKernel (FiniteKernel.comp later earlier) =
+      embeddedKernel later ∘ₖ embeddedKernel earlier := by
+  apply Kernel.ext
+  intro state
+  rw [Kernel.comp_apply, embeddedKernel_apply, embeddedKernel_apply]
+  have hrow :
+      (FiniteKernel.comp later earlier).row state =
+        later.predictive (earlier.row state) := by
+    apply FiniteLaw.ext_mass
+    rfl
+  rw [hrow]
+  exact embeddedPredictive_eq_comp (earlier.row state) later
 
 end FiniteEmbedding
 

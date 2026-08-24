@@ -284,7 +284,7 @@ def test_exponential_family_keeps_finite_scalar_support_visible() -> None:
     assert "Set.Icc lower upper" in bodies
 
 
-def test_continuous_time_source_is_exactly_two_state_and_plot_ready() -> None:
+def test_continuous_time_source_preserves_two_state_plot_ready_regression() -> None:
     source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
     bodies = "\n".join(CONTINUOUS_TIME_BODIES.values())
 
@@ -297,6 +297,227 @@ def test_continuous_time_source_is_exactly_two_state_and_plot_ready() -> None:
     assert "transition_stationary" in bodies
     assert "transition_detailedBalance" in bodies
     assert "benchmarkLyapunov_deriv_zero_neg" in bodies
+
+
+def test_h17_certified_semigroup_carriers_are_explicit() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert "import FepSketches.active_inference\n" in source
+    assert "import FepSketches.controlled_markov\n" not in source
+    assert "import FepSketches.markov_blanket\n" in source
+    assert "import Mathlib.Analysis.Normed.Algebra.MatrixExponential\n" in source
+    assert re.search(r"(?m)^structure FiniteRateGenerator\b", source)
+    assert re.search(r"(?m)^structure FiniteMarkovSemigroup\b", source)
+    assert "noncomputable def exponentialCandidate" in source
+    assert "entrywise stochasticity is not inferred" in source
+
+
+def test_h17_action_interface_samples_the_certified_semigroup_exactly() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(r"(?m)^structure ActionIndexedSemigroup\b", source)
+    assert re.search(r"(?m)^noncomputable def sampledKernel\b", source)
+    assert re.search(r"(?m)^noncomputable def toActionInterface\b", source)
+    assert re.search(
+        r"(?m)^theorem selectedActionTransition_eq_sampledSemigroup\b", source
+    )
+    assert "actionTransition := indexed.sampledKernel" in source
+    assert "transition_consistent := transition_consistent" in source
+
+
+def test_h17_action_semigroup_is_the_single_generative_transition_owner() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(r"(?m)^noncomputable def toGenerativeModel\b", source)
+    assert (
+        "transition policy := indexed.sampledKernel (policyToAction policy)" in source
+    )
+    assert re.search(r"(?m)^theorem toGenerativeModel_transition\b", source)
+    assert re.search(
+        r"(?m)^noncomputable def toGenerativeModelActionInterface\b", source
+    )
+    assert "indexed.toActionInterface" in source
+    assert "fun _ => rfl" in source
+
+
+def test_h17_native_kl_contraction_uses_mathlib_kernel_dpi() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert "import FepSketches.decision_risk\n" in source
+    assert re.search(r"(?m)^theorem nativeKL_contraction\b", source)
+    assert re.search(r"(?m)^theorem nativeKL_contraction_to_invariant\b", source)
+    assert "InformationTheory.klDiv_comp_right_le" in source
+    assert source.count("FEP.NativeBlanket.embeddedPredictive_eq_comp") >= 2
+
+
+def test_h17_two_state_regression_instantiates_the_general_certificate() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    for declaration in (
+        "rateGenerator",
+        "certifiedSemigroup",
+        "certifiedSemigroup_kernel_eq_kernel",
+        "certifiedSemigroup_stationary",
+        "certifiedSemigroup_detailedBalanced",
+    ):
+        assert re.search(
+            rf"(?m)^(?:noncomputable def|def|theorem) {declaration}\b", source
+        ), declaration
+
+
+def test_h17_three_state_steady_cycle_has_nonzero_probability_current() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert "def IsStationary (generator : FiniteRateGenerator" in source
+    assert "def IsDetailedBalanced (generator : FiniteRateGenerator" in source
+    assert "def probabilityCurrent (generator : FiniteRateGenerator" in source
+    assert re.search(r"(?m)^def threeCycleGenerator\b", source)
+    assert re.search(r"(?m)^noncomputable def threeCycleStationaryLaw\b", source)
+    assert re.search(r"(?m)^theorem threeCycle_stationary\b", source)
+    assert re.search(r"(?m)^theorem threeCycle_not_detailedBalanced\b", source)
+    assert re.search(r"(?m)^theorem threeCycle_current_zero_one_ne_zero\b", source)
+
+
+def test_h17_exact_blanket_product_has_positive_refresh_semigroup() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(r"(?m)^noncomputable def refreshSemigroup\b", source)
+    assert re.search(r"(?m)^theorem refreshTransition_pos\b", source)
+    assert re.search(r"(?m)^noncomputable def blanketRefreshSemigroup\b", source)
+    assert re.search(r"(?m)^theorem refreshSemigroup_uniform_stationary\b", source)
+    assert "FEP.MarkovBlanket.DynamicState Internal Sensory Active External" in source
+    assert "[Nontrivial Internal] [Nontrivial Sensory]" in source
+    assert "[Nontrivial Active] [Nontrivial External]" in source
+    assert re.search(r"(?m)^theorem blanketPointMass_ne_uniform\b", source)
+    assert re.search(r"(?m)^def boolBlanketOrigin\b", source)
+    assert re.search(r"(?m)^noncomputable def boolBlanketInitialLaw\b", source)
+    assert re.search(r"(?m)^theorem boolBlanketInitial_ne_uniform\b", source)
+    assert re.search(r"(?m)^theorem boolBlanketStationaryLaw_isStationary\b", source)
+
+
+def test_h17_internal_law_and_likelihood_lift_share_the_exact_blanket_carrier() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(r"(?m)^abbrev BoolBlanketState\b", source)
+    assert "FEP.MarkovBlanket.DynamicState Bool Bool Bool Bool" in source
+    assert re.search(r"(?m)^noncomputable def liftInternalLaw\b", source)
+    assert "internal.product" in source
+    assert "FiniteLaw.uniform : FiniteLaw (Bool × (Bool × Bool))" in source
+    assert re.search(r"(?m)^theorem liftInternalLaw_fstMarginal\b", source)
+    assert re.search(r"(?m)^theorem liftInternalLaw_ne_uniform_of_ne_uniform\b", source)
+    assert re.search(r"(?m)^def liftInternalLikelihood\b", source)
+    assert "likelihood state.1 observation" in source
+    assert re.search(
+        r"(?m)^theorem liftInternalLikelihood_predictive_liftInternalLaw\b",
+        source,
+    )
+    assert "(liftInternalLikelihood likelihood).predictive" in source
+    assert "likelihood.predictive internal" in source
+    assert re.search(
+        r"(?m)^theorem liftInternalLikelihood_posterior_liftInternalLaw\b",
+        source,
+    )
+    assert "likelihood.posterior internal observation hEvidence" in source
+
+
+def test_h17_bool_blanket_carrier_has_exactly_sixteen_states() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(r"(?m)^theorem boolBlanketState_card\b", source)
+    assert "Fintype.card BoolBlanketState = 16" in source
+
+
+def test_h17_bool_blanket_actions_are_exact_hold_and_refresh_kernels() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(r"(?m)^noncomputable def boolBlanketActionSampleTime\b", source)
+    assert "if action then boolBlanketRefreshTime else 0" in source
+    assert re.search(r"(?m)^theorem boolBlanketActionSampleTime_nonneg\b", source)
+    assert re.search(
+        r"(?m)^noncomputable def boolBlanketActionIndexedSemigroup\b", source
+    )
+    assert "ActionIndexedSemigroup BoolBlanketState Bool" in source
+    assert "semigroup _ :=" in source
+    assert re.search(
+        r"(?m)^theorem boolBlanketActionIndexedSemigroup_false_kernel\b", source
+    )
+    assert "FiniteKernel.identity" in source
+    assert re.search(
+        r"(?m)^theorem boolBlanketActionIndexedSemigroup_true_kernel\b", source
+    )
+    assert "boolBlanketRefreshKernel" in source
+    assert re.search(
+        r"(?m)^theorem boolBlanketActionIndexedSemigroup_kernels_ne\b", source
+    )
+
+
+def test_h17_bool_blanket_generative_model_reuses_the_action_semigroup() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(r"(?m)^noncomputable def boolBlanketGenerativeModel\b", source)
+    assert "GenerativeModel Bool BoolBlanketState Bool" in source
+    assert "boolBlanketActionIndexedSemigroup.toGenerativeModel id" in source
+    assert re.search(r"(?m)^theorem boolBlanketGenerativeModel_transition\b", source)
+    assert re.search(
+        r"(?m)^noncomputable def boolBlanketGenerativeModelActionInterface\b",
+        source,
+    )
+    assert "toGenerativeModelActionInterface" in source
+
+
+def test_h17_hold_policy_preserves_the_lifted_internal_observation_law() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(
+        r"(?m)^theorem boolBlanketGenerativeModel_false_predictedOutcome\b",
+        source,
+    )
+    assert "predictedOutcome" in source
+    assert "liftInternalLaw internal" in source
+    assert "liftInternalLikelihood likelihood" in source
+    assert "likelihood.predictive internal" in source
+    assert "boolBlanketActionIndexedSemigroup_false_kernel" in source
+    assert "liftInternalLikelihood_predictive_liftInternalLaw" in source
+    assert re.search(
+        r"(?m)^theorem boolBlanketGenerativeModel_false_posteriorState\b",
+        source,
+    )
+    assert "posteriorState" in source
+    assert "liftInternalLikelihood_posterior_liftInternalLaw" in source
+
+
+def test_h17_bool_blanket_refresh_strictly_decreases_native_kl() -> None:
+    source = (FORMAL_ROOT / "continuous_time_markov.lean").read_text(encoding="utf-8")
+
+    assert re.search(r"(?m)^theorem refreshSemigroup_predictive_mass\b", source)
+    assert re.search(
+        r"(?m)^theorem refreshSemigroup_finiteKL_strict_decrease_of_ne_uniform\b",
+        source,
+    )
+    assert re.search(
+        r"(?m)^theorem refreshSemigroup_nativeKL_strict_decrease_of_ne_uniform\b",
+        source,
+    )
+    assert re.search(r"(?m)^noncomputable def boolBlanketRefreshTime\b", source)
+    assert re.search(r"(?m)^noncomputable def boolBlanketEvolvedLaw\b", source)
+    assert re.search(r"(?m)^theorem boolBlanket_finiteKL_strict_decrease\b", source)
+    assert re.search(r"(?m)^theorem boolBlanket_nativeKL_strict_decrease\b", source)
+    noninvariance = re.search(
+        r"(?ms)^theorem boolBlanketInitial_not_invariant\b(.*?)(?=^theorem |^end )",
+        source,
+    )
+    assert noninvariance is not None
+    assert "¬FEP.FiniteMarkovDynamics.IsInvariant" in "".join(
+        noninvariance.group(1).split()
+    )
+    assert "boolBlanketInitialLaw boolBlanketRefreshKernel" in " ".join(
+        noninvariance.group(1).split()
+    )
+    assert (
+        source.count("FEP.DecisionRisk.weightedDirac_klDiv_eq_finiteKL_of_fullSupport")
+        >= 2
+    )
+    assert "FEP.MarkovBlanket.DynamicState Bool Bool Bool Bool" in source
 
 
 def test_slice04_theorem_names_do_not_overclaim_scope() -> None:

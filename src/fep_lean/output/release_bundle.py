@@ -74,6 +74,12 @@ from fep_lean.output.provenance import (
     report_source_digest,
     source_owner_paths,
 )
+from fep_lean.output.publication_metadata import (
+    GraphicalAbstractAsset,
+    PublicationMetadataError,
+    load_graphical_abstract,
+    load_publication_author,
+)
 from fep_lean.output.rendering import (
     MANUSCRIPT_ASSETS,
     manuscript_source_files,
@@ -163,6 +169,7 @@ _REQUIRED_STATIC_MEMBERS: tuple[tuple[str, str], ...] = (
     ("LICENSE", "legal_metadata"),
     ("CITATION.cff", "citation_metadata"),
     ("manuscript/config.yaml", "manuscript_metadata"),
+    ("manuscript/assets/graphical-abstract.png", "graphical_abstract"),
     ("manuscript/manuscript_vars.yaml", "manuscript_metadata"),
     ("manuscript/preamble.md", "manuscript_source"),
     ("manuscript/references.bib", "bibliography"),
@@ -183,6 +190,10 @@ _REQUIRED_STATIC_MEMBERS: tuple[tuple[str, str], ...] = (
     (PYTHON_COVERAGE_RECEIPT.as_posix(), "python_coverage_receipt"),
     (BROWSER_RECEIPT.as_posix(), "browser_receipt"),
     (PUBLICATION_HTML.as_posix(), "rendered_manuscript"),
+    (
+        "output/manuscript/assets/graphical-abstract.png",
+        "rendered_manuscript_asset",
+    ),
     (RENDERER_PROVENANCE.as_posix(), "renderer_provenance"),
 )
 _PROVIDER_MEMBER_PREFIXES = (
@@ -368,12 +379,22 @@ def _manuscript_source_records(
     return tuple(records)
 
 
+def _required_graphical_abstract(project_root: Path) -> GraphicalAbstractAsset:
+    """Return the cover only when its complete publication contract validates."""
+    root = Path(project_root).resolve()
+    try:
+        return load_graphical_abstract(root)
+    except PublicationMetadataError as exc:
+        raise ReleaseBundleError(str(exc)) from exc
+
+
 def _publication_resource_records(
     project_root: Path,
 ) -> tuple[tuple[str, bytes], ...]:
     """Capture the narrow roster of local files embedded by the manuscript."""
     root = Path(project_root).resolve()
     source_records = _manuscript_source_records(root)
+    graphical_abstract = _required_graphical_abstract(root)
     rendered_records: list[tuple[str, bytes]] = []
     for name, _data in source_records:
         relative = f"output/manuscript/{Path(name).name}"
@@ -387,6 +408,10 @@ def _publication_resource_records(
             for _source, destination in MANUSCRIPT_ASSETS.values()
         }
         | set(_MANUSCRIPT_FIGURE_REFERENCES)
+    )
+    graphical_abstract_placeholder = "{{publication.graphical_abstract.render_path}}"
+    allowed_references.update(
+        {graphical_abstract_placeholder, graphical_abstract.render_path}
     )
     observed_references: set[str] = set()
     for _name, data in (*source_records, *rendered_records):
@@ -411,6 +436,13 @@ def _publication_resource_records(
                     f"manuscript image reference is not release-owned: {reference}"
                 )
             observed_references.add(reference)
+    if not {
+        graphical_abstract_placeholder,
+        graphical_abstract.render_path,
+    }.issubset(observed_references):
+        raise ReleaseBundleError(
+            "configured graphical abstract is not consumed by source and rendered front matter"
+        )
     referenced = {
         relative
         for reference, relative in _MANUSCRIPT_FIGURE_REFERENCES.items()
@@ -425,10 +457,23 @@ def _publication_resource_records(
             or destination_relative.as_posix() in observed_references
         ):
             _relative_file_bytes(root, source_relative.as_posix())
-    return tuple(
+    records = [
         (relative, _relative_file_bytes(root, relative))
         for relative in sorted(referenced)
+    ]
+    rendered_path = (
+        Path("output/manuscript") / graphical_abstract.render_path
+    ).as_posix()
+    rendered_data = _relative_file_bytes(root, rendered_path)
+    if rendered_data != graphical_abstract.data:
+        raise ReleaseBundleError("rendered graphical abstract asset is stale")
+    records.extend(
+        (
+            (graphical_abstract.source_path, graphical_abstract.data),
+            (rendered_path, rendered_data),
+        )
     )
+    return tuple(records)
 
 
 def _canonical_renderer_input_records(
@@ -1560,6 +1605,11 @@ def _license_metadata_errors(project_root: Path) -> tuple[str, ...]:
     root = Path(project_root).resolve()
     errors: list[str] = []
     try:
+        canonical_author = load_publication_author(root)
+    except PublicationMetadataError as exc:
+        canonical_author = None
+        errors.append(f"CITATION.cff author metadata cannot be read: {exc}")
+    try:
         license_text = _relative_file_bytes(root, "LICENSE").decode("utf-8")
     except (ReleaseBundleError, UnicodeDecodeError) as exc:
         errors.append(f"canonical license text cannot be read: {exc}")
@@ -1715,13 +1765,16 @@ def _license_metadata_errors(project_root: Path) -> tuple[str, ...]:
             else None
         )
         authors_text = package_authors.group(1) if package_authors is not None else ""
-        if (
-            'name = "Daniel Ari Friedman"' not in authors_text
-            or 'email = "daniel@activeinference.institute"' not in authors_text
-        ):
+        package_author_records = re.findall(
+            r'\{\s*name\s*=\s*"([^"]+)"\s*,\s*email\s*=\s*"([^"]+)"\s*,?\s*\}',
+            authors_text,
+        )
+        if canonical_author is not None and package_author_records != [
+            (canonical_author.name, canonical_author.email)
+        ]:
             errors.append(
-                "Python package authors must identify Daniel Ari Friedman "
-                "<daniel@activeinference.institute>"
+                "Python package authors must match CITATION.cff canonical author "
+                f"{canonical_author.name} <{canonical_author.email}>"
             )
         urls_section = re.search(
             r"(?ms)^\[project\.urls\]\s*(.*?)(?=^\[[^\n]+\]|\Z)", pyproject

@@ -1,6 +1,6 @@
 # fep_lean formalism and publication handoff
 
-**Date:** 2026-08-23
+**Date:** 2026-08-24
 **Repository:** `ActiveInferenceInstitute/fep_lean`
 **Checkout:** `/home/trim/Documents/Git/HumOS/projects/outside_of_hum/fep_lean`
 **Release line:** `v1.1.0`
@@ -99,28 +99,55 @@ Compilation is not a proof of the FEP as a physical theory. Read
 `docs/formalism-coverage.md` and `docs/theorem-maturity-audit.md` before
 summarizing scientific completeness.
 
-## Current 155-topic source and retained evidence
+## Current source and evidence state
 
-- Maintained metadata, maturity, novelty, relation, family-body, and formal
-  manifest owners span the 155-topic source. Their catalogue, aggregate Lean,
-  formal-resource, coverage, atlas, dashboard, manuscript, wheel, and receipt
-  projections are regenerated and pass their deterministic drift checks.
-- `output/formalism-audit.json` is current schema-4 evidence for the 155-topic
-  source: 823/823 declarations resolved, 699 evidence declarations, Lean
-  4.33.1 with the locked Mathlib revision, zero warnings, no `sorryAx`, and no
-  untrusted axiom. `output/native-verification.json` independently validates
-  the ordered 155-topic roster under the same toolchain with zero failures,
-  warnings, or `sorry`.
-- The schema-3 Python acceptance receipt binds the complete canonical
-  collected-node roster, records zero failures or errors, and enforces the
-  maintained 89% line-coverage floor.
-  The schema-4 browser receipt replays six source-bound screenshots in Chrome
-  151 and verifies all twenty families, 155 topics, 133 relations, and fifteen
-  typed numerical witnesses without external requests or viewport overflow.
-- The 2026-08-20 full Hermes/OpenGauss report remains historical for its exact
-  50-topic source digest. Current provider claims still require a new,
-  independently validated source-bound full report. Keep provider, native,
-  declaration, numerical, and manuscript evidence planes separate.
+The 155-topic release recorded native, declaration/axiom, Python, browser, and
+publication receipts for its exact source snapshot. The accepted post-v1.1.0
+Horizon 1/Horizon 2 source wave and publication-owner change have invalidated
+those receipts' current-source binding. They remain historical evidence and
+must not be summarized as validation of the working tree.
+
+H1.0--H1.8 are accepted, including the optional H1.5 lane. The archived
+[Horizon 1 acceptance record](specs/done/horizon-1-finite-synthesis/README.md)
+owns the implementation and review evidence. Its terminal theorem repairs the
+first recorded H1.8 carrier-merge no-go with one finite, synthetic, one-step
+posterior--decision--action certificate on a shared 16-state Boolean carrier.
+The posterior update, emitted action, selected sampled kernel, genuine
+sensory--active blanket factorization, and strict real/native KL decrease use
+that same carrier and kernel. This is not transition-aware planning,
+EFE-optimal control, physical thermodynamics, causal identification, empirical
+validation, or a universal FEP theorem.
+
+The active [Horizon 2 spec](specs/horizon-2-smooth-stochastic/README.md) has
+separately accepted H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0,
+H2.5d-R0, H2.6a/b/c, and H2.6a-R0. The maintained surface now includes scalar
+Gaussian/native-KL and coordinate owners, a same-joint native posterior
+martingale and limiting-observation endpoint, selected-model identification,
+joint-law and fixed-truth consistency, weak Dirac and bounded-risk
+consequences, the native semigroup/H1 lift, exact scalar and finite-axis
+symmetric-precision transition families, the
+exact four-axis specialization, an evidence-a.e. native scalar filter with
+chronological finite recursion, one-step transition-consuming quadratic
+decision risk, and monotone finite-grid path laws with coordinate reversal
+plus explicit absolute-continuity/integrability failure boundaries. The
+accepted generic H2.5b-R0 transition-covariance and H2.6a-R0 native-posterior
+repairs remain append-only evidence alongside their accepted maintained owners.
+The accepted H2.5d-R0 repair proves the centered native stationary-joint
+factorization. Maintained H2.5d now proves the arbitrary-center native joint,
+blanket-a.e. pair/scalar Gaussian conditionals, endpoint `CondIndepFun`, actual
+stationary covariance `1 / 24`, and a bounded bivariate precision perturbation
+with actual covariance `-1 / 15` and native non-independence. H2.7-R0 has
+accepted the density-relative VFE and local natural-gradient bridge. H2.7 is
+the sole legal implementation slice; H3 remains closed.
+
+The canonical backlog row [`FEP-EVIDENCE-CURRENT`](TODO.md) owns the next
+coordinated projection and receipt refresh against the final current accepted
+owner roster. Until every validator is green against that roster, keep native,
+declaration, Python, browser, numerical, manuscript, and provider evidence
+planes separate.
+The 2026-08-20 Hermes/OpenGauss report likewise remains historical for its
+exact 50-topic source digest; current provider claims require a new,
+independently validated source-bound full report.
 
 ## Reproduction commands
 

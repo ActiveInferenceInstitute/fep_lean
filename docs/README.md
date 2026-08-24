@@ -3,6 +3,8 @@
 - [Getting started](getting-started.md) — install, catalogue mode, and strict mode.
 - [FEP background](fep-background.md) — conceptual orientation with explicit formalization boundaries.
 - [Formal-kernel methods](formal-kernel-methods.md) — shared carriers, theorem scope, validation ladder, and visualization contract.
+- [Design programs](design/README.md) — prospective architecture and research goals, kept separate from current catalogue and evidence claims.
+- [FEP research horizons](design/fep-research-program/README.md) — dependency-ordered finite synthesis, smooth/stochastic lifting, and an end-to-end scientific case study.
 - [155-topic expansion chapter](../manuscript/04i_formalism_catalogue_155.md) — finite risk, policy trees, native blankets, exponential-family duality, continuous time, and evidence boundaries.
 - [Topic reference](topics-reference.md) — canonical owners, inspection, and receipt semantics.
 - [Pipeline](pipeline.md) — stages, modes, and result contract.

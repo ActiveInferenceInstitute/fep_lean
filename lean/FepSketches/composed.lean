@@ -9,6 +9,13 @@ import FepSketches.compositions.policy_trees
 import FepSketches.compositions.native_blanket_transfer
 import FepSketches.compositions.exponential_family
 import FepSketches.compositions.continuous_time
+import FepSketches.compositions.finite_scientific_implications
+import FepSketches.compositions.finite_policy_action
+import FepSketches.compositions.finite_reference_agent
+import FepSketches.compositions.gaussian_filter
+import FepSketches.compositions.gaussian_control
+import FepSketches.compositions.gaussian_grid_path
+import FepSketches.compositions.smooth_reference_kernel
 
 /-!
 This file is generated from the formal module manifest. Scientific cross-topic

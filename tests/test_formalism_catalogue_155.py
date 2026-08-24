@@ -43,6 +43,19 @@ NEW_CAPABILITY_IDS = {
     "cap-finite-sample-risk-calibration",
     "cap-native-blanket-transfer",
 }
+H1_0_FEP014_ASSUMPTION = (
+    "Self-divergence uses SigmaFinite; zero-characterization and the chain rule use "
+    "finite measures; the chain rule additionally requires Markov kernels. The pin "
+    "separately exposes native measure-KL data processing under a Markov kernel as "
+    "InformationTheory.klDiv_comp_right_le; fep-014 does not include that theorem in "
+    "its maintained theorem surface."
+)
+RELEASED_FEP014_ASSUMPTION = (
+    "Self-divergence uses SigmaFinite; zero-characterization and the chain rule use "
+    "finite measures; the chain rule additionally requires Markov kernels. No "
+    "data-processing theorem is claimed because the pinned Mathlib revision does not "
+    "expose one."
+)
 
 
 def _canonical(value: object) -> str:
@@ -143,7 +156,7 @@ def test_expansion_vii_semantic_roster_is_complete_and_formalized() -> None:
     )
 
 
-def test_expansion_vii_preserves_every_preexisting_120_row_byte_contract() -> None:
+def test_expansion_vii_preserves_released_rows_except_h1_0_pin_correction() -> None:
     baseline = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
     metadata = _yaml("catalogue_metadata.yaml")
     maturity = _yaml("theorem_maturity.yaml")
@@ -160,8 +173,12 @@ def test_expansion_vii_preserves_every_preexisting_120_row_byte_contract() -> No
         _length_prefixed_sha256([_canonical(row) for row in metadata["topics"][:120]])
         == baseline["metadata_rows_digest"]
     )
+    maturity_rows = [dict(row) for row in maturity["topics"][:120]]
+    assert maturity_rows[13]["id"] == "fep-014"
+    assert maturity_rows[13]["assumption_review"] == H1_0_FEP014_ASSUMPTION
+    maturity_rows[13]["assumption_review"] = RELEASED_FEP014_ASSUMPTION
     assert (
-        _length_prefixed_sha256([_canonical(row) for row in maturity["topics"][:120]])
+        _length_prefixed_sha256([_canonical(row) for row in maturity_rows])
         == baseline["maturity_rows_digest"]
     )
     assert (

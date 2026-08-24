@@ -361,6 +361,351 @@ theorem finiteChannel_dataProcessing
     finiteKL_joint_sameKernel actual reference channel hreference hchannel] at hle
   exact hle
 
+/-! ## Finite constrained maximum entropy -/
+
+/-- One affine equality constraint on a finite law.  Its statistic has the
+prescribed expectation `target`; normalization remains owned by `FiniteLaw`. -/
+structure AffineMomentConstraint (α : Type*) where
+  statistic : α → ℝ
+  target : ℝ
+
+/-- Exact feasibility for a finite list of affine moment constraints. -/
+def SatisfiesMomentConstraints
+    (law : FiniteLaw α) (constraints : List (AffineMomentConstraint α)) : Prop :=
+  ∀ constraint ∈ constraints,
+    expectation law constraint.statistic = constraint.target
+
+/-- The signed affine Lagrange potential associated with a finite constraint
+list.  Positive temperature scales this potential in the certificate below. -/
+noncomputable def constraintPotential
+    (constraints : List (AffineMomentConstraint α))
+    (multipliers : Fin constraints.length → ℝ) (x : α) : ℝ :=
+  ∑ index : Fin constraints.length,
+    multipliers index *
+      ((constraints.get index).statistic x - (constraints.get index).target)
+
+/-- Independently checkable data for a finite constrained-entropy optimum.
+The Gibbs law has full support, the reference is exactly uniform, its signed
+potential is a finite affine combination of the listed constraint residuals,
+the temperature is strictly positive, and the optimizer is feasible.  This
+structure supplies a multiplier; it does not assert automatic dual attainment
+from affine feasibility or a Slater condition. -/
+structure ConstrainedEntropyCertificate (α : Type*) [Fintype α] [Nonempty α]
+    where
+  constraints : List (AffineMomentConstraint α)
+  multipliers : Fin constraints.length → ℝ
+  temperature : ℝ
+  temperature_pos : 0 < temperature
+  gibbs : GibbsCertificate α
+  reference_eq_uniform : gibbs.reference = FiniteLaw.uniform
+  potential_eq : ∀ x,
+    gibbs.potential x =
+      constraintPotential constraints multipliers x / temperature
+  optimizer_feasible :
+    SatisfiesMomentConstraints gibbs.optimizer constraints
+
+/-- Zero temperature is outside the supplied finite Gibbs-certificate regime.
+No division-by-zero convention is used to manufacture a boundary optimizer. -/
+theorem zeroTemperature_not_certified [Nonempty α]
+    (certificate : ConstrainedEntropyCertificate α) :
+    certificate.temperature ≠ 0 :=
+  ne_of_gt certificate.temperature_pos
+
+/-- A supplied full-support finite-multiplier certificate exhibits a feasible
+entropy maximizer and proves that it is unique.  This is a KKT/certificate
+result: neither multiplier existence nor strong duality is inferred from
+feasibility. -/
+theorem constrainedEntropy_existsUnique_of_certificate [Nonempty α]
+    (certificate : ConstrainedEntropyCertificate α) :
+    SatisfiesMomentConstraints certificate.gibbs.optimizer
+        certificate.constraints ∧
+      ∀ candidate : FiniteLaw α,
+        SatisfiesMomentConstraints candidate certificate.constraints →
+          entropy candidate ≤ entropy certificate.gibbs.optimizer ∧
+            (entropy candidate = entropy certificate.gibbs.optimizer ↔
+              candidate = certificate.gibbs.optimizer) := by
+  have hUniformPos :
+      ∀ x, 0 < (FiniteLaw.uniform : FiniteLaw α) x := by
+    intro x
+    change 0 < ((Fintype.card α : ℝ)⁻¹)
+    exact inv_pos.mpr (Nat.cast_pos.mpr Fintype.card_pos)
+  have hUniformCrossEntropy :
+      ∀ law : FiniteLaw α,
+        crossEntropy law (FiniteLaw.uniform : FiniteLaw α) =
+          -Real.log ((Fintype.card α : ℝ)⁻¹) := by
+    intro law
+    unfold crossEntropy FiniteLaw.uniform
+    simp_rw [neg_mul]
+    rw [Finset.sum_neg_distrib, ← Finset.sum_mul, law.sum_one, one_mul]
+  have hFeasiblePotentialZero :
+      ∀ law : FiniteLaw α,
+        SatisfiesMomentConstraints law certificate.constraints →
+          expectation law certificate.gibbs.potential = 0 := by
+    intro law hFeasible
+    have hConstraintPotential :
+        expectation law
+            (constraintPotential certificate.constraints
+              certificate.multipliers) = 0 := by
+      unfold expectation constraintPotential
+      simp_rw [Finset.mul_sum]
+      rw [Finset.sum_comm]
+      apply Finset.sum_eq_zero
+      intro index _
+      have hMoment := hFeasible
+        (certificate.constraints.get index)
+        (List.get_mem certificate.constraints index)
+      simp only [expectation] at hMoment
+      have hCentered :
+          (∑ x, law x *
+            ((certificate.constraints.get index).statistic x -
+              (certificate.constraints.get index).target)) = 0 := by
+        simp_rw [mul_sub]
+        rw [Finset.sum_sub_distrib, ← Finset.sum_mul, law.sum_one,
+          one_mul, hMoment, sub_self]
+      calc
+        (∑ x, law x *
+            (certificate.multipliers index *
+              ((certificate.constraints.get index).statistic x -
+                (certificate.constraints.get index).target))) =
+            certificate.multipliers index *
+              ∑ x, law x *
+                ((certificate.constraints.get index).statistic x -
+                  (certificate.constraints.get index).target) := by
+              rw [Finset.mul_sum]
+              apply Finset.sum_congr rfl
+              intro x _
+              ring
+        _ = 0 := by rw [hCentered, mul_zero]
+    unfold expectation at hConstraintPotential ⊢
+    calc
+      (∑ x, law x * certificate.gibbs.potential x) =
+          ∑ x, (law x *
+            constraintPotential certificate.constraints
+              certificate.multipliers x) / certificate.temperature := by
+            apply Finset.sum_congr rfl
+            intro x _
+            rw [certificate.potential_eq x]
+            ring
+      _ = (∑ x, law x *
+          constraintPotential certificate.constraints
+            certificate.multipliers x) / certificate.temperature := by
+            rw [Finset.sum_div]
+      _ = 0 := by rw [hConstraintPotential, zero_div]
+  refine ⟨certificate.optimizer_feasible, ?_⟩
+  intro candidate hCandidateFeasible
+  have hCandidatePotential :=
+    hFeasiblePotentialZero candidate hCandidateFeasible
+  have hOptimizerPotential :=
+    hFeasiblePotentialZero certificate.gibbs.optimizer
+      certificate.optimizer_feasible
+  have hCandidateBound :=
+    dvObjective_le_logPartition certificate.gibbs candidate
+  have hOptimizerValue := dvObjective_optimizer certificate.gibbs
+  have hKLDominates :
+      finiteKL certificate.gibbs.optimizer
+          (FiniteLaw.uniform : FiniteLaw α) ≤
+        finiteKL candidate (FiniteLaw.uniform : FiniteLaw α) := by
+    rw [dvObjective, hCandidatePotential,
+      certificate.reference_eq_uniform] at hCandidateBound
+    rw [dvObjective, hOptimizerPotential,
+      certificate.reference_eq_uniform] at hOptimizerValue
+    linarith
+  constructor
+  · rw [finiteKL_eq_crossEntropy_sub_entropy candidate
+        (FiniteLaw.uniform : FiniteLaw α) hUniformPos,
+      finiteKL_eq_crossEntropy_sub_entropy certificate.gibbs.optimizer
+        (FiniteLaw.uniform : FiniteLaw α) hUniformPos,
+      hUniformCrossEntropy candidate,
+      hUniformCrossEntropy certificate.gibbs.optimizer] at hKLDominates
+    linarith
+  · constructor
+    · intro hEntropy
+      have hKLEq :
+          finiteKL candidate (FiniteLaw.uniform : FiniteLaw α) =
+            finiteKL certificate.gibbs.optimizer
+              (FiniteLaw.uniform : FiniteLaw α) := by
+        rw [finiteKL_eq_crossEntropy_sub_entropy candidate
+              (FiniteLaw.uniform : FiniteLaw α) hUniformPos,
+          finiteKL_eq_crossEntropy_sub_entropy certificate.gibbs.optimizer
+            (FiniteLaw.uniform : FiniteLaw α) hUniformPos,
+          hUniformCrossEntropy candidate,
+          hUniformCrossEntropy certificate.gibbs.optimizer,
+          hEntropy]
+      have hAttains :
+          dvObjective certificate.gibbs candidate =
+            certificate.gibbs.logPartition := by
+        calc
+          dvObjective certificate.gibbs candidate =
+              -finiteKL candidate
+                (FiniteLaw.uniform : FiniteLaw α) := by
+                  simp [dvObjective, hCandidatePotential,
+                    certificate.reference_eq_uniform]
+          _ = -finiteKL certificate.gibbs.optimizer
+                (FiniteLaw.uniform : FiniteLaw α) := by rw [hKLEq]
+          _ = dvObjective certificate.gibbs
+                certificate.gibbs.optimizer := by
+                  simp [dvObjective, hOptimizerPotential,
+                    certificate.reference_eq_uniform]
+          _ = certificate.gibbs.logPartition :=
+            dvObjective_optimizer certificate.gibbs
+      exact (dvObjective_eq_logPartition_iff certificate.gibbs candidate).mp
+        hAttains
+    · rintro rfl
+      rfl
+
+/-! ### A checkable relative-interior `Fin 3` certificate -/
+
+/-- First moment on the ordered three-state carrier. -/
+def fin3FirstMoment : Fin 3 → ℝ := ![0, 1, 2]
+
+/-- Second moment on the ordered three-state carrier. -/
+def fin3SecondMoment : Fin 3 → ℝ := ![0, 1, 4]
+
+/-- The uniform `Fin 3` law has first moment `1` and second moment `5 / 3`.
+These two affine constraints give a concrete interior moment problem. -/
+noncomputable def fin3InteriorMomentConstraints :
+    List (AffineMomentConstraint (Fin 3)) :=
+  [ { statistic := fin3FirstMoment, target := 1 },
+    { statistic := fin3SecondMoment, target := 5 / 3 } ]
+
+/-- Zero multipliers and unit positive temperature certify the full-support
+uniform solution of the concrete two-moment `Fin 3` problem. -/
+noncomputable def fin3InteriorMomentCertificate :
+    ConstrainedEntropyCertificate (Fin 3) where
+  constraints := fin3InteriorMomentConstraints
+  multipliers _ := 0
+  temperature := 1
+  temperature_pos := by norm_num
+  gibbs := uniformZeroPotentialGibbs
+  reference_eq_uniform := rfl
+  potential_eq x := by
+    simp [uniformZeroPotentialGibbs, constraintPotential]
+  optimizer_feasible := by
+    intro constraint hConstraint
+    simp only [fin3InteriorMomentConstraints, List.mem_cons,
+      List.not_mem_nil, or_false] at hConstraint
+    rcases hConstraint with rfl | rfl <;>
+      norm_num [expectation, uniformZeroPotentialGibbs, FiniteLaw.uniform,
+        fin3FirstMoment, fin3SecondMoment, Fin.sum_univ_succ]
+
+/-- The explicit `Fin 3` optimizer is strictly positive, feasible, and the
+unique maximum-entropy law among all laws satisfying both moments. -/
+theorem fin3InteriorMoment_uniqueEntropyMaximizer :
+    (∀ x, 0 < fin3InteriorMomentCertificate.gibbs.optimizer x) ∧
+      SatisfiesMomentConstraints
+        fin3InteriorMomentCertificate.gibbs.optimizer
+        fin3InteriorMomentConstraints ∧
+      ∀ candidate : FiniteLaw (Fin 3),
+        SatisfiesMomentConstraints candidate fin3InteriorMomentConstraints →
+          entropy candidate ≤
+              entropy fin3InteriorMomentCertificate.gibbs.optimizer ∧
+            (entropy candidate =
+                entropy fin3InteriorMomentCertificate.gibbs.optimizer ↔
+              candidate = fin3InteriorMomentCertificate.gibbs.optimizer) := by
+  refine ⟨fin3InteriorMomentCertificate.gibbs.optimizer_pos, ?_⟩
+  exact constrainedEntropy_existsUnique_of_certificate
+    fin3InteriorMomentCertificate
+
+/-! ### Boundary support without a full-support Gibbs form -/
+
+/-- Requiring all mass at state zero is an affine boundary constraint. -/
+def fin3BoundaryConstraint : AffineMomentConstraint (Fin 3) where
+  statistic := ![1, 0, 0]
+  target := 1
+
+def fin3BoundaryConstraints : List (AffineMomentConstraint (Fin 3)) :=
+  [fin3BoundaryConstraint]
+
+/-- The boundary constraint forces the point mass at zero.  This theorem uses
+the restricted feasible support directly and makes no finite-multiplier or
+full-support Gibbs assertion. -/
+theorem fin3Boundary_feasible_iff_pointMassZero (law : FiniteLaw (Fin 3)) :
+    SatisfiesMomentConstraints law fin3BoundaryConstraints ↔
+      law = FiniteLaw.pointMass (0 : Fin 3) := by
+  constructor
+  · intro hFeasible
+    have hMoment := hFeasible fin3BoundaryConstraint (by
+      simp [fin3BoundaryConstraints])
+    norm_num [expectation, fin3BoundaryConstraint,
+      Fin.sum_univ_succ] at hMoment
+    have hSum := law.sum_one
+    norm_num [Fin.sum_univ_succ] at hSum
+    have hOne : law (1 : Fin 3) = 0 := by
+      linarith [law.nonneg (1 : Fin 3), law.nonneg (2 : Fin 3)]
+    have hTwo : law (2 : Fin 3) = 0 := by
+      linarith [law.nonneg (1 : Fin 3), law.nonneg (2 : Fin 3)]
+    apply FiniteLaw.ext_mass
+    funext x
+    fin_cases x
+    · simp [FiniteLaw.pointMass, hMoment]
+    · simp [FiniteLaw.pointMass, hOne]
+    · simp [FiniteLaw.pointMass, hTwo]
+  · rintro rfl
+    intro constraint hConstraint
+    simp only [fin3BoundaryConstraints, List.mem_singleton] at hConstraint
+    subst constraint
+    norm_num [expectation, fin3BoundaryConstraint, FiniteLaw.pointMass,
+      Fin.sum_univ_succ]
+
+/-- The support-forcing point mass is the unique feasible entropy maximizer.
+This is the boundary result; it is intentionally separate from the positive-
+temperature full-support certificate theorem. -/
+theorem fin3Boundary_uniqueEntropyMaximizer :
+    SatisfiesMomentConstraints (FiniteLaw.pointMass (0 : Fin 3))
+        fin3BoundaryConstraints ∧
+      ∀ candidate : FiniteLaw (Fin 3),
+        SatisfiesMomentConstraints candidate fin3BoundaryConstraints →
+          entropy candidate ≤ entropy (FiniteLaw.pointMass (0 : Fin 3)) ∧
+            (entropy candidate = entropy (FiniteLaw.pointMass (0 : Fin 3)) ↔
+              candidate = FiniteLaw.pointMass (0 : Fin 3)) := by
+  constructor
+  · exact (fin3Boundary_feasible_iff_pointMassZero
+      (FiniteLaw.pointMass (0 : Fin 3))).2 rfl
+  · intro candidate hFeasible
+    have hCandidate :=
+      (fin3Boundary_feasible_iff_pointMassZero candidate).1 hFeasible
+    subst candidate
+    exact ⟨le_rfl, ⟨fun _ => rfl, fun _ => rfl⟩⟩
+
+/-! ### Infeasible and redundant constraints -/
+
+/-- An impossible affine constraint: a probability law cannot place mass two
+on one atom. -/
+def fin3InfeasibleConstraint : AffineMomentConstraint (Fin 3) where
+  statistic := ![1, 0, 0]
+  target := 2
+
+def fin3InfeasibleConstraints : List (AffineMomentConstraint (Fin 3)) :=
+  [fin3InfeasibleConstraint]
+
+/-- Infeasibility is discharged before any multiplier, entropy, or duality
+claim is considered. -/
+theorem fin3Infeasible_no_feasibleLaw :
+    ¬ ∃ law : FiniteLaw (Fin 3),
+      SatisfiesMomentConstraints law fin3InfeasibleConstraints := by
+  rintro ⟨law, hFeasible⟩
+  have hMoment := hFeasible fin3InfeasibleConstraint (by
+    simp [fin3InfeasibleConstraints])
+  norm_num [expectation, fin3InfeasibleConstraint,
+    Fin.sum_univ_succ] at hMoment
+  linarith [law.mass_le_one (0 : Fin 3)]
+
+/-- The first-moment-equals-one constraint, named so duplication is visible. -/
+def fin3MeanOneConstraint : AffineMomentConstraint (Fin 3) where
+  statistic := fin3FirstMoment
+  target := 1
+
+/-- A finite list containing the same affine equality twice. -/
+def fin3RedundantConstraints : List (AffineMomentConstraint (Fin 3)) :=
+  [fin3MeanOneConstraint, fin3MeanOneConstraint]
+
+/-- Duplicating an affine moment equality does not change the feasible set. -/
+theorem fin3Redundant_feasible_iff (law : FiniteLaw (Fin 3)) :
+    SatisfiesMomentConstraints law fin3RedundantConstraints ↔
+      expectation law fin3FirstMoment = 1 := by
+  simp [SatisfiesMomentConstraints, fin3RedundantConstraints,
+    fin3MeanOneConstraint]
+
 /-! ## Rate--distortion weak duality -/
 
 /-- Expected distortion under a finite source--code joint law. -/

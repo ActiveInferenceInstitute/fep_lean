@@ -7,14 +7,18 @@ rows or a completed-work archive here.
 | ID | Open work | Acceptance probe |
 | --- | --- | --- |
 | FEP-FULL-155 | Refresh optional external full-mode evidence for the expanded source. Historical 50-topic and one-topic provider reports must remain historical. | Under a separately confirmed credential and spend boundary, a 155-topic Hermes/OpenGauss run completes and `validate_report_receipt(..., require_complete=True, project_root=...)` reports `valid`, `source_bound`, and `claim_ready`, with the exact live roster and no validation errors. |
+| FEP-EVIDENCE-CURRENT | Refresh deterministic native, declaration/axiom, Python, browser, and publication evidence for the accepted post-v1.1.0 H1/H2 and publication source wave after all canonical projections and publication owners settle. Retained receipts from an older owner manifest or source digest remain historical, never current evidence. | Native validation is `valid`, `source_bound`, and `native_claim_ready`; formal-audit, Python-acceptance, and browser-replay validators return no errors; manuscript/publication drift checks pass; and a deterministic release bundle validates as source-bound and claim-ready against the same final owner roster. |
+| FEP-H2-SMOOTH | Continue the [active Horizon 2 spec](specs/horizon-2-smooth-stochastic/README.md) from the accepted H2.7-R0 continuous Gaussian VFE/natural-gradient proof gate; implement H2.7 only under its exact predecessor and three-reviewer gates. | H2.7 connects the accepted scalar geometry, inference, semigroup, filter, control, and path surfaces through exact equalities while separately naming the accepted Fin4 carrier and H2.5d blanket-a.e. product-conditional theorem. It must exclude unsupported global geometry, Itô/SDE, Fokker--Planck, Girsanov, continuous-path, causal-blanket, and physical-entropy claims. |
+| FEP-H3-SCIENCE | After H2 exits, execute the gated and preregistered [Horizon 3 scientific case study](docs/design/fep-research-program/horizon-3-scientific-case-study.md). | H3.G0 inspects already-accepted H1/H2 source-bound evidence read-only and selects exactly one continuous or finite branch without proving, patching, or hybridizing a carrier; the frozen typed chain, H3.6S synthetic recovery, optional governed H3.6E analysis or no-go/null result, and independent claim review satisfy the H3 exit gate. |
 
 `FEP-FULL-002` and `FEP-PROV-003` remain completed for their exact 2026-08-20
 source snapshot; their evidence is recorded in [CHANGELOG.md](CHANGELOG.md),
 [HANDOFF.md](HANDOFF.md), and [ISA.md](ISA.md). They do not substitute for
-`FEP-FULL-155`. The completed current native and declaration/axiom probes are
-recorded in [CHANGELOG.md](CHANGELOG.md), [HANDOFF.md](HANDOFF.md), and
-[ISA.md](ISA.md). Completed engineering tasks belong to repository history,
-not this open-only backlog.
+`FEP-FULL-155`. The release-recorded native and declaration/axiom probes remain
+evidence for their exact source snapshot. The accepted post-v1.1.0 Horizon
+1/Horizon 2 and publication source wave invalidated their current-source binding;
+`FEP-EVIDENCE-CURRENT` owns the next deterministic refresh. Completed
+engineering tasks belong to repository history, not this open-only backlog.
 
 ## Closure rule
 

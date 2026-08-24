@@ -82,17 +82,49 @@ their import aggregate. The maturity audit, rather than compilation alone,
 records which rows are direct formalizations and which remain conditional or
 structural proxies.
 
-**Current evidence boundary.** The maintained source now spans 155 topics. The
-current exact-roster native receipt independently validates 155/155 topics
-under Lean 4.33.1 and Mathlib `v4.33.1`, with zero failures, warnings, or
-`sorry`. The schema-4 declaration/axiom receipt independently validates all
-823 required formal-resource declarations, including 699 evidence
-declarations, with no warnings, `sorryAx`, or untrusted axioms. The schema-3
-Python receipt binds the complete canonical collected-node roster, zero
-failures or errors, and line coverage at or above the maintained 89% floor to
-the same frozen source and test roster. The schema-4
-browser receipt replays all six accepted screenshots in Chrome 151 against 155
-topics, 20 families, and 15 typed numerical witnesses. The local full-report
+**Current evidence boundary.** The maintained catalogue spans 155 topics.
+H1.0--H1.8 have exited through their accepted gates, with optional H1.5
+accepted separately; the archived
+[Horizon 1 record](specs/done/horizon-1-finite-synthesis/README.md) owns the
+detailed evidence. Its terminal theorem is one finite, synthetic, one-step
+posterior--decision--action certificate on a shared 16-state Boolean carrier.
+The learned posterior, emitted action, sampled kernel, genuine sensory--active
+blanket factorization, and strict real/native KL decrease remain connected on
+that same carrier and kernel. The record also preserves the first H1.8
+carrier-merge no-go. It does not establish transition-aware planning,
+EFE-optimal control, physical or causal adequacy, empirical validation, or a
+universal FEP claim.
+
+The active [Horizon 2 spec](specs/horizon-2-smooth-stochastic/README.md) has
+accepted H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0, H2.5d-R0,
+H2.6a/b/c, and H2.6a-R0. The current smooth surface includes fixed-variance scalar Gaussian
+KL/information geometry, local coordinate duality, a same-joint native
+posterior martingale with its limiting-observation conditional-expectation
+endpoint, selected-model identification, joint-law and fixed-truth posterior
+consistency, weak convergence to the sampled-parameter Dirac law,
+bounded-continuous transfer, bounded zero-one risk convergence, native
+kernel/action semigroups, exact scalar and finite-axis linear-Gaussian
+transition families, the exact four-axis symmetric-precision specialization,
+an evidence-a.e. native Gaussian filter with chronological finite recursion,
+one-step transition-consuming quadratic decision risk, and monotone finite-grid
+path laws with explicit support and log-ratio boundaries. The accepted R0
+repairs preserve the historical H2.0 no-go rows while their maintained owners
+derive the replacement mathematics. H2.5d-R0 reconstructs the centered Fin4
+stationary joint. Maintained H2.5d extends that native conditional product to
+every stationary center, proves blanket-a.e. pair and scalar conditional laws
+plus endpoint `CondIndepFun`, and derives a fixed bivariate precision
+perturbation with actual covariance `-1 / 15` and native non-independence.
+H2.7-R0 has accepted the continuous density-relative exact-posterior VFE and
+derived local natural-gradient seam. H2.7 is now the sole legal implementation
+slice. H3 remains closed until the connected H2.7 terminal merge and its
+separate review gate pass.
+
+That formal exit is not current publication evidence. The retained exact-roster
+native, declaration/axiom, Python, and Chrome receipts validate the frozen
+v1.1.0 release snapshot only; their former counts and hashes remain historical
+until every live-source validator accepts a coordinated replacement.
+[`TODO.md`](TODO.md) retains that refresh as `FEP-EVIDENCE-CURRENT`. The local
+full-report
 path `output/reports/run_20260820_183143_709998/` remains historical evidence
 for the earlier 50-topic source snapshot and does not bind the 155-topic
 source; ignored provider reports are deliberately not shipped in a release.

@@ -1,5 +1,71 @@
 # Changelog
 
+## Unreleased — connected Horizon research program
+
+- Accepted H1.0--H1.8 of the dependency-gated Horizon research program, with
+  optional H1.5 accepted separately. The archived
+  [Horizon 1 record](specs/done/horizon-1-finite-synthesis/README.md) preserves
+  the first H1.8 carrier-merge no-go and the repaired terminal theorem: one
+  finite, synthetic, one-step posterior--decision--action certificate on a
+  shared 16-state Boolean carrier, with a genuine sensory--active blanket and
+  same-kernel strict real/native KL decrease.
+- Kept the Horizon 1 exit claim narrow. It is not transition-aware planning,
+  EFE-optimal control, physical thermodynamics, causal identification,
+  empirical validation, or a universal FEP theorem.
+- Advanced Horizon 2 through accepted H2.0--H2.3b, H2.4a/b,
+  H2.5a/b/c/d (including H2.5b-R0 and H2.5d-R0), H2.6a/b/c, and H2.6a-R0:
+  fixed-variance scalar Gaussian KL and coordinate geometry, local smooth
+  duality, native kernel/action semigroups with the exact H1 lift, a scalar OU
+  transition semigroup, a same-joint native posterior martingale with its
+  limiting-observation conditional-expectation endpoint, selected-model
+  identification, joint-law and fixed-truth posterior consistency, weak
+  convergence to the sampled-parameter Dirac law, bounded-continuous transfer,
+  bounded zero-one risk convergence, and monotone
+  finite-grid path laws with support-aware
+  forward-to-coordinate-reversed KL boundaries. Dynamic `Fin 4` transition
+  covariance is derived generically by the accepted H2.5b-R0 spectral repair;
+  the maintained H2.5b owner now constructs the native finite-axis Markov
+  semigroup, invariant Gaussian, moments, full-time weak limit, and exact
+  `Fin 1` H2.5a specialization while preserving the historical H2.0 no-go.
+  The accepted H2.6a-R0 repair proves the selected scalar Gaussian
+  density factorization, joint-law and evidence-marginal identities, and
+  evidence-a.e. equality to Mathlib's native posterior; the maintained H2.6a
+  owner adds exact posterior parameters, normalization, and chronological
+  finite observation recursion. H2.5c now instantiates the preregistered
+  external--sensory--active--internal carrier, derives its covariance, exact
+  transition laws, invariant Gaussian, weak limit, and scalar specialization.
+  The accepted H2.5d-R0 repair orthogonalizes the centered stationary law.
+  Maintained H2.5d reconstructs the arbitrary-center blanket/endpoints
+  `compProd`, identifies native pair and scalar conditionals blanket-marginal
+  almost everywhere, proves endpoint `CondIndepFun` while retaining actual
+  marginal covariance `1 / 24`, and derives a fixed bivariate precision
+  perturbation with actual covariance `-1 / 15` and native non-independence.
+  It claims no generic precision equivalence, transition-row conditioning,
+  causal blanket, reversibility, H2.7 theorem, or H3 result.
+  H2.6b now derives one-step posterior-predictive quadratic risk from the actual
+  selected transition, proves finite attainment and evidence-a.e. native
+  selector agreement, and supplies strict and tie witnesses without claiming
+  policy-tree, reward--EFE, global Bayes-estimator, or infinite-horizon control.
+  The H2.3b same-law countermodel keeps the native posterior equal to the prior
+  only almost everywhere under the predictive law, and no entropy, logarithmic,
+  unbounded-observable, rate, arbitrary-prior, continuous-parameter, or tail-field
+  claim was introduced.
+  No SDE, Fokker--Planck, Girsanov, continuous-path, reverse-OU, or physical
+  entropy-production claim was introduced.
+- Resliced and accepted the H2 terminal proof gate. H2.7-R0 proves actual
+  Lebesgue-density evidence surprisal, recognition-to-exact-posterior native
+  KL, the mean-coordinate Fisher-metric-dual natural-gradient tangent, and
+  strict local descent. Its append-only source-bound decision opens H2.7 only;
+  H3 remains closed pending the connected terminal merge and review.
+- Added a deterministic manuscript author block and graphical abstract under a
+  strict metadata, digest, dimension, and rendering contract. These changes,
+  together with the accepted post-release H1/H2 source wave, deliberately
+  invalidate the v1.1.0 evidence receipts for the live checkout until
+  `FEP-EVIDENCE-CURRENT` is completed.
+- No post-v1.1.0 theorem, manuscript, or generated artifact is part of the
+  immutable v1.1.0 release. A later release must choose its own version and DOI
+  only after the connected theorem and source-bound evidence gates settle.
+
 ## 1.1.0 — 2026-08-23
 
 ### 155-topic formalism expansion and release acceptance
@@ -23,17 +89,18 @@
   assumptions, composition bridges, evidence-plane boundaries, and primary
   sources for Brier risk, sophisticated inference, information geometry, and
   the pinned Lean/Mathlib releases.
-- The current schema-4 formalism audit independently validates all 823 required
+- The release-snapshot schema-4 formalism audit independently validates all 823 required
   formal-resource declarations, including 699 evidence declarations, under
   Lean 4.33.1 and the locked Mathlib revision with zero warnings, no `sorryAx`,
-  and no untrusted axiom. The current native receipt validates the exact 155
+  and no untrusted axiom. The release-snapshot native receipt validates the exact 155
   topic roster with zero failures, warnings, or `sorry`; the schema-3 Python
   receipt binds the complete canonical collected-node roster, records zero
   failures or errors, and enforces the maintained 89% line-coverage floor;
   and the schema-4 browser receipt replays six accepted
   screenshots against all 20 families and 15 typed numerical witnesses. The
-  retained 50-topic provider report remains historical and is not promoted to
-  current full-mode evidence.
+  retained 50-topic provider report remains historical and was not promoted to
+  full-mode evidence for that release snapshot. Later source waves must
+  regenerate every receipt before making a current-source claim.
 
 ### Prior 120-topic expansion and family-owned formal sources
 

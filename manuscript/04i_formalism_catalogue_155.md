@@ -40,16 +40,13 @@ Four evidence planes must therefore be read separately:
 | Deterministic numerical witnesses | Exact finite evaluations of named theorem instances and boundary checks | Deductive proof, stochastic calibration on data, or extension beyond the sampled carrier |
 | Provider-backed full execution | Hermes/OpenGauss execution for the exact source only when a complete report independently validates | A stronger theorem, physical truth of the FEP, or evidence for any later source snapshot |
 
-The current schema-4 declaration/axiom receipt resolves all 823 required
-formal-resource declarations, including 699 evidence declarations, under Lean
-4.33.1 and the locked Mathlib revision with zero warnings, no `sorryAx`, and no
-untrusted axiom. The current exact-roster native receipt validates all 155
-topics under the same toolchain with zero failures, warnings, or `sorry`. The
-schema-3 Python receipt binds the complete canonical collected-node roster,
-zero failures or errors, and line coverage at or above the maintained 89%
-floor; the schema-4 Chrome replay binds six accepted screenshots to all 20
-families, 155 topics, and 15 typed witnesses. The retained provider report binds an
-earlier 50-topic snapshot and is not silently promoted to current 155-topic
+The v1.1.0 release-snapshot declaration/axiom, native, Python, and Chrome
+receipts bind the frozen 155-topic source that they hash. Active Horizon work
+changes formal resources, tests, manuscript inputs, and the source-owner
+roster, so those retained receipts are historical rather than evidence for the
+live checkout until all corresponding validators accept coordinated
+replacements. The retained provider report binds an earlier 50-topic snapshot
+and is not silently promoted to live 155-topic
 provider evidence. At render time, `{{verify.claim_ready}}` and
 `{{full.claim_ready}}` report the independently validated native and full
 evidence states; unavailable evidence remains unavailable rather than being

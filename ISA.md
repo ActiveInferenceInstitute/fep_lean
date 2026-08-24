@@ -155,14 +155,14 @@ capability, import, and semantic-disposition totals. The maturity ledger
 contains direct formalizations as well as conditional and structural proxies;
 compilation cannot erase those reviewed boundaries.
 
-ISA-04 is closed for the current 155-topic source. The exact sealed-roster
-native receipt independently validates 155/155 topics under Lean 4.33.1 and the
-locked Mathlib revision with zero failures, warnings, or `sorry`. The separate
-schema-4 declaration/axiom receipt resolves all 823 required declarations,
-including 699 evidence declarations, with zero warnings, no `sorryAx`, and no
-untrusted axiom. The schema-3 Python receipt and schema-4 Chrome replay bind the
-current test, coverage, atlas, dashboard, and screenshot evidence to the same
-checkout; neither substitutes for the Lean receipts or changes a maturity
+ISA-04 was closed for the frozen v1.1.0 155-topic release snapshot. Its exact
+sealed-roster native, schema-4 declaration/axiom, schema-3 Python, and schema-4
+Chrome receipts remain historical evidence for those bytes. The accepted
+post-v1.1.0 Horizon 1/Horizon 2 and publication source wave changes formal
+resources, tests, manuscript inputs, and the source-owner roster, so none of
+those retained receipts currently binds the live checkout.
+[`FEP-EVIDENCE-CURRENT`](TODO.md) owns the coordinated refresh after the source
+wave settles; neither a stale nor a refreshed receipt changes a maturity
 disposition.
 
 The three provider reports created on 2026-08-20, including
@@ -176,10 +176,13 @@ a physical theory or authorizes publication.
 
 ## Release boundary
 
-This repository supports the current 155-topic native, formal-resource
-declaration, and trusted-axiom claims recorded above. It does not support a
-current 155-topic provider claim until ISA-06 and the provider-backed parts of
-ISA-07 have fresh evidence for these exact bytes. Historical provider receipts
-remain useful provenance but do not cross that boundary. The final worktree
-must be inspected, its release receipts must validate, and published artifact
-bytes must match their recorded hashes before any release is accepted.
+The current source owns the 155-topic roster and the formal resources described
+above, but the retained native, formal-declaration, trusted-axiom, Python, and
+browser receipts do not validate these live bytes. Those current-source
+evidence claims remain open under `FEP-EVIDENCE-CURRENT`. The repository also
+does not support a current 155-topic provider claim until ISA-06 and the
+provider-backed parts of ISA-07 have fresh evidence for these exact bytes.
+Historical receipts remain useful provenance but do not cross that boundary.
+The final worktree must be inspected, its release receipts must validate, and
+published artifact bytes must match their recorded hashes before any release
+is accepted.

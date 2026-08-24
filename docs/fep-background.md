@@ -24,8 +24,10 @@ the posterior from a joint law or turn an infinite KL value into a real one.
 
 fep-014 separately reuses native KL self/zero results and the
 composition-product chain rule for finite measures and Markov kernels. The
-pinned revision does not expose the later upstream data-processing module, so
-the project does not invent that result locally.
+pinned revision also exposes native measure-KL data processing under a Markov
+kernel as `InformationTheory.klDiv_comp_right_le`. That upstream theorem is not
+part of fep-014's maintained theorem surface, and it does not identify native
+extended KL with the project's totalized real finite KL.
 
 The maintained finite active-inference kernel supplies the complementary
 real-valued construction. A normalized generative model derives a positive-
@@ -66,6 +68,19 @@ Bellman minima and optimizer existence, embeds open-loop plans, and proves
 closed-loop weak dominance plus a treewise EFE decomposition. It is not an
 infinite-horizon, continuous-belief, or universal EFE-equivalence theorem.
 
+The H1 terminal composition closes one deliberately smaller chain through
+shared values. In the selected Boolean sampling model, two `true` observations
+give posterior masses `1/10` and `9/10`; one further `true` update is lifted to
+the sixteen-state Boolean internal--sensory--active--external carrier. Under a
+false-positive report cost four times the false-negative cost, the
+posterior-dependent continuation selects `true` and strictly beats either
+fixed report. Its action interface identifies that emitted action with the
+generative transition and the exact positive-time refresh kernel. This is a
+model-specific one-step posterior--decision--action certificate, not
+transition-aware planning, EFE-optimal control, or a claim about how future
+transition consequences determine the report. The exact theorem lives in
+[`finite_reference_agent.lean`](../src/fep_lean/formal/compositions/finite_reference_agent.lean).
+
 ## Bayesian mechanics and Markov blankets
 
 A Markov-blanket claim combines at least two different structures:
@@ -88,6 +103,13 @@ derives native `CondIndepFun` for the static joint, preserves it under
 measurable endpoint coarsening, and proves it rowwise for factorized
 transitions. It does not prove that prior mixtures retain the factorization or
 that arbitrary dynamics admit a blanket.
+
+H1 adds one selected invariant instance without changing that generic
+boundary. Its full-support uniform law on the sixteen Boolean `(I,S,A,E)`
+states factorizes as `P(S,A)P(I|S,A)P(E|S,A)`, and the refresh kernel selected
+by the emitted `true` action preserves that same law. The result does not infer
+causal direction from observational factorization, identify a blanket in an
+arbitrary dynamics, or supply a biological interpretation.
 
 fep-010 proves that a reversible Markov kernel leaves its reference measure
 invariant and supplies the identity kernel as a concrete witness. That row
@@ -185,6 +207,14 @@ derivative. This is a genuine continuous-time Markov example, not a general
 CTMC constructor, a driven nonequilibrium steady state, or a continuous-state
 SDE/Fokker--Planck theory.
 
+The H1 refresh semigroup is another finite continuous-time instance. For the
+same lifted posterior produced by the further `true` update, its selected
+positive-time kernel strictly decreases both the repository's real `finiteKL`
+and Mathlib-native `InformationTheory.klDiv` to the full-support invariant
+uniform law. Those are probability-divergence inequalities. They are not
+measured heat, physical entropy production, or thermodynamic free-energy
+dissipation.
+
 The offline [formalism atlas](formalism-atlas.html) distinguishes such
 conceptual frontiers from checked formal seams; imports never create an
 automatic scientific edge. fep-036 closes its reviewed finite empirical-Bayes
@@ -194,8 +224,11 @@ simultaneous, and whole-law `L¹` strong-law limits under explicit hypotheses.
 The learning family adds separate finite-sample concentration and
 model-evidence theorems. The later empirical-risk family composes the exact
 fep-036 Laplace estimator with finite-law squared/Brier-risk bounds and
-concentration-event transfer. Posterior contraction, empirical calibration,
-minimax risk, and a generic marginal-likelihood optimum remain out of scope.
+concentration-event transfer. H1 separately proves posterior bad-mass
+contraction for its selected identifiable Boolean model. Posterior contraction
+for the Laplace empirical-Bayes estimator or broader model classes, empirical
+calibration, minimax risk, and a generic marginal-likelihood optimum remain out
+of scope.
 
 ## What Lean acceptance establishes
 
@@ -209,6 +242,11 @@ does not establish:
 - that separate topic rows compose into one theory;
 - that the FEP is empirically true; or
 - that an optional LLM or OpenGauss workflow ran.
+
+In particular, acceptance of the H1 terminal theorem establishes its finite
+synthetic one-step implication only. It does not establish transition-aware or
+EFE-optimal control, causal identification, physical dissipation, empirical
+adequacy, or a universal Free Energy Principle.
 
 Those boundaries are first-class project data: semantic dispositions, authored
 relations, retained capability nodes, native receipts, and full-run receipts

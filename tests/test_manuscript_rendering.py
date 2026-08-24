@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import importlib.util
+import shutil
 from pathlib import Path
 from types import ModuleType
 
 import pytest
+import yaml
 
 from fep_lean.catalogue import FEPTopicCatalogue
 from fep_lean.output.manuscript import (
@@ -23,6 +25,42 @@ from fep_lean.output.rendering import (
 )
 
 PROJ = Path(__file__).resolve().parent.parent
+
+
+def _graphical_abstract_variables() -> dict[str, object]:
+    return {
+        "publication": {
+            "graphical_abstract": {
+                "source_path": "manuscript/assets/graphical-abstract.png",
+                "render_path": "assets/graphical-abstract.png",
+                "media_type": "image/png",
+                "width_px": 1536,
+                "height_px": 1024,
+                "sha256": (
+                    "969c7e959360545b3fff95963a9d88a8f7addb7f6d536a1b983da8032cbd9ccd"
+                ),
+                "alt_text": "Graphical abstract fixture",
+            }
+        }
+    }
+
+
+def _write_graphical_abstract_render_fixture(project_root: Path) -> Path:
+    source = project_root / "manuscript"
+    source.mkdir(parents=True)
+    shutil.copy2(PROJ / "manuscript/config.yaml", source / "config.yaml")
+    (source / "00_front_matter.md").write_text(
+        "![Graphical abstract]({{publication.graphical_abstract.render_path}})\n",
+        encoding="utf-8",
+    )
+    return source
+
+
+def _copy_publication_metadata(project_root: Path) -> None:
+    manuscript = project_root / "manuscript"
+    shutil.copy2(PROJ / "CITATION.cff", project_root / "CITATION.cff")
+    shutil.copy2(PROJ / "manuscript/config.yaml", manuscript / "config.yaml")
+    shutil.copytree(PROJ / "manuscript/assets", manuscript / "assets")
 
 
 def _load_render_script() -> ModuleType:
@@ -118,11 +156,85 @@ def test_all_authored_manuscript_placeholders_are_in_typed_projection() -> None:
         path.name for path in manuscript_source_files(PROJ / "manuscript")
     )
 
-    assert source_names[0] == "01_abstract.md"
+    assert source_names[0] == "00_front_matter.md"
     assert source_names[-1] == "08_appendix_a_overview.md"
     assert all(name[0].isdigit() for name in source_names)
     assert "preamble.md" not in source_names
     assert unresolved_placeholders(PROJ / "manuscript", variables) == ()
+
+
+def test_live_render_includes_author_block_and_canonical_graphical_abstract(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("fep_lean.output.manuscript._count_test_cases", lambda _: 0)
+    catalogue = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
+    variables = build_manuscript_vars(catalogue, PROJ)
+
+    rendered = render_manuscript(PROJ / "manuscript", tmp_path / "build", variables)
+
+    assert rendered[0].name == "00_front_matter.md"
+    front_matter = rendered[0].read_text(encoding="utf-8")
+    assert "Daniel Ari Friedman" in front_matter
+    assert "Active Inference Institute" in front_matter
+    assert "https://orcid.org/0000-0001-6232-9096" in front_matter
+    assert "daniel@activeinference.institute" in front_matter
+    assert "assets/graphical-abstract.png" in front_matter
+    assert (tmp_path / "build/assets/graphical-abstract.png").read_bytes() == (
+        PROJ / "manuscript/assets/graphical-abstract.png"
+    ).read_bytes()
+
+
+def test_render_manuscript_fails_closed_when_graphical_abstract_is_missing(
+    tmp_path: Path,
+) -> None:
+    source = _write_graphical_abstract_render_fixture(tmp_path)
+    destination = tmp_path / "build"
+
+    with pytest.raises(
+        ManuscriptRenderError, match="graphical abstract asset is missing"
+    ):
+        render_manuscript(source, destination, _graphical_abstract_variables())
+
+    assert not destination.exists()
+
+
+def test_render_manuscript_fails_closed_when_graphical_abstract_is_tampered(
+    tmp_path: Path,
+) -> None:
+    source = _write_graphical_abstract_render_fixture(tmp_path)
+    asset = source / "assets/graphical-abstract.png"
+    asset.parent.mkdir()
+    data = bytearray((PROJ / "manuscript/assets/graphical-abstract.png").read_bytes())
+    data[-1] ^= 1
+    asset.write_bytes(data)
+    destination = tmp_path / "build"
+
+    with pytest.raises(ManuscriptRenderError, match="sha256 does not match"):
+        render_manuscript(source, destination, _graphical_abstract_variables())
+
+    assert not destination.exists()
+
+
+def test_render_manuscript_rejects_graphical_abstract_that_escapes_root(
+    tmp_path: Path,
+) -> None:
+    source = _write_graphical_abstract_render_fixture(tmp_path)
+    config_path = source / "config.yaml"
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    outside = tmp_path.parent / f"{tmp_path.name}-outside.png"
+    config["publication"]["graphical_abstract"]["path"] = f"../{outside.name}"
+    config_path.write_text(
+        yaml.safe_dump(config, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
+    outside.write_bytes(
+        (PROJ / "manuscript/assets/graphical-abstract.png").read_bytes()
+    )
+    destination = tmp_path / "build"
+
+    with pytest.raises(ManuscriptRenderError, match="unsafe graphical abstract asset"):
+        render_manuscript(source, destination, _graphical_abstract_variables())
+
+    assert not destination.exists()
 
 
 def test_manuscript_projection_drift_detects_stale_stable_data(
@@ -141,6 +253,7 @@ def test_manuscript_projection_drift_detects_stale_stable_data(
         tmp_path / "src" / "fep_lean" / "formal",
     )
     (tmp_path / "manuscript").mkdir()
+    _copy_publication_metadata(tmp_path)
     (tmp_path / "tests").mkdir()
     monkeypatch.setattr("fep_lean.output.manuscript._count_test_cases", lambda _root: 0)
     catalogue = FEPTopicCatalogue.from_yaml(tmp_path / "config" / "topics.yaml")

@@ -3,6 +3,14 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
+
+_LEAN_QUALIFIED_NAME = r"[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)*"
+_LEAN_NAMESPACE_RE = re.compile(rf"^\s*namespace\s+({_LEAN_QUALIFIED_NAME})\s*$")
+_LEAN_SECTION_RE = re.compile(
+    rf"^\s*(?:noncomputable\s+)?section(?:\s+({_LEAN_QUALIFIED_NAME}))?\s*$"
+)
+_LEAN_END_RE = re.compile(rf"^\s*end(?:\s+({_LEAN_QUALIFIED_NAME}))?\s*$")
 
 
 def lean_code_without_comments(source: str) -> str:
@@ -74,6 +82,51 @@ def lean_code_without_comments(source: str) -> str:
     return "".join(output)
 
 
+def is_lean_qualified_name(value: str) -> bool:
+    """Return whether ``value`` is a simple or dot-qualified Lean name."""
+    return re.fullmatch(_LEAN_QUALIFIED_NAME, value) is not None
+
+
+def iter_lean_namespace_scopes(
+    source: str,
+) -> Iterator[tuple[str, tuple[str, ...], str | None]]:
+    """Yield comment-free lines with their active and newly opened namespaces."""
+    blocks: list[tuple[str, str | None]] = []
+    for line in lean_code_without_comments(source).splitlines():
+        opened_namespace: str | None = None
+        if match := _LEAN_NAMESPACE_RE.match(line):
+            opened_namespace = match.group(1)
+            blocks.append(("namespace", opened_namespace))
+        elif match := _LEAN_SECTION_RE.match(line):
+            blocks.append(("section", match.group(1)))
+        elif match := _LEAN_END_RE.match(line):
+            name = match.group(1)
+            if name is None:
+                if blocks:
+                    blocks.pop()
+            else:
+                for index in range(len(blocks) - 1, -1, -1):
+                    block_name = blocks[index][1]
+                    if block_name == name or (
+                        block_name is not None and block_name.rsplit(".", 1)[-1] == name
+                    ):
+                        del blocks[index:]
+                        break
+        namespaces = tuple(
+            name for kind, name in blocks if kind == "namespace" and name is not None
+        )
+        yield line, namespaces, opened_namespace
+
+
+def lean_outer_namespaces(source: str) -> tuple[str, ...]:
+    """Return every namespace opened outside another namespace block."""
+    return tuple(
+        opened_namespace
+        for _line, namespaces, opened_namespace in iter_lean_namespace_scopes(source)
+        if opened_namespace is not None and len(namespaces) == 1
+    )
+
+
 def lean_declaration_conclusion(source: str) -> str:
     """Return a theorem/lemma result after its final top-level header colon."""
     code = lean_code_without_comments(source)
@@ -106,4 +159,10 @@ def lean_declaration_conclusion(source: str) -> str:
     return conclusion
 
 
-__all__ = ["lean_code_without_comments", "lean_declaration_conclusion"]
+__all__ = [
+    "is_lean_qualified_name",
+    "iter_lean_namespace_scopes",
+    "lean_code_without_comments",
+    "lean_declaration_conclusion",
+    "lean_outer_namespaces",
+]

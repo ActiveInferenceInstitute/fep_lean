@@ -19,6 +19,7 @@ from fep_lean.formal import (
     write_formal_aggregate,
     write_formal_projections,
 )
+from fep_lean.formal import manifest as formal_manifest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -28,9 +29,11 @@ def test_formal_module_accepts_safe_nested_resources_with_exact_module_path() ->
         resource="compositions/measure_variational.lean",
         lean_module="FepSketches.compositions.measure_variational",
         role=FormalModuleRole.COMPOSITION,
+        declaration_namespace="FEPComposed",
     )
 
     assert module.resource == "compositions/measure_variational.lean"
+    assert module.declaration_namespace == "FEPComposed"
 
 
 @pytest.mark.parametrize(
@@ -49,6 +52,27 @@ def test_formal_module_rejects_unsafe_or_mismatched_resource_paths(
             resource=resource,
             lean_module=lean_module,
             role=FormalModuleRole.COMPOSITION,
+            declaration_namespace="FEPComposed",
+        )
+
+
+@pytest.mark.parametrize(
+    ("role", "declaration_namespace"),
+    [
+        (FormalModuleRole.FOUNDATION, None),
+        (FormalModuleRole.COMPOSITION, "not a Lean namespace"),
+        (FormalModuleRole.AGGREGATE, "FEPComposed"),
+    ],
+)
+def test_formal_module_rejects_namespace_values_that_disagree_with_role(
+    role: FormalModuleRole, declaration_namespace: str | None
+) -> None:
+    with pytest.raises(ValueError, match="declaration namespace"):
+        FormalModule(
+            resource="module.lean",
+            lean_module="FepSketches.module",
+            role=role,
+            declaration_namespace=declaration_namespace,
         )
 
 
@@ -75,9 +99,19 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
         "policy_tree.lean",
         "native_blanket.lean",
         "exponential_family.lean",
+        "gaussian_information_geometry.lean",
+        "smooth_information_geometry.lean",
         "continuous_time_markov.lean",
+        "markov_semigroup.lean",
+        "scalar_gaussian_semigroup.lean",
+        "linear_gaussian_semigroup.lean",
+        "fin4_gaussian_semigroup.lean",
+        "gaussian_precision_conditioning.lean",
+        "decision_risk.lean",
+        "finite_posterior_learning.lean",
+        "posterior_convergence.lean",
     )
-    composition_resources = (
+    released_composition_resources = (
         "compositions/core.lean",
         "compositions/measure_variational.lean",
         "compositions/control_temporal.lean",
@@ -89,6 +123,15 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
         "compositions/native_blanket_transfer.lean",
         "compositions/exponential_family.lean",
         "compositions/continuous_time.lean",
+    )
+    composition_resources = (
+        *released_composition_resources,
+        "compositions/finite_scientific_implications.lean",
+        "compositions/finite_policy_action.lean",
+        "compositions/finite_reference_agent.lean",
+        "compositions/gaussian_filter.lean",
+        "compositions/gaussian_control.lean",
+        "compositions/gaussian_grid_path.lean",
     )
     aggregate_resources = ("composed.lean",)
     resources = (
@@ -102,6 +145,48 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
     )
     assert tuple(module.resource for module in FORMAL_MODULES) == resources
     assert tuple(module.lean_module for module in FORMAL_MODULES) == modules
+    assert tuple(module.declaration_namespace for module in FORMAL_MODULES) == (
+        "FEP",
+        "FEP.FiniteInformation",
+        "FEP.ActiveInference",
+        "FEP.MarkovBlanket",
+        "FEP.InformationGeometry",
+        "FEP.StatisticalConvergence",
+        "FEP.MeasureBayes",
+        "FEP.VariationalDuality",
+        "FEP.ControlledMarkov",
+        "FEP.TemporalInference",
+        "FEP.FiniteMarkovDynamics",
+        "FEP.CausalDynamics",
+        "FEP.PredictiveCoding",
+        "FEP.PathThermodynamics",
+        "FEP.GeometricOptimization",
+        "FEP.CollectiveInference",
+        "FEP.LearningTheory",
+        "FEP.EmpiricalRisk",
+        "FEP.PolicyTrees",
+        "FEP.NativeBlanket",
+        "FEP.ExponentialFamily",
+        "FEP.GaussianInformationGeometry",
+        "FEP.SmoothInformationGeometry",
+        "FEP.ContinuousTimeMarkov",
+        "FEP.MarkovSemigroup",
+        "FEP.ScalarGaussianSemigroup",
+        "FEP.LinearGaussianSemigroup",
+        "FEP.Fin4GaussianSemigroup",
+        "FEP.GaussianPrecisionConditioning",
+        "FEP.DecisionRisk",
+        "FEP.FinitePosteriorLearning",
+        "FEP.PosteriorConvergence",
+        *("FEPComposed",) * len(released_composition_resources),
+        "FEPComposed.FiniteScientificImplications",
+        "FEPComposed.FinitePolicyAction",
+        "FEPComposed.FiniteReferenceAgent",
+        "FEPComposed.GaussianFilter",
+        "FEPComposed.GaussianControl",
+        "FEPComposed.GaussianGridPath",
+        None,
+    )
     expected_resources_by_role = {
         FormalModuleRole.FOUNDATION: foundation_resources,
         FormalModuleRole.COMPOSITION: composition_resources,
@@ -137,7 +222,13 @@ def test_formal_resource_manifest_rejects_missing_and_unlisted_lean_files(
     for module in FORMAL_MODULES:
         path = formal_root / module.resource
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("/- manifested fixture -/\n", encoding="utf-8")
+        namespace = module.declaration_namespace
+        source = (
+            "/- declaration-free aggregate -/\n"
+            if namespace is None
+            else f"namespace {namespace}\nend {namespace}\n"
+        )
+        path.write_text(source, encoding="utf-8")
 
     rogue = formal_root / "unmanifested.lean"
     rogue.write_text("theorem escapedAudit : True := by trivial\n", encoding="utf-8")
@@ -147,6 +238,98 @@ def test_formal_resource_manifest_rejects_missing_and_unlisted_lean_files(
     missing = formal_root / FORMAL_MODULES[0].resource
     missing.unlink()
     assert formal_resource_manifest_drift(tmp_path) == (missing,)
+
+
+def test_formal_resource_manifest_validates_comment_stripped_namespace_owner(
+    tmp_path: Path,
+) -> None:
+    formal_root = tmp_path / "src" / "fep_lean" / "formal"
+    for module in FORMAL_MODULES:
+        path = formal_root / module.resource
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if module.declaration_namespace is None:
+            path.write_text("/- declaration-free aggregate -/\n", encoding="utf-8")
+        else:
+            path.write_text(
+                f"namespace {module.declaration_namespace}\n"
+                "theorem fixture : True := by trivial\n"
+                f"end {module.declaration_namespace}\n",
+                encoding="utf-8",
+            )
+
+    assert formal_resource_manifest_drift(tmp_path) == ()
+    target = formal_root / FORMAL_MODULES[0].resource
+    target.write_text(
+        f"/- namespace {FORMAL_MODULES[0].declaration_namespace} -/\n"
+        "namespace Wrong.Owner\n"
+        "theorem fixture : True := by trivial\n"
+        "end Wrong.Owner\n",
+        encoding="utf-8",
+    )
+
+    assert formal_resource_manifest_drift(tmp_path) == (target,)
+
+    target.write_text(
+        f"namespace {FORMAL_MODULES[0].declaration_namespace}\n"
+        "namespace Nested\n"
+        "theorem fixture : True := by trivial\n"
+        "end Nested\n"
+        f"end {FORMAL_MODULES[0].declaration_namespace}\n"
+        "namespace Wrong.Owner\n"
+        "theorem secondFixture : True := by trivial\n"
+        "end Wrong.Owner\n",
+        encoding="utf-8",
+    )
+
+    assert formal_resource_manifest_drift(tmp_path) == (target,)
+
+
+def test_formal_manifest_rejects_duplicate_leaf_specific_namespace_owners(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    duplicate_namespace = "FEPComposed.FiniteReferenceAgent"
+    monkeypatch.setattr(
+        formal_manifest,
+        "FORMAL_MODULES",
+        (
+            FormalModule(
+                resource="compositions/first.lean",
+                lean_module="FepSketches.compositions.first",
+                role=FormalModuleRole.COMPOSITION,
+                declaration_namespace=duplicate_namespace,
+            ),
+            FormalModule(
+                resource="compositions/second.lean",
+                lean_module="FepSketches.compositions.second",
+                role=FormalModuleRole.COMPOSITION,
+                declaration_namespace=duplicate_namespace,
+            ),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="duplicate declaration namespaces"):
+        formal_manifest.formal_module_imports()
+
+
+def test_formal_manifest_rejects_new_owner_of_released_shared_namespace(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(
+        formal_manifest,
+        "FORMAL_MODULES",
+        (
+            FormalModule(
+                resource="compositions/future.lean",
+                lean_module="FepSketches.compositions.future",
+                role=FormalModuleRole.COMPOSITION,
+                declaration_namespace="FEPComposed",
+            ),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="released compatibility namespace"):
+        formal_manifest.formal_resource_manifest_drift(tmp_path)
 
 
 def test_core_composition_leaf_names_cross_topic_witnesses() -> None:
@@ -195,6 +378,18 @@ def test_formal_projection_writer_and_drift_are_byte_exact(tmp_path: Path) -> No
     assert written == tuple(
         tmp_path / "lean" / "FepSketches" / module.resource for module in FORMAL_MODULES
     )
+    assert formal_projection_drift(tmp_path) == ()
+
+    canonical = tmp_path / "src" / "fep_lean" / "formal" / FORMAL_MODULES[0].resource
+    original = canonical.read_bytes()
+    canonical.write_text(
+        "namespace Wrong.Owner\nend Wrong.Owner\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="formal resource manifest is incomplete"):
+        write_formal_projections(tmp_path)
+    assert canonical in formal_projection_drift(tmp_path)
+    canonical.write_bytes(original)
     assert formal_projection_drift(tmp_path) == ()
 
     written[0].write_text("tampered\n", encoding="utf-8")

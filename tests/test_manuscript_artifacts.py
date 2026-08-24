@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -33,8 +34,20 @@ from fep_lean.output.manuscript import (
     write_manuscript_vars,
     write_unified_formalism_appendix_markdown,
 )
+from fep_lean.output.publication_metadata import (
+    PublicationMetadataError,
+    load_publication_author,
+)
 
 PROJ = Path(__file__).resolve().parent.parent
+
+
+def _copy_publication_metadata(project_root: Path) -> None:
+    manuscript = project_root / "manuscript"
+    manuscript.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(PROJ / "CITATION.cff", project_root / "CITATION.cff")
+    shutil.copy2(PROJ / "manuscript/config.yaml", manuscript / "config.yaml")
+    shutil.copytree(PROJ / "manuscript/assets", manuscript / "assets")
 
 
 def test_authored_figure_anchors_are_attached_to_figures() -> None:
@@ -121,6 +134,68 @@ def test_build_manuscript_vars_shape(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert v["lean_version"] == v["lean_toolchain"].rsplit(":v", 1)[-1]
     assert v["mathlib_tag"] == f"v{v['lean_version']}"
+
+
+def test_build_manuscript_vars_projects_the_canonical_citation_author(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("fep_lean.output.manuscript._count_test_cases", lambda _: 0)
+    catalogue = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
+    citation = yaml.safe_load((PROJ / "CITATION.cff").read_text(encoding="utf-8"))
+    author = citation["authors"][0]
+
+    variables = build_manuscript_vars(catalogue, PROJ)
+    manuscript_config = yaml.safe_load(
+        (PROJ / "manuscript/config.yaml").read_text(encoding="utf-8")
+    )
+
+    assert variables["publication"]["author"] == {
+        "name": f"{author['given-names']} {author['family-names']}",
+        "affiliation": author["affiliation"],
+        "email": author["email"],
+        "orcid": author["orcid"],
+    }
+    assert "authors" not in manuscript_config
+
+
+def test_publication_author_rejects_a_duplicated_preferred_citation_owner(
+    tmp_path: Path,
+) -> None:
+    _copy_publication_metadata(tmp_path)
+    citation_path = tmp_path / "CITATION.cff"
+    citation = yaml.safe_load(citation_path.read_text(encoding="utf-8"))
+    citation["preferred-citation"]["authors"] = [dict(citation["authors"][0])]
+    citation_path.write_text(
+        yaml.safe_dump(citation, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
+
+    with pytest.raises(PublicationMetadataError, match="reuse the canonical authors"):
+        load_publication_author(tmp_path)
+
+
+def test_build_manuscript_vars_validates_the_canonical_graphical_abstract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("fep_lean.output.manuscript._count_test_cases", lambda _: 0)
+    catalogue = FEPTopicCatalogue.from_yaml(PROJ / "config" / "topics.yaml")
+
+    variables = build_manuscript_vars(catalogue, PROJ)
+
+    assert variables["publication"]["graphical_abstract"] == {
+        "source_path": "manuscript/assets/graphical-abstract.png",
+        "render_path": "assets/graphical-abstract.png",
+        "media_type": "image/png",
+        "width_px": 1536,
+        "height_px": 1024,
+        "sha256": "969c7e959360545b3fff95963a9d88a8f7addb7f6d536a1b983da8032cbd9ccd",
+        "alt_text": (
+            "Graphical abstract: a manifested Lean proof tree flows into a "
+            "four-region Markov-blanket model, then Gaussian geometry and a "
+            "stable stochastic flow, ending in solid synthetic-evidence and "
+            "dashed optional empirical branches. The diagram is a research-program "
+            "map, not a proof that all depicted links hold."
+        ),
+    }
 
 
 def test_build_manuscript_vars_can_disable_test_count_cache(
@@ -634,14 +709,12 @@ def test_build_manuscript_vars_exposes_hermes_block(
 ) -> None:
     """``build_manuscript_vars`` must expose a top-level ``hermes`` block when a
     sibling ``summary.json`` is present alongside the verification manifest."""
-    import shutil
-
     shutil.copytree(PROJ / "config", tmp_path / "config")
     shutil.copytree(
         PROJ / "src" / "fep_lean" / "formal",
         tmp_path / "src" / "fep_lean" / "formal",
     )
-    (tmp_path / "manuscript").mkdir()
+    _copy_publication_metadata(tmp_path)
     # _read_toolchain_vars only reads ``lean-toolchain``, ``lakefile.lean``,
     # ``lake-manifest.json``; skip the multi-GB ``.lake`` build cache and the
     # transient FepSketches verification scratch dir.
@@ -718,13 +791,8 @@ def test_build_manuscript_vars_exposes_hermes_block(
 def test_write_manuscript_vars_roundtrip(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import shutil
-
     shutil.copytree(PROJ / "config", tmp_path / "config")
-    (tmp_path / "manuscript").mkdir()
-    (tmp_path / "manuscript" / "config.yaml").write_text(
-        "paper:\n  title: t\n", encoding="utf-8"
-    )
+    _copy_publication_metadata(tmp_path)
     for d in ("scripts", "tests", "src", "output"):
         (tmp_path / d).mkdir()
     (tmp_path / "src" / "__init__.py").write_text('"""x"""\n', encoding="utf-8")

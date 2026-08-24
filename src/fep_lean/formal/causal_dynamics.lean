@@ -146,6 +146,64 @@ theorem sharedConditional_mixture_preserves_joint
         (1 - weight) * (right value.1 * kernel value.1 value.2)
   ring
 
+/-- A mixture of product laws remains a product law when the right marginal is
+shared.  This is a sufficient condition, not a claim that arbitrary mixtures
+of independent laws remain independent. -/
+theorem mixture_product_shared_right
+    {Left Right : Type*} [Fintype Left] [Fintype Right]
+    (weight : ℝ) (hWeightNonneg : 0 ≤ weight)
+    (hWeightLeOne : weight ≤ 1)
+    (left right : FiniteLaw Left) (shared : FiniteLaw Right) :
+    mixLaw weight hWeightNonneg hWeightLeOne
+        (left.product shared) (right.product shared) =
+      (mixLaw weight hWeightNonneg hWeightLeOne left right).product shared := by
+  apply FiniteLaw.ext_mass
+  funext value
+  change
+    weight * (left value.1 * shared value.2) +
+          (1 - weight) * (right value.1 * shared value.2) =
+      (weight * left value.1 + (1 - weight) * right value.1) * shared value.2
+  ring
+
+/-- The symmetric sufficient condition: sharing the left marginal also makes
+the mixture of product laws factorize. -/
+theorem mixture_product_shared_left
+    {Left Right : Type*} [Fintype Left] [Fintype Right]
+    (weight : ℝ) (hWeightNonneg : 0 ≤ weight)
+    (hWeightLeOne : weight ≤ 1)
+    (shared : FiniteLaw Left) (left right : FiniteLaw Right) :
+    mixLaw weight hWeightNonneg hWeightLeOne
+        (shared.product left) (shared.product right) =
+      shared.product (mixLaw weight hWeightNonneg hWeightLeOne left right) := by
+  apply FiniteLaw.ext_mass
+  funext value
+  change
+    weight * (shared value.1 * left value.2) +
+          (1 - weight) * (shared value.1 * right value.2) =
+      shared value.1 *
+        (weight * left value.2 + (1 - weight) * right value.2)
+  ring
+
+/-- Two factorized rows with the same named right marginal have a factorized
+mixture.  The shared-marginal premise is the substantive compatibility
+condition; factorization of the two rows alone is insufficient. -/
+theorem mixture_factorizes_of_shared_right
+    {Left Right : Type*} [Fintype Left] [Fintype Right]
+    (weight : ℝ) (hWeightNonneg : 0 ≤ weight)
+    (hWeightLeOne : weight ≤ 1)
+    (left right : FiniteLaw (Left × Right))
+    (leftInternal rightInternal : FiniteLaw Left)
+    (shared : FiniteLaw Right)
+    (hLeft : left = leftInternal.product shared)
+    (hRight : right = rightInternal.product shared) :
+    let mixture := mixLaw weight hWeightNonneg hWeightLeOne left right
+    mixture = mixture.fstMarginal.product mixture.sndMarginal := by
+  subst left
+  subst right
+  dsimp only
+  rw [mixture_product_shared_right, FiniteLaw.product_fstMarginal,
+    FiniteLaw.product_sndMarginal]
+
 /-- A half-mixture of the two Boolean point masses is genuinely nondegenerate. -/
 noncomputable def boolHalfMixture : FiniteLaw Bool :=
   mixLaw (1 / 2 : ℝ) (by norm_num) (by norm_num)
@@ -176,6 +234,35 @@ def pairedKernel
     rw [Fintype.sum_prod_type]
     simp_rw [← Finset.mul_sum, right.sum_one, mul_one]
     exact left.sum_one blanket.1
+
+/-- Prediction of a product law through a paired component kernel is the
+product of the two component predictions. -/
+theorem pairedKernel_predictive_product
+    {Input₁ Input₂ Output₁ Output₂ : Type*}
+    [Fintype Input₁] [Fintype Input₂]
+    [Fintype Output₁] [Fintype Output₂]
+    (leftLaw : FiniteLaw Input₁) (rightLaw : FiniteLaw Input₂)
+    (leftKernel : FiniteKernel Input₁ Output₁)
+    (rightKernel : FiniteKernel Input₂ Output₂) :
+    (pairedKernel leftKernel rightKernel).predictive
+        (leftLaw.product rightLaw) =
+      (leftKernel.predictive leftLaw).product
+        (rightKernel.predictive rightLaw) := by
+  apply FiniteLaw.ext_mass
+  funext output
+  change
+    (∑ input : Input₁ × Input₂,
+        (leftLaw input.1 * rightLaw input.2) *
+          (leftKernel input.1 output.1 * rightKernel input.2 output.2)) =
+      (∑ input : Input₁, leftLaw input * leftKernel input output.1) *
+        ∑ input : Input₂, rightLaw input * rightKernel input output.2
+  rw [Fintype.sum_prod_type, Finset.sum_mul]
+  apply Finset.sum_congr rfl
+  intro leftInput _
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro rightInput _
+  ring
 
 /-- Compose two local blanket subsystems around one possibly correlated blanket
 pair.  Dependence may pass through the blanket law, while the internal and
@@ -255,6 +342,32 @@ theorem correlatedBoolBlanket_mutualInformation_pos :
       ((mutualInformation_eq_zero_iff correlatedBoolBlanket).mp hzero)
   exact lt_of_le_of_ne (mutualInformation_nonneg correlatedBoolBlanket)
     (Ne.symm hNonzero)
+
+/-- The diagonal Boolean blanket is an equal mixture of two laws that are each
+individually products of point masses. -/
+theorem boolFactorizedMixture_eq_correlatedBlanket :
+    mixLaw (1 / 2 : ℝ) (by norm_num) (by norm_num)
+        ((FiniteLaw.pointMass false).product (FiniteLaw.pointMass false))
+        ((FiniteLaw.pointMass true).product (FiniteLaw.pointMass true)) =
+      correlatedBoolBlanket := by
+  apply FiniteLaw.ext_mass
+  funext value
+  rcases value with ⟨internal, external⟩
+  cases internal <;> cases external <;>
+    norm_num [mixLaw, FiniteLaw.product, FiniteLaw.pointMass,
+      correlatedBoolBlanket]
+
+/-- Arbitrary positive mixtures do not preserve factorization: mixing the two
+deterministic product regimes produces the correlated diagonal law. -/
+theorem boolFactorizedMixture_not_factorized :
+    let mixture :=
+      mixLaw (1 / 2 : ℝ) (by norm_num) (by norm_num)
+        ((FiniteLaw.pointMass false).product (FiniteLaw.pointMass false))
+        ((FiniteLaw.pointMass true).product (FiniteLaw.pointMass true))
+    mixture ≠ mixture.fstMarginal.product mixture.sndMarginal := by
+  dsimp only
+  rw [boolFactorizedMixture_eq_correlatedBlanket]
+  exact correlatedBoolBlanket_not_factorized
 
 /-! ## Interventions and an ordered four-node carrier -/
 
@@ -396,6 +509,45 @@ def mediatorMarginal
     (law : FiniteLaw (OrderedState Root NonDescendant Mediator Outcome)) :
     FiniteLaw Mediator :=
   law.fstMarginal.sndMarginal
+
+/-- Under a hard root intervention, the mediator marginal is exactly the named
+structural mediator kernel row.  No observational-identification premise is
+used or inferred. -/
+theorem interventionalMediatorMarginal_mass [DecidableEq Root]
+    (model : OrderedFourNodeModel Root NonDescendant Mediator Outcome)
+    (root : Root) (mediator : Mediator) :
+    mediatorMarginal (interventionalJoint model root) mediator =
+      model.mediatorGivenRoot root mediator := by
+  have houtcome :
+      (interventionalJoint model root).fstMarginal =
+        (mediatorLift model).joint
+          ((FiniteLaw.pointMass root).product model.nonDescendantLaw) := by
+    apply FiniteLaw.ext_mass
+    funext history
+    exact FiniteKernel.joint_fstMarginal_mass _ _ history
+  rw [mediatorMarginal, houtcome]
+  change
+    (∑ roots : Root × NonDescendant,
+      (((FiniteLaw.pointMass root).product model.nonDescendantLaw) roots) *
+        model.mediatorGivenRoot roots.1 mediator) =
+      model.mediatorGivenRoot root mediator
+  rw [Fintype.sum_prod_type]
+  simp [FiniteLaw.product, FiniteLaw.pointMass]
+  rw [← Finset.sum_mul, model.nonDescendantLaw.sum_one, one_mul]
+
+/-- Interventional mediator behavior is identified when the maintained
+structural mediator kernels are equal.  Observational equality alone is not a
+premise and is not sufficient, as the separate Boolean countermodel shows. -/
+theorem interventionalMediator_eq_of_mediatorKernel_eq [DecidableEq Root]
+    (left right : OrderedFourNodeModel Root NonDescendant Mediator Outcome)
+    (hMediator : left.mediatorGivenRoot = right.mediatorGivenRoot)
+    (root : Root) :
+    mediatorMarginal (interventionalJoint left root) =
+      mediatorMarginal (interventionalJoint right root) := by
+  apply FiniteLaw.ext_mass
+  funext mediator
+  rw [interventionalMediatorMarginal_mass,
+    interventionalMediatorMarginal_mass, hMediator]
 
 /-- Boolean four-node model in which the mediator copies the intervened root
 and the outcome is the XOR of the non-descendant and mediator. -/

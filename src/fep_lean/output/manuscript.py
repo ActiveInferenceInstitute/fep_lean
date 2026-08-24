@@ -23,6 +23,10 @@ from fep_lean.output.evidence import (
     validate_native_lean_receipt,
 )
 from fep_lean.output.provenance import config_owner_paths, source_owner_paths
+from fep_lean.output.publication_metadata import (
+    load_graphical_abstract,
+    load_publication_author,
+)
 
 UNIFIED_FORMALISM_CATALOGUE_FILENAME = "09z_unified_formalism_catalogue.md"
 _RUN_BOUND_MANUSCRIPT_KEYS = frozenset({"compile_rate", "full", "hermes", "verify"})
@@ -836,6 +840,8 @@ def build_manuscript_vars(
         if cache_test_count
         else _count_test_cases(project_root, write_cache=False)
     )
+    publication_author = load_publication_author(root)
+    graphical_abstract = load_graphical_abstract(root)
     return {
         **summary,
         "areas": area_vars,
@@ -860,6 +866,10 @@ def build_manuscript_vars(
         },
         "hermes": _hermes_block_from_summary(summary_path),
         "tests": {"collected": test_count},
+        "publication": {
+            "author": publication_author.manuscript_variables(),
+            "graphical_abstract": graphical_abstract.manuscript_variables(),
+        },
     }
 
 

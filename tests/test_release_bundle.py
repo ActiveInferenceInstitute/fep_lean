@@ -7,6 +7,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -17,6 +18,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import yaml
 
 from fep_lean.output import release_bundle as bundle_module
 from fep_lean.output.release_bundle import (
@@ -27,6 +29,8 @@ from fep_lean.output.release_bundle import (
     validate_release_bundle,
     write_publication_manuscript,
 )
+
+PROJ = Path(__file__).resolve().parents[1]
 
 
 def test_bounded_manuscript_projection_accepts_zero_count_relation_kinds() -> None:
@@ -916,10 +920,34 @@ def _minimal_manuscript(project_root: Path) -> None:
     rendered = project_root / "output" / "manuscript"
     manuscript.mkdir(parents=True)
     rendered.mkdir(parents=True)
-    (manuscript / "config.yaml").write_text(
-        "paper:\n  title: Deterministic fixture\n  date: '2026-08-23'\n",
+    shutil.copy2(PROJ / "manuscript/config.yaml", manuscript / "config.yaml")
+    asset = (PROJ / "manuscript/assets/graphical-abstract.png").read_bytes()
+    (manuscript / "assets").mkdir()
+    (manuscript / "assets/graphical-abstract.png").write_bytes(asset)
+    (rendered / "assets").mkdir()
+    (rendered / "assets/graphical-abstract.png").write_bytes(asset)
+    front_matter = (
+        "---\n"
+        "author:\n"
+        "  - |\n"
+        "    **Author information**  \n"
+        "    Daniel Ari Friedman  \n"
+        "    Active Inference Institute  \n"
+        "    daniel@activeinference.institute · "
+        "https://orcid.org/0000-0001-6232-9096\n"
+        'abstract-title: "Graphical abstract"\n'
+        "abstract: |\n"
+        "  ![Graphical abstract fixture](assets/graphical-abstract.png){width=90%}\n"
+        "---\n"
+    )
+    (manuscript / "00_front_matter.md").write_text(
+        front_matter.replace(
+            "assets/graphical-abstract.png",
+            "{{publication.graphical_abstract.render_path}}",
+        ),
         encoding="utf-8",
     )
+    (rendered / "00_front_matter.md").write_text(front_matter, encoding="utf-8")
     (manuscript / "references.bib").write_text("", encoding="utf-8")
     (manuscript / "preamble.md").write_text(
         "```latex\n% deterministic fixture\n```\n", encoding="utf-8"
@@ -936,6 +964,91 @@ def _minimal_manuscript(project_root: Path) -> None:
         "# Appendix\n\nA source-bound appendix.\n",
         encoding="utf-8",
     )
+
+
+def test_publication_html_shows_author_and_embeds_graphical_abstract(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        pytest.skip("pandoc is unavailable")
+    _minimal_manuscript(tmp_path)
+    monkeypatch.setattr(
+        bundle_module.shutil,
+        "which",
+        lambda name: pandoc if name == "pandoc" else None,
+    )
+
+    rendered = render_publication_manuscript(tmp_path, source_date_epoch=0)
+
+    assert b"Author information" in rendered.html
+    assert b"Daniel Ari Friedman" in rendered.html
+    assert b"Active Inference Institute" in rendered.html
+    assert b"daniel@activeinference.institute" in rendered.html
+    assert b"0000-0001-6232-9096" in rendered.html
+    assert b"data:image/png;base64," in rendered.html
+    provenance = json.loads(rendered.provenance)
+    inputs = {record["path"]: record for record in provenance["inputs"]}
+    assert inputs["manuscript/assets/graphical-abstract.png"]["sha256"] == (
+        "969c7e959360545b3fff95963a9d88a8f7addb7f6d536a1b983da8032cbd9ccd"
+    )
+
+
+def test_publication_pdf_shows_author_and_embeds_graphical_abstract(
+    tmp_path: Path,
+) -> None:
+    required = {
+        name: shutil.which(name)
+        for name in ("pandoc", "xelatex", "mutool", "pdftotext", "pdfimages")
+    }
+    if any(executable is None for executable in required.values()):
+        pytest.skip("complete PDF inspection toolchain is unavailable")
+    _minimal_manuscript(tmp_path)
+
+    rendered = render_publication_manuscript(tmp_path, source_date_epoch=0)
+
+    assert rendered.pdf is not None
+    pdf = tmp_path / "publication.pdf"
+    pdf.write_bytes(rendered.pdf)
+    text_result = subprocess.run(
+        [str(required["pdftotext"]), "-f", "1", "-l", "1", "-layout", str(pdf), "-"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    images_result = subprocess.run(
+        [str(required["pdfimages"]), "-f", "1", "-l", "1", "-list", str(pdf)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert text_result.returncode == 0
+    assert "Author information" in text_result.stdout
+    assert "Daniel Ari Friedman" in text_result.stdout
+    assert "Active Inference Institute" in text_result.stdout
+    assert "daniel@activeinference.institute" in text_result.stdout
+    assert "0000-0001-6232-9096" in text_result.stdout
+    assert images_result.returncode == 0
+    assert re.search(r"\b1536\s+1024\b", images_result.stdout)
+
+
+def test_publication_resources_require_graphical_abstract_contract(
+    tmp_path: Path,
+) -> None:
+    _minimal_manuscript(tmp_path)
+    config_path = tmp_path / "manuscript/config.yaml"
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    del config["publication"]["graphical_abstract"]
+    config_path.write_text(
+        yaml.safe_dump(config, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
+
+    with pytest.raises(
+        bundle_module.ReleaseBundleError,
+        match="manuscript graphical abstract metadata",
+    ):
+        bundle_module._publication_resource_records(tmp_path)
 
 
 def test_publication_html_is_two_render_reproducible_and_checkable(
@@ -1018,7 +1131,7 @@ def test_release_rejects_manuscript_sources_that_escape_through_symlinks(
 @pytest.mark.parametrize(
     ("relative", "expected_error"),
     [
-        ("manuscript/config.yaml", "required regular file is missing"),
+        ("manuscript/config.yaml", "path traverses a symlink"),
         ("manuscript/references.bib", "required regular file is missing"),
         (
             "manuscript/09z_unified_formalism_catalogue.md",
@@ -1054,6 +1167,11 @@ def test_publication_renderer_rejects_symlinked_metadata_appendix_and_resources(
             docs = tmp_path / "docs"
             docs.mkdir()
             (docs / "formalism-atlas.svg").write_text("<svg/>", encoding="utf-8")
+            (outside / "graphical-abstract.png").write_bytes(
+                (PROJ / "manuscript/assets/graphical-abstract.png").read_bytes()
+            )
+        if canonical.parent.exists():
+            shutil.rmtree(canonical.parent)
         canonical.parent.symlink_to(outside, target_is_directory=True)
     else:
         outside = tmp_path / f"outside-{canonical.name}"
@@ -2485,8 +2603,17 @@ def _write_release_metadata_fixture(project_root: Path) -> None:
         "repository-code: https://github.com/ActiveInferenceInstitute/fep_lean\n"
         "url: https://github.com/ActiveInferenceInstitute/fep_lean\n"
         "license: CC-BY-4.0\n"
+        "authors:\n"
+        "  - &canonical-author\n"
+        "    given-names: Daniel Ari\n"
+        "    family-names: Friedman\n"
+        "    email: daniel@activeinference.institute\n"
+        "    orcid: https://orcid.org/0000-0001-6232-9096\n"
+        "    affiliation: Active Inference Institute\n"
         "preferred-citation:\n"
         "  type: article\n"
+        "  authors:\n"
+        "    - *canonical-author\n"
         "  journal: Active Inference Journal\n"
         "  doi: 10.5281/zenodo.19699233\n",
         encoding="utf-8",
@@ -2583,6 +2710,28 @@ def test_release_metadata_rejects_a_misdirected_package_url(tmp_path: Path) -> N
 
     assert bundle_module._license_metadata_errors(tmp_path) == (
         "Python package Repository URL must be https://github.com/ActiveInferenceInstitute/fep_lean",
+    )
+
+
+def test_release_metadata_rejects_package_author_drift_from_citation(
+    tmp_path: Path,
+) -> None:
+    _write_release_metadata_fixture(tmp_path)
+    citation_path = tmp_path / "CITATION.cff"
+    citation = yaml.safe_load(citation_path.read_text(encoding="utf-8"))
+    citation["authors"][0]["given-names"] = "Ada"
+    citation["authors"][0]["family-names"] = "Example"
+    citation["authors"][0]["email"] = "ada@example.org"
+    citation["preferred-citation"]["authors"] = citation["authors"]
+    citation_path.write_text(
+        yaml.safe_dump(citation, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
+
+    assert bundle_module._license_metadata_errors(tmp_path) == (
+        (
+            "Python package authors must match CITATION.cff canonical author "
+            "Ada Example <ada@example.org>"
+        ),
     )
 
 

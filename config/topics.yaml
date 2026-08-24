@@ -1286,13 +1286,14 @@ topics:
   semantic_disposition: formalized
   nl: 'Mathlib KL divergence is nonnegative, vanishes exactly on equal finite measures, and obeys the composition-product
     chain rule for Markov kernels. Assumption scope: Self-divergence uses SigmaFinite; zero-characterization and the chain
-    rule use finite measures; the chain rule additionally requires Markov kernels. No data-processing theorem is claimed because
-    the pinned Mathlib revision does not expose one. Semantic disposition: `formalized`.
+    rule use finite measures; the chain rule additionally requires Markov kernels. The pin separately exposes native measure-KL
+    data processing under a Markov kernel as InformationTheory.klDiv_comp_right_le; fep-014 does not include that theorem
+    in its maintained theorem surface. Semantic disposition: `formalized`.
 
     '
   assumption_review: Self-divergence uses SigmaFinite; zero-characterization and the chain rule use finite measures; the chain
-    rule additionally requires Markov kernels. No data-processing theorem is claimed because the pinned Mathlib revision does
-    not expose one.
+    rule additionally requires Markov kernels. The pin separately exposes native measure-KL data processing under a Markov
+    kernel as InformationTheory.klDiv_comp_right_le; fep-014 does not include that theorem in its maintained theorem surface.
   non_vacuity: Equal finite measures witness zero KL, unequal finite measures exercise the zero-characterization, and distinct
     Markov kernels give a nontrivial conditional term in the chain rule.
   acceptance_probe: native Lean compile of fep014_kl_nonneg, fep014_kl_self, fep014_kl_eq_zero_iff, and fep014_kl_chain_rule

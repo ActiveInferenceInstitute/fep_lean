@@ -10,6 +10,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from fep_lean.output.publication_metadata import (
+    PublicationMetadataError,
+    load_graphical_abstract,
+)
+
 PLACEHOLDER_RE = re.compile(r"\{\{([^}]+)\}\}")
 SOURCE_EXCLUDES = frozenset(
     {
@@ -119,6 +124,20 @@ def _atomic_text(path: Path, text: str) -> None:
             os.unlink(raw_path)
 
 
+def _atomic_bytes(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, raw_path = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(raw_path, path)
+    finally:
+        if os.path.exists(raw_path):
+            os.unlink(raw_path)
+
+
 def _replace_render_tree(staged: Path, destination: Path) -> None:
     """Replace one renderer-owned destination tree, restoring it on failure."""
     backup: Path | None = None
@@ -168,10 +187,20 @@ def render_manuscript(
         source_path: source_path.read_text(encoding="utf-8")
         for source_path in manuscript_source_files(source)
     }
+    flat = flatten_variables(variables)
+    rendered_contents: dict[Path, str] = {}
+    for source_path, content in source_contents.items():
+
+        def replace(match: re.Match[str]) -> str:
+            key = match.group(1).strip()
+            return match.group(0) if key == "…" else flat[key]
+
+        rendered_contents[source_path] = PLACEHOLDER_RE.sub(replace, content)
+
     referenced_assets = {
         reference: paths
         for reference, paths in MANUSCRIPT_ASSETS.items()
-        if any(reference in content for content in source_contents.values())
+        if any(reference in content for content in rendered_contents.values())
     }
     missing_assets = [
         str(source.parent / source_relative)
@@ -182,15 +211,30 @@ def render_manuscript(
         raise ManuscriptRenderError(
             "referenced manuscript assets are missing:\n" + "\n".join(missing_assets)
         )
-    flat = flatten_variables(variables)
-    rendered_contents: dict[Path, str] = {}
-    for source_path, content in source_contents.items():
+    asset_contents = {
+        destination_relative: (source.parent / source_relative).read_bytes()
+        for source_relative, destination_relative in referenced_assets.values()
+    }
+    graphical_abstract_requested = any(
+        "publication.graphical_abstract." in content
+        for content in source_contents.values()
+    )
+    if graphical_abstract_requested:
+        try:
+            graphical_abstract = load_graphical_abstract(source.parent)
+        except PublicationMetadataError as exc:
+            raise ManuscriptRenderError(str(exc)) from exc
+        expected_variables = graphical_abstract.manuscript_variables()
+        actual_variables = variables.get("publication")
+        if not isinstance(actual_variables, Mapping) or (
+            actual_variables.get("graphical_abstract") != expected_variables
+        ):
+            raise ManuscriptRenderError(
+                "graphical abstract variables do not match the canonical asset"
+            )
+        asset_contents[Path(graphical_abstract.render_path)] = graphical_abstract.data
 
-        def replace(match: re.Match[str]) -> str:
-            key = match.group(1).strip()
-            return match.group(0) if key == "…" else flat[key]
-
-        rendered_content = PLACEHOLDER_RE.sub(replace, content)
+    for source_path, rendered_content in rendered_contents.items():
         for reference, (
             _source_relative,
             destination_relative,
@@ -199,12 +243,6 @@ def render_manuscript(
                 reference, destination_relative.as_posix()
             )
         rendered_contents[source_path] = rendered_content
-    asset_contents = {
-        destination_relative: (source.parent / source_relative).read_text(
-            encoding="utf-8"
-        )
-        for source_relative, destination_relative in referenced_assets.values()
-    }
 
     destination.parent.mkdir(parents=True, exist_ok=True)
     staged = Path(
@@ -213,8 +251,8 @@ def render_manuscript(
     try:
         for source_path, rendered_content in rendered_contents.items():
             _atomic_text(staged / source_path.name, rendered_content)
-        for destination_relative, asset_text in asset_contents.items():
-            _atomic_text(staged / destination_relative, asset_text)
+        for destination_relative, asset_data in asset_contents.items():
+            _atomic_bytes(staged / destination_relative, asset_data)
         _replace_render_tree(staged, destination)
     finally:
         if staged.exists():
