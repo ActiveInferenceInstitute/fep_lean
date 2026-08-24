@@ -123,8 +123,8 @@
     "specs/horizon-2-smooth-stochastic/readiness/matrix.yaml": "b4cd283051c02ca73ba0983479068194586d4d4aac8c5df07048cdd9381d4a4c",
     "specs/horizon-2-smooth-stochastic/readiness/probes/07_fin4_matrix_gaussian.lean": "d7a11fbf2f19f97d81ab1e833fb388a87deb7480d640f8391c4c6340c48c32bf",
     "src/fep_lean/formal/markov_semigroup.lean": "5aa92f5750cd7f502e388944883e8f9d3de8398db92264253b81765d046598b1",
-    "src/fep_lean/formal/scalar_gaussian_semigroup.lean": "e8633c2b2707301f7d80f59f35c59f6a46c880ff9d6cb11abe14aef1bb7e9aa3",
-    "specs/horizon-2-smooth-stochastic/slices/05b-r0-transition-covariance.md": "8e3863f06aef27e8a2a0d484ad135697e6a66c730970b4e1d489b0ec395dbad7",
+    "src/fep_lean/formal/scalar_gaussian_semigroup.lean": "d99665db1366fd8cfa58c43313fb85fc81f68d36eb70a768b26d4c2f9570a05e",
+    "specs/horizon-2-smooth-stochastic/slices/05b-r0-transition-covariance.md": "d68e4651aa7e9d5eb86e9e3a8852a167e5e6fd01c5a80c57e719a8031bd39ca5",
     "specs/horizon-2-smooth-stochastic/spikes/05b_transition_covariance.lean": "6dbf96396535587a02fbbe95a24f1f0a35609d1ed8d26389cb5385765e62674f",
     "tests/test_horizon2_transition_covariance_readiness.py": "24e39f4f45194c37272fc5fb91827fd1ceee04cb4738aedf7ac20a4f1076d153"
   }

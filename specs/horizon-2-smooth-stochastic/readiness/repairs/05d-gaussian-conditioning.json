@@ -133,7 +133,7 @@
     "specs/horizon-2-smooth-stochastic/readiness/matrix.yaml": "b4cd283051c02ca73ba0983479068194586d4d4aac8c5df07048cdd9381d4a4c",
     "specs/horizon-2-smooth-stochastic/readiness/probes/08_gaussian_conditioning.lean": "5c848021ad605cbfb628811ad7ef69846e7fde0b24437a3d4ce9a289f0e18fa3",
     "src/fep_lean/formal/fin4_gaussian_semigroup.lean": "d8d15d0abdfe6eb53c9e1b94d6f1e90a076e97c9507a3532021aea090deb630b",
-    "specs/horizon-2-smooth-stochastic/slices/05d-r0-gaussian-conditioning.md": "e239ec0a1867acb44203d62a8ab13455787187f6cabba4cfc8b6b1462bfb6849",
+    "specs/horizon-2-smooth-stochastic/slices/05d-r0-gaussian-conditioning.md": "249d2aa0dc4e2ebfeaf12a521c0fbb7da81e5cff26f4319fa2469f0f9d497df1",
     "specs/horizon-2-smooth-stochastic/spikes/05d_gaussian_conditioning.lean": "551bcf412f037f0a1f4a5ca180b244074c3df910a6c502d8eaef8eed402a6df8",
     "tests/test_horizon2_gaussian_conditioning_readiness.py": "e5345257132111b9fa6231bda28989061f8a8f0cf2d0963b50b52734ce6b6da9"
   }

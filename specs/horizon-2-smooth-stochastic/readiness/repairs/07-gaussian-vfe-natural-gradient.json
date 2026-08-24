@@ -125,7 +125,7 @@
     "uv.lock": "ee5039340168e0dabcfbdbc39e8efe688d2e86718828771c0ce1e7d74365408e",
     "specs/horizon-2-smooth-stochastic/readiness/acceptance.json": "c5ab12778266bd6b476068ec1e5768e8671763fc64757b5aa51b4a4edadc054b",
     "specs/horizon-2-smooth-stochastic/readiness/matrix.yaml": "b4cd283051c02ca73ba0983479068194586d4d4aac8c5df07048cdd9381d4a4c",
-    "src/fep_lean/formal/manifest.py": "952a28bd121d31ab573f2bff85d45daf9ce98c7f22679788dc60d4e6a45e2a2a",
+    "src/fep_lean/formal/manifest.py": "9ac7bb2e188f23681c6992db4214a5113fbf821bf731f74a2dab2df22c0f0405",
     "src/fep_lean/formal/gaussian_information_geometry.lean": "cb4d2a5d8c5bb5061e08c3d968d00cdafd7c60b2849b4ecc7c5efaae8f0bae1c",
     "lean/FepSketches/gaussian_information_geometry.lean": "cb4d2a5d8c5bb5061e08c3d968d00cdafd7c60b2849b4ecc7c5efaae8f0bae1c",
     "src/fep_lean/formal/smooth_information_geometry.lean": "571789ed86eb4ca7516c47621d555b4c12a467fd61f3854a009484de4debf1f8",

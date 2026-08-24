@@ -164,8 +164,8 @@
     "specs/horizon-2-smooth-stochastic/readiness/matrix.yaml": "b4cd283051c02ca73ba0983479068194586d4d4aac8c5df07048cdd9381d4a4c",
     "specs/horizon-2-smooth-stochastic/readiness/probes/08_gaussian_conditioning.lean": "5c848021ad605cbfb628811ad7ef69846e7fde0b24437a3d4ce9a289f0e18fa3",
     "src/fep_lean/formal/gaussian_information_geometry.lean": "cb4d2a5d8c5bb5061e08c3d968d00cdafd7c60b2849b4ecc7c5efaae8f0bae1c",
-    "src/fep_lean/formal/scalar_gaussian_semigroup.lean": "e8633c2b2707301f7d80f59f35c59f6a46c880ff9d6cb11abe14aef1bb7e9aa3",
-    "specs/horizon-2-smooth-stochastic/slices/06a-r0-native-posterior.md": "8a108e52429068ba7bb52b4990cf33a2b6b54db4d2b5a6727622d804e841fa96",
+    "src/fep_lean/formal/scalar_gaussian_semigroup.lean": "d99665db1366fd8cfa58c43313fb85fc81f68d36eb70a768b26d4c2f9570a05e",
+    "specs/horizon-2-smooth-stochastic/slices/06a-r0-native-posterior.md": "a315c5a2ac630e26d59ea2eade17d384597c6fb4811f5a287309f41fd4022b7e",
     "specs/horizon-2-smooth-stochastic/spikes/06a_native_filter_posterior.lean": "cd9bf8532d7748283f39148c3d80cea4ba49a276a69f21e7404d9fdb4c3e81d5",
     "tests/test_horizon2_native_filter_posterior_readiness.py": "8d88a2130710a00e3f6fda2a5a051e288600d225ffd7a8f5e6de0372c0bb545d"
   }
