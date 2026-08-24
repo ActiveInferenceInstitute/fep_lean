@@ -111,6 +111,13 @@ FORMAL_MODULES: tuple[FormalModule, ...] = (
         role=FormalModuleRole.FOUNDATION,
     ),
     FormalModule(
+        resource="ness_flow.lean",
+        lean_module="FepSketches.ness_flow",
+        role=FormalModuleRole.FOUNDATION,
+    ),
+    FormalModule(
+        resource="path_thermodynamics.lean",
+    FormalModule(
         resource="path_thermodynamics.lean",
         lean_module="FepSketches.path_thermodynamics",
         role=FormalModuleRole.FOUNDATION,
