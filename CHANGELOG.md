@@ -65,6 +65,15 @@
 - No post-v1.1.0 theorem, manuscript, or generated artifact is part of the
   immutable v1.1.0 release. A later release must choose its own version and DOI
   only after the connected theorem and source-bound evidence gates settle.
+- Refreshed the deterministic offline evidence surface after the post-v1.1.0
+  source wave (`fep-evidence` lane): catalogue stage exit 0, formalism coverage
+  regenerated (52 maintained formal modules, 33 foundation modules, 1480 total
+  theorem declarations, 226 composed theorem declarations, including the new
+  `FepSketches.ness_flow` and `FepSketches.compositions.smooth_reference_kernel`
+  owners), atlas and formal-kernel dashboard projections regenerated and
+  byte-current, theorem-maturity projection current, manuscript render check
+  passing with every authored placeholder resolved. Native Lean compile sweep
+  and Hermes/OpenGauss receipts remain deferred to the coordinator.
 
 ## 1.1.0 — 2026-08-23
 
