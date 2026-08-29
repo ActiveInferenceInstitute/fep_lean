@@ -7,7 +7,7 @@ open Lake DSL
     `import Mathlib.*` module used in the sealed live catalogue.
 
     Run setup once in a non-sandboxed terminal:
-        cd lean && lake exe cache get && lake build
+        cd lean && ./build.sh
     Then the LeanVerifier can call `lake env lean <sketch.lean>` for each topic.
 -/
 package «FepSketches»
