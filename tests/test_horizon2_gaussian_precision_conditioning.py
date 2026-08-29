@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._support.lean_runner import run_lean_probe
+
 from fep_lean.formal import formal_projection_pairs, render_formal_aggregate
 from fep_lean.formal.manifest import FORMAL_MODULES, FormalModuleRole
 
@@ -195,20 +197,11 @@ def _assert_exact_namespace_declarations(
 
 
 def _run_lean(path: Path, *, timeout: int = 300) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [
-            _lake_executable(),
-            "env",
-            "lean",
-            "-R",
-            str(PROJECT_ROOT / "src" / "fep_lean" / "formal"),
-            str(path),
-        ],
+    return run_lean_probe(
+        path,
+        import_root=PROJECT_ROOT / "src" / "fep_lean" / "formal",
         cwd=LEAN_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
+        timeout_s=timeout,
     )
 
 

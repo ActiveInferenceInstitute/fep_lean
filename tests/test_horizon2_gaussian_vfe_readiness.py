@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._support.lean_runner import run_lean_probe
+
 from fep_lean.formal.manifest import FORMAL_MODULES
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -177,23 +179,14 @@ def _namespace_names(output: str) -> frozenset[str]:
 
 
 def _run_lean(source_text: str) -> subprocess.CompletedProcess[str]:
-    with tempfile.TemporaryDirectory(prefix="h2_7_vfe_") as temp_dir:
-        probe = Path(temp_dir) / "GaussianVFEProbe.lean"
+    with tempfile.TemporaryDirectory(prefix="lean_probe_") as temp_dir:
+        probe = Path(temp_dir) / "LeanProbe.lean"
         probe.write_text(source_text, encoding="utf-8")
-        return subprocess.run(
-            [
-                _lake_executable(),
-                "env",
-                "lean",
-                "-R",
-                str(PROJECT_ROOT / "src" / "fep_lean" / "formal"),
-                str(probe),
-            ],
+        return run_lean_probe(
+            probe,
+            import_root=PROJECT_ROOT / "src" / "fep_lean" / "formal",
             cwd=LEAN_ROOT,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=300,
+            timeout_s=300,
         )
 
 

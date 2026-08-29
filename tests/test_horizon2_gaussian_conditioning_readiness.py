@@ -11,6 +11,9 @@ from pathlib import Path
 
 import pytest
 
+from tests._support.lean_runner import run_lean_probe
+
+
 from fep_lean.formal import formal_projection_pairs
 from fep_lean.formal.manifest import FORMAL_MODULES
 
@@ -315,19 +318,14 @@ def test_h2_5d_r0_public_surface_is_exact_and_fail_closed() -> None:
     assert not re.search(r"Matrix\.SchurComplement|Kernel\.Posterior", source)
 
 
-def test_h2_5d_r0_spike_compiles_warning_free() -> None:
-    result = subprocess.run(
-        [
-            _lake_executable(),
-            "env",
-            "lean",
-            str(Path("..") / SPIKE.relative_to(PROJECT_ROOT)),
-        ],
+def test_h2_5d_r0_spike_compiles_warning_free(tmp_path: Path) -> None:
+    probe = tmp_path / "H2_5dGaussianConditioningSpike.lean"
+    probe.write_text(SPIKE.read_text(encoding="utf-8"), encoding="utf-8")
+    result = run_lean_probe(
+        probe,
+        import_root=PROJECT_ROOT / "src" / "fep_lean" / "formal",
         cwd=LEAN_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=300,
+        timeout_s=300,
     )
 
     output = result.stdout + result.stderr

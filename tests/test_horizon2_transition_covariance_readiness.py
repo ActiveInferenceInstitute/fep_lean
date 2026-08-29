@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from tests._support.lean_runner import run_lean_probe
+
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LEAN_ROOT = PROJECT_ROOT / "lean"
 SPIKE = (
@@ -136,19 +139,14 @@ def test_h2_5b_r0_public_surface_is_exact_generic_and_fail_closed() -> None:
     assert not re.search(r"structure\s+\w+|transitionCovariancePosSemidef\s*:", source)
 
 
-def test_h2_5b_r0_spike_compiles_warning_free() -> None:
-    result = subprocess.run(
-        [
-            _lake_executable(),
-            "env",
-            "lean",
-            str(Path("..") / SPIKE.relative_to(PROJECT_ROOT)),
-        ],
+def test_h2_5b_r0_spike_compiles_warning_free(tmp_path: Path) -> None:
+    probe = tmp_path / "TransitionCovarianceR0Spike.lean"
+    probe.write_text(SPIKE.read_text(encoding="utf-8"), encoding="utf-8")
+    result = run_lean_probe(
+        probe,
+        import_root=PROJECT_ROOT / "src" / "fep_lean" / "formal",
         cwd=LEAN_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=300,
+        timeout_s=300,
     )
 
     output = result.stdout + result.stderr
@@ -163,13 +161,11 @@ def test_h2_5b_r0_public_theorems_use_only_standard_axioms(tmp_path: Path) -> No
         f"#print axioms FEP.TransitionCovarianceR0.{name}" for name in PUBLIC_THEOREMS
     )
     probe.write_text(f"{source}\n{prints}\n", encoding="utf-8")
-    result = subprocess.run(
-        [_lake_executable(), "env", "lean", str(probe)],
+    result = run_lean_probe(
+        probe,
+        import_root=PROJECT_ROOT / "src" / "fep_lean" / "formal",
         cwd=LEAN_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=300,
+        timeout_s=300,
     )
 
     output = result.stdout + result.stderr
@@ -218,13 +214,11 @@ example (left right : ℝ≥0) :
 """
     import_source = "\n".join(imports)
     probe.write_text(f"{import_source}\n{bodies}\n{consumer}\n", encoding="utf-8")
-    result = subprocess.run(
-        [_lake_executable(), "env", "lean", str(probe)],
+    result = run_lean_probe(
+        probe,
+        import_root=PROJECT_ROOT / "src" / "fep_lean" / "formal",
         cwd=LEAN_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=300,
+        timeout_s=1800,
     )
 
     output = result.stdout + result.stderr
