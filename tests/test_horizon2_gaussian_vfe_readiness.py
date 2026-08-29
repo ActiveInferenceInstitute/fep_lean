@@ -377,10 +377,12 @@ def test_h2_7_r0_uses_the_pinned_lean_mathlib_environment() -> None:
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stderr == ""
-    assert result.stdout.strip() == (
-        "Lean (version 4.33.1, x86_64-unknown-linux-gnu, "
-        "commit 819816b2e0a3bf405af45ae5c7af2491d8f5bee6, Release)"
-    )
+    # Pin the toolchain version + exact build commit; the platform triple varies
+    # by host (the CI runner is x86_64-linux, local hosts may be aarch64-darwin)
+    # and is not part of the source-bound environment claim the receipt records.
+    version_line = result.stdout.strip()
+    assert version_line.startswith("Lean (version 4.33.1, "), version_line
+    assert "commit 819816b2e0a3bf405af45ae5c7af2491d8f5bee6, Release)" in version_line
 
 
 def test_h2_7_r0_surface_and_orientation_are_exact_and_fail_closed() -> None:
