@@ -49,6 +49,8 @@ def test_hermes_config_defaults() -> None:
     cfg = HermesConfig()
     assert cfg.enabled is True
     assert cfg.model
+    assert cfg.timeout_s > 0
+    assert cfg.max_tokens > 0
     assert cfg.http_referer == "https://github.com/ActiveInferenceInstitute/fep_lean"
 
 

@@ -166,15 +166,6 @@ def test_verify_block_non_integer_topics(tmp_path: Path) -> None:
 # ── Hermes config edge cases ────────────────────────────────────────────────
 
 
-def test_hermes_config_defaults() -> None:
-    from fep_lean.llm.hermes import HermesConfig
-
-    cfg = HermesConfig()
-    assert cfg.model != ""
-    assert cfg.timeout_s > 0
-    assert cfg.max_tokens > 0
-
-
 def test_hermes_config_disabled_without_key() -> None:
     from fep_lean.llm.hermes import HermesConfig
 
