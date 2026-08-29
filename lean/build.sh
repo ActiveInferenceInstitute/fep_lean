@@ -19,9 +19,11 @@ echo "  cores=$CORES  build_jobs=$BUILD_JOBS  cwd=$PWD" | tee -a "$LOGFILE"
 echo "  lake exe cache get..." | tee -a "$LOGFILE"
 nice -n 10 lake exe cache get 2>&1 | tee -a "$LOGFILE"
 
-# Build with capped parallelism at reduced priority
-echo "  lake build -j$BUILD_JOBS $*" | tee -a "$LOGFILE"
-nice -n 10 lake build -j "$BUILD_JOBS" "$@" 2>&1 | tee -a "$LOGFILE"
+# Build at reduced priority. NOTE: Lake 5.0 (Lean v4.33.1) removed the `-j`
+# flag — parallelism is automatic. `BUILD_JOBS` is kept for the log line and
+# future Lake versions that restore an explicit knob.
+echo "  lake build (auto-parallelism, target_jobs=$BUILD_JOBS) $*" | tee -a "$LOGFILE"
+nice -n 10 lake build "$@" 2>&1 | tee -a "$LOGFILE"
 EXIT=$?
 
 echo "  exit=$EXIT $(date)" | tee -a "$LOGFILE"
