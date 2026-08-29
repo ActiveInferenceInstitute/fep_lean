@@ -110,7 +110,7 @@ _RE_FAIL_KIND_ARITY = re.compile(
     re.IGNORECASE,
 )
 
-_LAKE_TIMEOUT_S = int(os.environ.get("FEP_LEAN_VERIFY_TIMEOUT", "900"))
+_LAKE_TIMEOUT_S = int(os.environ.get("FEP_LEAN_VERIFY_TIMEOUT", "1800"))
 _VERIFICATION_TIMEOUT = _LAKE_TIMEOUT_S
 
 
