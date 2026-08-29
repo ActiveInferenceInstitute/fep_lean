@@ -42,7 +42,8 @@ Provider-backed or empirical evidence remains a different plane.
 
 ## Invariants
 
-1. `src/fep_lean/catalogue/sketches.py` owns every topic Lean body;
+1. The family-owned bodies under `src/fep_lean/catalogue/bodies/` own every
+   topic Lean body;
    `config/theorem_maturity.yaml` owns its reviewed claim; and
    `config/formalism_relations.yaml` owns capabilities and scientific edges.
    Generated YAML, aggregate Lean, coverage, atlas, and manuscript builds are
@@ -77,7 +78,7 @@ Provider-backed or empirical evidence remains a different plane.
 
 ## Code and test pointers
 
-- Topic models and semantics: `fep_lean.catalogue.sketches`,
+- Topic models and semantics: `fep_lean.catalogue.bodies`,
   `fep_lean.catalogue.semantics`, and `config/theorem_maturity.yaml`.
 - Formal ownership and composition: `fep_lean.formal.manifest`,
   `fep_lean.formal.declarations`, `fep_lean.formal.projection`, and

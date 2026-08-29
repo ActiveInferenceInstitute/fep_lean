@@ -68,9 +68,11 @@ output. Use the owner-provided generators and their `--check` modes.
 
 - Stable schema-2 roster: `fep-001` through `fep-155`, partitioned into 20
   families across five areas.
-- The generated coverage report owns all topic/formal-resource declaration,
-  import, relation, and capability totals. Do not copy those moving totals into
-  this handoff.
+- The generated coverage report owns all moving topic/formal-resource
+  declaration, import, relation, and capability totals. The accepted H2 exit
+  snapshot is recorded here only to bind the closure state: 52 maintained
+  modules, partitioned into 33 foundations, 18 compositions, and one
+  declaration-free aggregate, with 1,477 theorem declarations.
 - Semantic review contains direct formalizations together with explicit
   conditional and structural proxies. Their assumptions and non-vacuity
   boundaries remain first-class even when the bodies compile.
@@ -118,9 +120,10 @@ that same carrier and kernel. This is not transition-aware planning,
 EFE-optimal control, physical thermodynamics, causal identification, empirical
 validation, or a universal FEP theorem.
 
-The active [Horizon 2 spec](specs/horizon-2-smooth-stochastic/README.md) has
-separately accepted H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0,
-H2.5d-R0, H2.6a/b/c, and H2.6a-R0. The maintained surface now includes scalar
+The accepted [Horizon 2 record](specs/horizon-2-smooth-stochastic/README.md)
+closes every required slice through terminal H2.7, including the H2.5b-R0,
+H2.5d-R0, H2.6a-R0, and H2.7-R0 proof gates. The maintained surface includes
+scalar
 Gaussian/native-KL and coordinate owners, a same-joint native posterior
 martingale and limiting-observation endpoint, selected-model identification,
 joint-law and fixed-truth consistency, weak Dirac and bounded-risk
@@ -136,9 +139,18 @@ The accepted H2.5d-R0 repair proves the centered native stationary-joint
 factorization. Maintained H2.5d now proves the arbitrary-center native joint,
 blanket-a.e. pair/scalar Gaussian conditionals, endpoint `CondIndepFun`, actual
 stationary covariance `1 / 24`, and a bounded bivariate precision perturbation
-with actual covariance `-1 / 15` and native non-independence. H2.7-R0 has
-accepted the density-relative VFE and local natural-gradient bridge. H2.7 is
-the sole legal implementation slice; H3 remains closed.
+with actual covariance `-1 / 15` and native non-independence. H2.7-R0 accepted
+the density-relative VFE and local natural-gradient bridge. Terminal H2.7
+connects the selected scalar learning, filtering, VFE, control, grid-path, and
+KL definitions and separately exports the accepted exact `Fin 4` carrier. The
+[source-bound exit receipt](specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json)
+(`5bbee4453542c5e59a9fdb1db50d41327b5f2e0ffeede3f87097611ff798190e`)
+accepts and closes H2. H3.G0 is accepted and closed under the prospective
+[source-bound acceptance receipt](specs/h3-reference-study/carrier-acceptance.json),
+with the continuous carrier selected for formal H3.1--H3.5 and synthetic H3.6S
+work. H3.0 preregistration is now the sole open gate; H3.1--H3.7 remain closed
+until it freezes. The canonical `data-capability.yaml` owner is absent, so
+H3.6E and causal claims remain blocked; no protected outcomes were inspected.
 
 The canonical backlog row [`FEP-EVIDENCE-CURRENT`](TODO.md) owns the next
 coordinated projection and receipt refresh against the final current accepted

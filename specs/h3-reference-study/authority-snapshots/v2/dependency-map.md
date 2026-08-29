@@ -46,10 +46,10 @@ flowchart TB
       H27["H2.7 smooth vertical theorem<br/>accepted"]
     end
 
-    subgraph H3["Horizon 3 · H3.G0 accepted; H3.0 open; H3.1--H3.7 closed"]
-      H3G["H3.G0 accepted read-only gate<br/>continuous formal/synthetic branch"]
-      H30["H3.0 sole open gate<br/>model + data preregistration"]
-      H3C["H3.0 canonical capability absent<br/>H3.6E + causal claims blocked"]
+    subgraph H3["Horizon 3 · H3.G0 open; H3.0--H3.7 closed"]
+      H3G["H3.G0 sole open read-only gate<br/>candidate review + branch"]
+      H30["H3.0 model + data preregistration"]
+      H3C["H3.0 canonical data capability<br/>empirical eligibility"]
       H31["H3.1 typed scientific model"]
       H32["H3.2 dynamics + stationarity + blanket"]
       H33["H3.3 inference + calibration"]
@@ -145,8 +145,8 @@ released kernel
   -> {H2.1a/b, H2.2a, H2.3a/b, H2.4a/b,
       H2.5a, H2.5b-R0, H2.5b/c/d, H2.6a-R0, H2.6a/b/c}
   -> H2.7 smooth terminal merge
-  -> H3.G0 accepted read-only continuous selection
-  -> H3.0 sole open gate: freeze protocol
+  -> H3.G0 read-only carrier acceptance + exactly-one branch
+  -> H3.0 frozen protocol
   -> {H3.1, H3.2, H3.3, H3.4, H3.5, H3.6S}
   -> optional H3.6E locked real-data branch
   -> H3.7 independent replication
@@ -169,16 +169,13 @@ Only slices whose exact incoming rows are green may open. H2.1, H2.2a,
 H2.3a/b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0, H2.5d-R0, H2.6a/b/c,
 H2.6a-R0, H2.7-R0, and H2.7 have exited. The
 [source-bound H2 exit receipt](../../../specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json)
-closes Horizon 2. H3.G0 is accepted and closed under the prospective
-[source-bound acceptance receipt](../../../specs/h3-reference-study/carrier-acceptance.json),
-which selects the continuous carrier for formal H3.1--H3.5 and synthetic H3.6S
-work. H3.0 preregistration is the sole open gate; H3.1--H3.7 remain closed until
-it freezes. The absent canonical `data-capability.yaml` keeps H3.6E and causal
-claims blocked; no protected outcomes were inspected. Finite selection still
-requires an explicit reviewed H2 terminal no-go plus a reviewed H3 DAG revision.
-H3.G0 is owned by
+closes Horizon 2. H3.G0 is the sole open gate and may only inspect accepted
+H1/H2 evidence read-only; H3.0--H3.7 remain closed. Positive H2.7 acceptance
+authorizes continuous formal and synthetic eligibility; data capability gates
+only H3.6E and causal claims. Finite selection requires an explicit reviewed H2
+terminal no-go plus a reviewed H3 DAG revision. H3.G0 is owned by
 `tests/test_h3_g0_carrier_acceptance.py`;
-`tests/test_h3_preregistration.py` belongs exclusively to H3.0.
+`tests/test_h3_preregistration.py` is reserved for H3.0.
 
 A no-go decision must update both the affected terminal clause and every
 outgoing edge before dependent work continues. A stopped solid lane either
@@ -203,8 +200,8 @@ table highlights only the gates most likely to change the cross-horizon DAG.
 | H2.5 scalar + `Fin 4` OU | The scalar transition proves normalization, semigroup, invariant law, moments, and weak convergence; before H2.7, the exact symmetric-positive `K`, derived `Sigma = K⁻¹`, dynamic transition covariance, four-coordinate semigroup, exact scalar specialization, and conditioning/precision seam also pass | Stop before SDE language. Retain the accepted scalar and finite-axis algebra while keeping H2.7 and continuous H3 eligibility closed if the terminal merge fails |
 | H2.7-R0 Gaussian VFE/natural gradient | Actual H2.6a evidence density and posterior law support a recognition-to-posterior KL VFE gap, Fisher-metric-dual tangent, and strict local negative-flow derivative | Do not substitute H1 finite VFE or H2.2 coordinate duality; keep H2.7 and continuous H3 closed |
 | H2.7 smooth merge | One scalar Gaussian carrier is used by geometry, posterior, OU, filtering, control, and dissipation, and the separate required H2.5 `Fin 4` export is accepted in the same barrier | Do not ship a terminal theorem; retain predecessor evidence and a blocked-merge record |
-| H3.G0 carrier/branch acceptance | Accepted: an immutable, source-bound candidate uses positive accepted H2.7 to select exactly one continuous formal/synthetic carrier; repaired H1.8 remains fallback/negative-control evidence, selectable only after the reviewed H2 no-go and DAG-revision events | A future invalidation closes H3.0--H3.7; preserve withheld candidates and issue a new candidate rather than proving, patching, hybridizing, or rewriting H3.G0 history |
-| H3.0 data feasibility | A frozen protocol governs formal/synthetic work; the single `specs/h3-reference-study/data-capability.yaml` owner separately establishes license, variables, units, sampling frequency, interventions, and identifiability for H3.6E and causal claims | Keep H3.6E closed, publish a synthetic case study and documented empirical no-go, and never substitute convenient data or block the formal/synthetic spine solely because empirical metadata are absent |
+| H3.G0 carrier/branch acceptance | An immutable, source-bound candidate uses positive accepted H2.7 to select exactly one continuous formal/synthetic carrier; repaired H1.8 remains fallback/negative-control evidence, selectable only after the reviewed H2 no-go and DAG-revision events | Preserve withheld candidates and keep H3.0--H3.7 closed until two independent reviews approve the exact current hashes; do not prove, patch, hybridize, or rewrite history in H3.G0 |
+| H3.0 data feasibility | The frozen protocol governs formal/synthetic work; the single `specs/h3-reference-study/data-capability.yaml` owner separately establishes license, variables, units, sampling frequency, interventions, and identifiability for H3.6E and causal claims | Keep H3.6E closed, publish a synthetic case study and documented empirical no-go, and never substitute convenient data or block the formal/synthetic spine solely because empirical metadata are absent |
 | H3.6S model recovery | Synthetic model and parameter recovery meet preregistered thresholds | Remove the dashed H3.6S--H3.6E unlock; do not fit real data, repair thresholds post hoc, or hide rejection |
 | H3.6E held-out comparison | The locked analysis completes against capacity-matched baselines | Retain null/negative result and forbid post-hoc supportive relabeling; H3.7 publishes an empirical-unavailable/null row |
 | H3.7 clean-room replication | Independent rebuild reproduces symbolic and synthetic fixtures, hashes, and claim classifications | Block publication/promotion and route each mismatch to its owning H3 row |
@@ -217,7 +214,7 @@ table highlights only the gates most likely to change the cross-horizon DAG.
   leaf waits for stable endpoint declarations.
 - Numerical witnesses wait for theorem signatures and never define them.
 - H3 data-governance and unit-schema reconnaissance may start during late H2,
-  but accepted H3.G0 was read-only and post-H2, H3.0 remains a hard dependency of H3.1,
+  but H3.G0 is read-only and post-H2, H3.0 remains a hard dependency of H3.1,
   empirical metadata gate only H3.6E and matching causal claims, and data
   inspection that could affect hypotheses waits for the preregistration freeze.
 - Toolchain migration is serialized with all Lean work and invalidates native,

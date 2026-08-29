@@ -2,22 +2,17 @@
 
 Status: **Horizon 2 is accepted and closed under its
 [source-bound exit receipt](../../../specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json).
-H3.G0 is accepted and closed under the prospective
-[source-bound acceptance receipt](../../../specs/h3-reference-study/carrier-acceptance.json),
-which selects the continuous carrier for formal H3.1--H3.5 and synthetic H3.6S
-work. H3.0 preregistration is the sole open gate; H3.1--H3.7 remain closed until
-it freezes. The absent canonical `data-capability.yaml` keeps H3.6E and causal
-claims blocked, and no protected outcomes were inspected.**
+H3.G0 is the sole open gate and is read-only; H3.0--H3.7 remain closed.**
 
 ## Outcome
 
 Horizon 3 turns the H2 mathematical kernel into one falsifiable scientific
-study. The selected carrier is the exact H2.5 symmetric-precision
+study. The primary candidate is the exact H2.5 symmetric-precision
 linear-Gaussian stationary process, relabeled through an explicit
 external/sensory/active/internal axis equivalence, with an observation model and
-a finite set of interventions or actions. H3.G0 accepted the already-landed H2
-carrier read-only and selected the continuous formal/synthetic branch. H3.0 now
-freezes the protocol for that branch before H3.1 starts. H3
+a finite set of interventions or actions. H3.G0 performs read-only acceptance
+of the already-landed H2 carrier and selects exactly one continuous or finite
+branch. H3.0 then freezes the protocol for that branch before H3.1 starts. H3
 must not become a collection of unrelated demonstrations or a hybrid of the two
 branches.
 
@@ -35,11 +30,11 @@ for this named model and data:
 
 | Candidate | Role | Go condition | Boundary |
 | --- | --- | --- | --- |
-| Controlled linear-Gaussian/Ornstein--Uhlenbeck blanket model | Selected continuous branch | H2.5 landed the exact symmetric-precision `Fin 4` constructor, H2.7 exited, and both independent H3.G0 reviews approved the source-bound candidate | Linear, Gaussian, symmetric-positive precision, dimensionless-state, and stationarity premises remain explicit |
+| Controlled linear-Gaussian/Ornstein--Uhlenbeck blanket model | Continuous branch | H2.5 has landed the exact symmetric-precision `Fin 4` constructor, H2.7 has exited, and the source-bound H3.G0 candidate passes both independent reviews | Linear, Gaussian, symmetric-positive precision, dimensionless-state, and stationarity premises remain explicit |
 | Finite partially observed reference agent from H1 | Finite branch and negative control | The H1 carrier repair and H1.8 exit are green, an explicit reviewed H2 terminal no-go blocks the primary carrier, and a reviewed H3 DAG revision selects the fallback before H3.0 freezes | Synthetic/finite result only; no covariance, diffusion, or continuous-time claim |
 | Biochemical reaction or cellular network | Future alternative, not H3 mainline | Separate domain, data, and stochastic-process spec | Must not be approximated as OU without a reviewed error model |
 
-H3.G0 recorded exactly one branch. A continuous model may not borrow a finite
+H3.G0 records exactly one branch. A continuous model may not borrow a finite
 blanket theorem through an unnamed coercion, and a finite model may not borrow
 Gaussian covariance, diffusion, or raw-unit conclusions. Changing branches
 invalidates H3.0 and requires a new preregistration before outcome inspection.
@@ -52,8 +47,8 @@ H3.1--H3.5 formal work and H3.6S synthetic work. Governed interface,
 intervention, license, unit, and sampling metadata are separate H3.6E
 empirical-eligibility and causal-claim gates. The finite carrier can be selected
 only after an explicit reviewed H2 terminal no-go and a reviewed H3 DAG
-revision. The accepted selection does not bypass the hard H3.0 scheduling
-dependency.
+revision. None of these eligibility statements bypasses H3.G0 review or the
+hard H3.0 scheduling dependency.
 
 ## Implementation contract matrix
 
@@ -63,8 +58,8 @@ does not create shared ownership: the declaration classes below are disjoint.
 
 | ID | Canonical resource and ownership boundary | Smallest spike and observable go condition | No-go effect | Test, evidence, review, and nearest out-of-scope claim |
 | --- | --- | --- | --- | --- |
-| H3.G0 | accepted read-only append-only lifecycle: immutable versioned candidates and review history precede a separate final acceptance receipt; no Lean resource, import, or H2 source mutation | Accepted H2.5 declaration/axiom evidence, exact `K`/`Sigma`, scalar specialization, H2.7 exit, conditioning/precision, capability snapshot, and exactly-one continuous policy selection passed both independent reviews | A future invalidation closes H3.0--H3.7; preserve every withheld candidate and issue a new candidate rather than rewriting history | `tests/test_h3_g0_carrier_acceptance.py` validates lifecycle, source hashes, branch policy, and downstream closure; read-only formal/provenance evidence; probability/dynamics plus skeptical review; no new Gaussian theorem, branch hybrid, or blanket conclusion from stability |
-| H3.0 | open prospective `specs/h3-reference-study/preregistration.yaml` protocol plus canonical `specs/h3-reference-study/data-capability.yaml` empirical-capability owner; immutable after freeze | Freeze the formal/synthetic protocol before outcomes; separately validate any real-data candidate's license, column/unit map, time resolution, intervention field, missingness, and immutable split hash | Keep or remove the dashed H3.0--H3.6E real-data edge without blocking the formal/synthetic spine; continue through H3.6S and H3.7 with an empirical-unavailable claim row | `tests/test_h3_preregistration.py` exclusively owns H3.0; data-governance evidence; data owner + statistician approval; no causal or empirical claim from unavailable variables |
+| H3.G0 | open read-only append-only lifecycle: immutable versioned candidates and review history precede a separate final acceptance receipt; no Lean resource, import, or H2 source mutation | Verify the accepted H2.5 declaration/axiom receipt, exact `K`/`Sigma` witness, scalar specialization, H2.7 exit, conditioning/precision seam, canonical capability snapshot, and exactly-one policy selection; two independent reviews must approve the same immutable candidate hashes | Keep H3.0--H3.7 closed; preserve every withheld candidate, repair the owning authority or carrier, and issue a new candidate rather than rewriting history | `tests/test_h3_g0_carrier_acceptance.py` validates lifecycle, source hashes, branch policy, and downstream closure; read-only formal/provenance evidence; probability/dynamics plus skeptical review; no new Gaussian theorem, branch hybrid, or blanket conclusion from stability |
+| H3.0 | prospective `specs/h3-reference-study/preregistration.yaml` protocol plus canonical `specs/h3-reference-study/data-capability.yaml` empirical-capability owner; immutable after freeze | Freeze the formal/synthetic protocol before outcomes; separately validate any real-data candidate's license, column/unit map, time resolution, intervention field, missingness, and immutable split hash | Keep or remove the dashed H3.0--H3.6E real-data edge without blocking the formal/synthetic spine; continue through H3.6S and H3.7 with an empirical-unavailable claim row | `tests/test_h3_preregistration.py` is reserved for H3.0; data-governance evidence; data owner + statistician approval; no causal or empirical claim from unavailable variables |
 | H3.1 | new `formal/h3_reference_model.lean`; `FOUNDATION`; `FEP.H3ReferenceModel`; directly imports exactly `fin4_gaussian_semigroup` and `markov_semigroup`, with the latter retained only for declarations named in public signatures; `gaussian_information_geometry`, `posterior_convergence`, `controlled_markov`, and the finite `markov_blanket` owner are excluded | After the hard H3.0 dependency passes, define `Axis`, its exact `Axis ≃ Fin 4` order, the standardized dimensionless state, positive affine raw-unit bridge, observation/intervention primitives, and data-column map without storing covariance, invariance, recognition, or identifiability conclusions | Keep H3.2--H3.7 closed or replace the selected branch through a new H3.G0/H3.0 cycle; do not invent unit coercions, a second action carrier, or certificate fields that assume downstream theorems | new `tests/test_h3_reference_model.py`; native + semantic validation; domain and Lean review; no biological identity, measured-energy interpretation, posterior theorem, finite blanket carrier, or generic control carrier |
 | H3.2 | intrinsic derived transition/precision/covariance/invariance declarations in `h3_reference_model.lean`; the explicit H1 tuple permutation plus blanket, recognition, identifiability, preservation, intervention, and countermodel bridges in `compositions/h3_case_study.lean`; generic laws remain with H1/H2 owners | On the continuous branch, pull back H2.5's exact `K`/`Sigma` through `Axis ≃ Fin 4`, derive covariance and invariance, prove the precision-zero blanket equivalence, derive the Gaussian conditional-mean recognition map and its rank-based identifiability, and normalize one intervention; on the finite branch, first prove the named right-associated H1 tuple permutation and then prove only claims supplied by the repaired H1 terminal carrier | Remove blanket, recognition, identifiability, or causal clauses individually from the case-study DAG; retain the selected model as a negative/control process if its intrinsic dynamics remain valid | `tests/test_h3_reference_model.py`, `tests/test_h3_case_study.py`, `tests/test_native_blanket_formalisms.py`, and `tests/test_causal_predictive_formalisms.py`; native + numerical witness; dynamical-systems and causal review; no blanket from good prediction, covariance sparsity, or stored certificates |
 | H3.3 | cross-domain declarations in new `formal/compositions/h3_case_study.lean`; `COMPOSITION`; `FEPComposed.H3CaseStudy`; imports H3 foundation and stable H2 posterior/filter endpoints | One exact synthetic observation reproduces the native Gaussian update and VFE optimum; a non-identifiable/noise-misspecified pair remains executable | Remove posterior-consistency/calibration clauses; block H3.4 and real-data inference until recovery is redesigned | new `tests/test_h3_case_study.py`; native + synthetic evidence; inference/statistics review; no observed-data calibration inferred from a theorem |
@@ -108,19 +103,18 @@ the H3 composition leaf's explicit owners.
 ## H3.G0 — read-only carrier acceptance and branch gate
 
 **Depends on:** the accepted H2 exit receipt. This dependency is satisfied;
-the read-only H3.G0 decision is accepted and closed under the prospective
-[source-bound acceptance receipt](../../../specs/h3-reference-study/carrier-acceptance.json).
+the read-only H3.G0 decision itself remains open.
 
 **Single owner:** `specs/h3-reference-study/carrier-candidate.json` is the
-immutable reviewed v2 input. Versioned prior candidates and their review events
-remain immutable history. The prospective
-`specs/h3-reference-study/carrier-acceptance.json` is the separate final receipt
-and sole acceptance owner; it binds the approved candidate and postdecision
-authority bytes without rewriting history. H3.G0 read H1/H2 declarations,
-receipts, source digests, and the pre-outcome capability snapshot; it changed
-none of them and is not a formal resource.
+immutable current candidate. Versioned prior candidates and their review events
+remain immutable history. `specs/h3-reference-study/carrier-acceptance.json` is
+reserved for a separate final receipt and must be absent until both independent
+reviews approve the same candidate, signpost, test, and canonical-payload
+hashes. H3.G0 reads H1/H2 declarations, receipts, source digests, and the
+pre-outcome capability snapshot; it changes none of them and is not a formal
+resource.
 
-For continuous eligibility, the accepted record resolves and source-binds H2.5's
+For continuous eligibility, the record must resolve and source-bind H2.5's
 scalar constructor, exact symmetric-positive `Fin 4` precision
 `K`, derived `Sigma = K⁻¹`, transition semigroup, invariant Gaussian, weak
 convergence, scalar-specialization theorem, and conditioning/precision seam,
@@ -128,33 +122,32 @@ plus the H2.7 exit acceptance. The exact displayed H2.5 matrices are the
 carrier; an arbitrary Hurwitz matrix or a newly fitted covariance is not a
 substitute.
 
-For finite fallback evidence, the candidate resolves a repaired and accepted
+For finite fallback evidence, the candidate must resolve a repaired and accepted
 H1.8 terminal carrier. The retained first-merge no-go is not selection authority
 by itself; selecting the finite branch requires an explicit reviewed H2 terminal
 no-go plus a reviewed H3 DAG revision. H3.G0 must preserve the accepted
 `finiteReferenceAgent_terminal` and retained no-go boundary without weakening or
 hybridizing either carrier.
 
-The accepted gate records exactly one branch:
+The gate then records exactly one branch:
 
-- **continuous, selected:** consume the accepted H2.5 `Fin 4` carrier; and
-- **finite, not selected:** retain the repaired H1.8 carrier as fallback and
-  negative-control evidence with every covariance, diffusion, and
-  continuous-time claim mechanically excluded.
+- **continuous:** consume the accepted H2.5 `Fin 4` carrier; or
+- **finite:** consume the repaired H1.8 carrier and mechanically exclude every
+  covariance, diffusion, and continuous-time claim.
 
 Positive accepted H2.7 selects the continuous formal/synthetic carrier under the
 pre-outcome program policy. License, axis-variable, unit, sampling, and
 intervention metadata do not reverse that carrier choice; they govern H3.6E
 empirical eligibility and the strength of causal claims through the single
 canonical owner below. A branch switch invalidates the candidate and every H3.0
-artifact derived from it. A later invalidation closes H3.0--H3.7. H3.G0 may not
-add imports, prove a missing Gaussian theorem, repair H1, inspect protected
-outcomes, or rebuild either carrier in an H3 namespace.
+artifact derived from it. If the carrier or review requirements fail,
+H3.0--H3.7 remain closed. H3.G0 may not add imports, prove a missing Gaussian
+theorem, repair H1, inspect protected outcomes, or rebuild either carrier in an
+H3 namespace.
 
 ## H3.0 — preregistration and model/data decision
 
-**Depends on:** accepted H3.G0 unconditionally. This dependency is satisfied;
-H3.0 is the sole open gate. The exactly-one continuous branch decision is an
+**Depends on:** H3.G0 unconditionally. Its exactly-one branch decision is an
 immutable protocol input. Candidate/data governance may be investigated during
 late H2, but hypotheses remain frozen before outcome inspection. The finite
 branch does not bypass H3.0, and a Lean file cannot satisfy this scheduling
@@ -164,12 +157,11 @@ dependency by import.
 owns the frozen protocol. `specs/h3-reference-study/data-capability.yaml` is the
 single canonical metadata owner. Its governed interface, intervention, license,
 unit, sampling, and split fields alone may open H3.6E empirical eligibility or
-support the corresponding causal claims. That owner is absent at H3.G0
-acceptance, so H3.6E and causal claims remain blocked. H3.G0 recorded a
-source-bound fail-closed snapshot at
+support the corresponding causal claims. H3.G0 records only a source-bound
+fail-closed snapshot at
 `specs/h3-reference-study/data-capability-snapshot.json` of that path's presence
-and eligibility without reading protected outcomes. No protected outcomes were
-inspected. These design files are not the final protocol or gate receipt.
+and eligibility without reading protected outcomes. These design files are not
+the final protocol or gate receipt.
 
 ### Questions to freeze
 
@@ -223,9 +215,8 @@ Do not change the research question after inspecting outcomes.
 
 ## H3.1 — typed scientific model and dimensional boundary
 
-**Depends on:** accepted H3.G0 and completion of H3.0 for both branches. H3.G0
-is satisfied; H3.0 remains a hard open dependency, not a provenance note or an
-optional real-data edge. H3.1 remains closed until H3.0 freezes.
+**Depends on:** H3.G0 and H3.0 for both branches. H3.0 is a hard dependency,
+not a provenance note and not an optional real-data edge.
 
 **Single owner:** new foundation `formal/h3_reference_model.lean`, namespace
 `FEP.H3ReferenceModel`. On the continuous branch it selects, but does not copy,

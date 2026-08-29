@@ -45,7 +45,8 @@ would make a green compiler result look like scientific completeness.
 
 1. This feature preserves the exact `fep-001` through `fep-050` roster; roster
    growth is outside its contract.
-2. `src/fep_lean/catalogue/sketches.py` owns topic Lean bodies, while
+2. The family-owned bodies under `src/fep_lean/catalogue/bodies/` own topic
+   Lean bodies, while
    `src/fep_lean/formal/composed.lean` owns maintained cross-topic theorems and
    `fep_lean.formal.manifest` owns the formal-module roster. Workspace Lean,
    topic YAML, coverage, and atlas files are generated projections whose
@@ -69,7 +70,7 @@ would make a green compiler result look like scientific completeness.
 ## Code and test pointers
 
 - Native topic bodies and metadata join:
-  `fep_lean.catalogue.sketches`, `fep_lean.catalogue.generation`, and
+  `fep_lean.catalogue.bodies`, `fep_lean.catalogue.generation`, and
   `config/theorem_maturity.yaml`.
 - Cross-topic ownership and projection:
   `fep_lean.formal.manifest`, `fep_lean.formal.declarations`,

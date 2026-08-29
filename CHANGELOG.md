@@ -12,8 +12,8 @@
 - Kept the Horizon 1 exit claim narrow. It is not transition-aware planning,
   EFE-optimal control, physical thermodynamics, causal identification,
   empirical validation, or a universal FEP theorem.
-- Advanced Horizon 2 through accepted H2.0--H2.3b, H2.4a/b,
-  H2.5a/b/c/d (including H2.5b-R0 and H2.5d-R0), H2.6a/b/c, and H2.6a-R0:
+- Accepted and closed every required Horizon 2 slice through terminal H2.7,
+  including H2.5b-R0, H2.5d-R0, H2.6a-R0, and H2.7-R0:
   fixed-variance scalar Gaussian KL and coordinate geometry, local smooth
   duality, native kernel/action semigroups with the exact H1 lift, a scalar OU
   transition semigroup, a same-joint native posterior martingale with its
@@ -55,8 +55,25 @@
 - Resliced and accepted the H2 terminal proof gate. H2.7-R0 proves actual
   Lebesgue-density evidence surprisal, recognition-to-exact-posterior native
   KL, the mean-coordinate Fisher-metric-dual natural-gradient tangent, and
-  strict local descent. Its append-only source-bound decision opens H2.7 only;
-  H3 remains closed pending the connected terminal merge and review.
+  strict local descent. Terminal H2.7 connects the selected scalar learning,
+  filtering, VFE, control, finite-grid, and KL definitions and separately
+  exports the exact `Fin 4` certificate. The source-bound
+  [H2 exit receipt](specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json)
+  (`5bbee4453542c5e59a9fdb1db50d41327b5f2e0ffeede3f87097611ff798190e`)
+  accepts the result and closes H2. The generated exit snapshot contains 52
+  maintained modules (33 foundations, 18 compositions, and one
+  declaration-free aggregate) and 1,477 theorem declarations.
+- Accepted H3.G0 under the prospective
+  [source-bound acceptance receipt](specs/h3-reference-study/carrier-acceptance.json)
+  after both independent v2 reviews approved the same immutable candidate
+  binding. The decision selects the continuous carrier for formal H3.1--H3.5
+  and synthetic H3.6S work, retains the finite carrier as fallback and negative
+  control behind an explicit reviewed H2 terminal no-go plus reviewed H3 DAG
+  revision, and opens only H3.0 preregistration. H3.1--H3.7 remain closed until
+  H3.0 freezes. The absent canonical `data-capability.yaml` keeps H3.6E and
+  causal claims blocked; no protected outcomes were inspected. This G0
+  boundary does not refresh publication evidence: `FEP-EVIDENCE-CURRENT` and
+  `FEP-FULL-155` remain open.
 - Added a deterministic manuscript author block and graphical abstract under a
   strict metadata, digest, dimension, and rendering contract. These changes,
   together with the accepted post-release H1/H2 source wave, deliberately
@@ -64,7 +81,14 @@
   `FEP-EVIDENCE-CURRENT` is completed.
 - No post-v1.1.0 theorem, manuscript, or generated artifact is part of the
   immutable v1.1.0 release. A later release must choose its own version and DOI
-  only after the connected theorem and source-bound evidence gates settle.
+  only after the current-source evidence and publication gates settle.
+- Narrowed the historical `FEP.NessFlow` owner to five elementary
+  two-coordinate algebra definitions and six exact identities. Removed the
+  unsupported entropy-production, detailed-balance, free-energy, living-NESS,
+  and external-demo claims. Its independent
+  [source-bound acceptance](specs/ness-flow-algebra-acceptance.json) explicitly
+  excludes probabilistic, stationary, thermodynamic, biological, and universal
+  FEP interpretations.
 
 ## 1.1.0 — 2026-08-23
 

@@ -99,7 +99,8 @@ result in one plane never promotes another.
 
 ## Evidence and publication invariants
 
-1. `src/fep_lean/catalogue/sketches.py`, the formal resources, maintained YAML,
+1. The family-owned bodies under `src/fep_lean/catalogue/bodies/` with
+   `src/fep_lean/catalogue/registry.py`, the formal resources, maintained YAML,
    and the explicit source-owner roster are authoritative. Workspace Lean,
    packaged YAML, coverage, atlas, dashboard, and manuscript files are checked
    projections.

@@ -29,8 +29,6 @@ Authoritative fields live in the checked-in file. Highlights:
 GAUSS_HOME=/tmp/test-gauss uv run python scripts/01_fep_catalogue_and_figures.py
 
 OPENROUTER_API_KEY="" uv run python scripts/01_fep_catalogue_and_figures.py
-
-GAUSS_LOG_LEVEL=DEBUG uv run python scripts/02_run_single_topic.py fep-001
 ```
 
 ## topics.yaml — Topic format

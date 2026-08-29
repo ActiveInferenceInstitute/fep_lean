@@ -53,9 +53,9 @@ classes of false confidence.
    `--project-root`.
 2. `fep_lean.catalogue.generation` is the catalogue join. Its checkout YAML and
    `fep_lean.data` package resource are byte-identical projections.
-3. `config/catalogue_metadata.yaml`, `config/theorem_maturity.yaml`, and
-   `fep_lean.catalogue.sketches` own different facts. A generator may join them
-   but may not infer one from another.
+3. `config/catalogue_metadata.yaml`, `config/theorem_maturity.yaml`, and the
+   family-owned bodies in `fep_lean.catalogue.bodies` own different facts. A
+   generator may join them but may not infer one from another.
 4. `fep_lean.output.evidence` owns native/full evidence selection. A catalogue
    result with zero verified topics can never populate a native or full-run
    success claim.
@@ -78,13 +78,13 @@ classes of false confidence.
 - Installed resources: `src/fep_lean/data/topics.yaml` and
   `src/fep_lean/formal/composed.lean`.
 - Catalogue ownership: `fep_lean.catalogue.schema`,
-  `fep_lean.catalogue.semantics`, `fep_lean.catalogue.sketches`, and
+  `fep_lean.catalogue.semantics`, `fep_lean.catalogue.bodies`, and
   `fep_lean.catalogue.generation`.
 - Evidence and rendering: `fep_lean.output.evidence`,
   `fep_lean.output.manuscript`, and `fep_lean.output.rendering`.
 - Distribution and failure contracts: `tests/test_distribution.py`,
   `tests/test_native_evidence.py`, `tests/test_manuscript_rendering.py`,
-  `tests/test_catalogue_sketches_ssot.py`, and `tests/test_pipeline.py`.
+  `tests/test_catalogue_registry_ssot.py`, and `tests/test_pipeline.py`.
 
 ## Dead ends and consequential divergences
 

@@ -1,10 +1,18 @@
-# Horizon 2 implementation handoff
+# Horizon 2 accepted handoff
 
-Status: **H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0, H2.5d-R0,
-H2.6a/b/c, H2.6a-R0, and H2.7-R0 accepted; H2.7 is the sole legal
-implementation slice; H3 is closed**.
+Status: **every required slice through terminal H2.7 and every required R0
+proof gate are accepted; the
+[source-bound exit receipt](readiness/exits/07-smooth-reference-kernel.json)
+closes H2. H3.G0 is accepted and closed under the prospective
+[H3.G0 receipt](../h3-reference-study/carrier-acceptance.json); H3.0
+preregistration is the sole open gate, and H3.1--H3.7 remain closed until it
+freezes**.
 
 Read [`README.md`](README.md),
+[`slices/07-terminal-certificate.md`](slices/07-terminal-certificate.md), the
+canonical
+[`readiness/exits/07-smooth-reference-kernel.json`](readiness/exits/07-smooth-reference-kernel.json)
+exit receipt,
 [`slices/03a-posterior-martingale.md`](slices/03a-posterior-martingale.md),
 [`slices/05a-scalar-ou.md`](slices/05a-scalar-ou.md),
 [`readiness/matrix.yaml`](readiness/matrix.yaml), and the canonical
@@ -13,15 +21,17 @@ Read [`README.md`](README.md),
 owns mathematical intent; this spec owns execution state and reviewed
 divergences.
 
-## Immediate work
+## Closure and next legal gate
 
-Implement only
-[`H2.7 smooth reference-kernel terminal merge`](slices/07-terminal-certificate.md).
-Consume the accepted H2.7-R0 density-relative exact-posterior VFE/KL and local
-natural-gradient theorem on the same selected scalar carrier used by the
-semigroup, filter, control, and finite-grid path. Verify the accepted Fin4
-carrier separately. Optional H2.2b stays closed until it removes more structure
-than it adds, and H3 remains closed until H2.7 receives its own review quorum.
+Do not reopen or relocate H2: its accepted receipts source-bind the current
+spec, source, test, projection, choice, repair, and receipt paths. Perform H3.0
+only. Accepted H3.G0 selected the continuous formal/synthetic branch without
+adding a theorem, repairing a carrier, or combining branches. H3.0 must freeze
+that protocol before outcome inspection; H3.1--H3.7 remain closed until then.
+The absent canonical `data-capability.yaml` keeps H3.6E and causal claims
+blocked. The finite carrier remains fallback and negative-control evidence and
+requires an explicit reviewed H2 terminal no-go plus reviewed H3 DAG revision.
+Optional H2.2b remains unopened outside the accepted H2 exit.
 
 ## H2.3a evidence
 
@@ -198,19 +208,39 @@ than it adds, and H3 remains closed until H2.7 receives its own review quorum.
   the sole non-scientific R0 test correction without changing the spike or
   historical readiness decision.
 
-## Last accepted integrated formal baseline
+## H2.7 terminal exit
 
-- At the accepted H2.6c/H2.5d baseline, the canonical graph had 50 maintained
-  modules: 32 foundations, 17
-  compositions, and one declaration-free aggregate. It contains 1,437 total
+- `FEPComposed.SmoothReferenceKernel` connects the selected scalar geometry,
+  parameter learning, OU transition, native filtering, density-relative VFE,
+  one-step control, finite-grid path, and native-KL definitions through exact
+  typed equalities. It does not merely conjoin predecessor propositions.
+- A separate terminal theorem exports the accepted exact `Fin 4` carrier and
+  H2.5d conditioning result without pretending that the scalar and
+  four-coordinate carriers are identical.
+- The public surface contains 10 definitions and 30 theorems. Direct and
+  projected-module evidence, exact owner/import/declaration checks, standard
+  axiom reports, typed consumers, mutation tests, and the focused 12-test suite
+  are bound into the accepted receipt.
+- The
+  [exit receipt](readiness/exits/07-smooth-reference-kernel.json), SHA-256
+  `5bbee4453542c5e59a9fdb1db50d41327b5f2e0ffeede3f87097611ff798190e`,
+  records `accepted` with scope `close_Horizon_2_open_H3.G0_only`. It does not
+  refresh or authorize publication evidence.
+- No global information geometry, Itô/SDE, Fokker--Planck, Girsanov,
+  continuous-path, causal-blanket, physical-energy, or universal-FEP claim was
+  introduced.
+
+## Accepted H2 integrated formal exit
+
+- The current generated graph contains 52 maintained modules: 33 foundations,
+  18 compositions, and one declaration-free aggregate. It contains 1,477
   theorem declarations.
-- Manifest and workspace projection drift were empty; coverage, atlas, and
-  dashboard projections were current; and the default Lake build completed
-  8,759 jobs.
-- The all-H2 plus formal manifest/declaration matrix passed 201 tests. The
-  formal coverage/atlas/dashboard projection matrix separately passed 65.
-- These counts are historical baseline evidence and do not validate in-flight
-  H2.7-R0/H2.7 bytes.
+- The H2.7 exit receipt is the H2 closure authority. Earlier H2.6c/H2.5d
+  integrated counts and test totals remain historical predecessor evidence,
+  not the terminal snapshot.
+- The retained native, declaration/axiom, Python, browser, numerical,
+  manuscript, provider, and publication receipts remain stale for the current
+  post-v1.1.0 source. `FEP-EVIDENCE-CURRENT` and `FEP-FULL-155` remain open.
 
 ## H2.6c evidence
 

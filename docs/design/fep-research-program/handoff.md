@@ -6,9 +6,17 @@ Horizon 1 has exited. Its completed implementation and evidence record lives in
 the [Horizon 1 handoff](../../../specs/done/horizon-1-finite-synthesis/HANDOFF.md),
 and its audited design decisions—including the preserved first carrier
 no-go—live in the [choices ledger](../../../specs/done/horizon-1-finite-synthesis/choices.md).
-H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0, H2.5d-R0, H2.6a/b/c,
-H2.6a-R0, and H2.7-R0 have exited with explicit boundaries. H2.7 is the sole
-legal implementation slice; Horizon 3 remains closed.
+Every required H2 slice through terminal H2.7 and every required R0 proof gate
+have exited with explicit boundaries. The
+[source-bound H2 receipt](../../../specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json),
+SHA-256
+`5bbee4453542c5e59a9fdb1db50d41327b5f2e0ffeede3f87097611ff798190e`,
+accepts and closes Horizon 2. H3.G0 is accepted and closed under the prospective
+[source-bound acceptance receipt](../../../specs/h3-reference-study/carrier-acceptance.json),
+with the continuous carrier selected for formal H3.1--H3.5 and synthetic H3.6S
+work. H3.0 preregistration is the sole open gate; H3.1--H3.7 remain closed until
+it freezes. The absent canonical `data-capability.yaml` keeps H3.6E and causal
+claims blocked, and no protected outcomes were inspected.
 
 The accepted H1 terminal result is deliberately narrow. Starting from the
 selected Boolean sampling model, it reuses the exact two-observation posterior,
@@ -352,13 +360,25 @@ only; and fresh independent review returned `APPROVE`. This is not a global
 Bayes-estimator theorem, policy-tree planning, reward--EFE equivalence,
 multi-step control, or HJB/infinite-horizon result.
 
-The last accepted H2.6c/H2.5d integration baseline has 50 modules, 32
-foundations, 17 compositions, one declaration-free aggregate, and 1,437
-theorem declarations. Manifest/projection drift was empty,
-coverage/atlas/dashboard projections were current, the all-H2/formal matrix
-passed 201 tests, and the default Lean build completed 8,759 jobs. The formal
-presentation-projection matrix separately passed 65 tests. Those are baseline
-receipts, not a fresh validation of in-flight H2.7 bytes.
+## H2.7 terminal exit
+
+Maintained `FEPComposed.SmoothReferenceKernel` connects the selected scalar
+geometry, parameter learning, OU transition, native filter, density-relative
+VFE, one-step control, finite-grid path, and native-KL definitions by exact
+typed equalities. A separate theorem exports the exact `Fin 4` carrier and
+accepted H2.5d conditioning result without identifying it with the scalar
+carrier. The public surface contains 10 definitions and 30 theorems.
+
+Direct and projected-module evidence, exact owner/import/declaration checks,
+standard-axiom reports, typed consumers, mutation tests, and the focused
+12-test suite are source-bound by the accepted exit receipt. The receipt scope
+is `close_Horizon_2_open_H3.G0_only`; it does not refresh publication evidence.
+
+The accepted generated H2 exit graph contains 52 maintained modules: 33
+foundations, 18 compositions, and one declaration-free aggregate, with 1,477
+theorem declarations. Earlier H2.6c/H2.5d counts and test totals remain
+historical predecessor evidence, not the terminal snapshot. The retained
+publication receipts remain stale for the current post-v1.1.0 source.
 
 ## H2.5d exit
 
@@ -372,8 +392,9 @@ non-independence; it is neither a perturbed Fin4 law nor a generic converse.
 The source and projection are byte-identical, its 25 theorems use standard
 axioms only, the packaged-module consumer resolves private kernel instances,
 and two independent reviews returned `APPROVE`. The append-only lifecycle
-amendment records the sole pre-receipt R0 owner-absence correction. H2.5d opens
-only H2.7 and makes no transition-conditioning, causal-blanket, reversibility,
+amendment records the sole pre-receipt R0 owner-absence correction. At that
+gate, H2.5d opened only H2.7 and made no transition-conditioning,
+causal-blanket, reversibility,
 H2.7-terminal, or H3 claim.
 
 ## H2.5b-R0 exit
@@ -412,16 +433,15 @@ above.
 
 ## Next pickup
 
-Implement only
-[H2.7 smooth reference-kernel terminal merge](../../../specs/horizon-2-smooth-stochastic/slices/07-terminal-certificate.md).
-H2.2b remains optional and closed pending a proof-compression usefulness test.
-Connect exact accepted scalar predecessors and separately name the accepted
-Fin4/H2.5d export; do not widen it into global geometry, stochastic calculus,
-transition conditioning, or a causal blanket. H3 remains closed until H2.7's
-theorem and independent-review gates pass.
-H3.G0 remains read-only and post-H2-terminal: it may select continuous only
-after H2.7 succeeds, or finite only after an explicit reviewed H2 terminal
-no-go.
+Perform H3.0 only. Freeze the selected continuous formal/synthetic protocol
+before outcomes; do not prove or patch a carrier, add an H2 import, or hybridize
+branches. H2.2b remains optional and unopened outside the accepted H2 exit.
+H3.1--H3.7 remain closed until H3.0 freezes. H3.6E and causal claims remain
+blocked while canonical capability metadata are absent. The finite carrier
+remains fallback and negative-control evidence and requires an explicit reviewed
+H2 terminal no-go plus reviewed H3 DAG revision. The closed G0 gate remains
+owned by `tests/test_h3_g0_carrier_acceptance.py`; the next gate belongs
+exclusively to `tests/test_h3_preregistration.py`.
 
 The scheduling authority is the [dependency map](dependency-map.md); evidence
 and review rules remain in the [research contract](research-contract.md).

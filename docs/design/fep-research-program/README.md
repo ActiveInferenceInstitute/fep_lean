@@ -1,16 +1,21 @@
 # FEP research program: Horizons 1, 2, and 3
 
-Status: **active implementation program; Horizon 1 exited, the
-[active H2 spec](../../../specs/horizon-2-smooth-stochastic/README.md) has
-accepted H2.0--H2.3b, H2.4a/b, H2.5a/b/c, H2.5b-R0, H2.5d-R0,
-H2.5d, H2.6a/b/c, H2.6a-R0, and H2.7-R0; H2.7 is the sole legal
-implementation slice, while Horizon 3 remains closed**.
+Status: **active research program; Horizons 1 and 2 have exited. The
+[accepted H2 record](../../../specs/horizon-2-smooth-stochastic/README.md)
+closes every required slice through terminal H2.7 under its
+[source-bound receipt](../../../specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json).
+H3.G0 is accepted and closed under the prospective
+[source-bound acceptance receipt](../../../specs/h3-reference-study/carrier-acceptance.json);
+H3.0 preregistration is the sole open gate, and H3.1--H3.7 remain closed until
+it freezes**.
 The accepted H1
 record preserves the first uninhabited carrier merge and separately proves the
-repaired finite one-step terminal theorem. H2 implementation state and reviewed
-topology live in the active spec; the horizon documents own mathematical goals
-and scientific firewalls. H3 rows remain prospective rather than theorem or
-empirical evidence.
+repaired finite one-step terminal theorem. Accepted H2 implementation state and
+reviewed topology live in its source-bound record; the horizon documents own
+mathematical goals and scientific firewalls. Accepted H3.G0 selected the
+continuous carrier for formal H3.1--H3.5 and synthetic H3.6S work. H3.1--H3.7
+remain prospective rather than theorem or empirical evidence; the absent
+canonical `data-capability.yaml` keeps H3.6E and causal claims blocked.
 
 The released catalogue establishes many exact finite, measure-theoretic,
 geometric, control, learning, and thermodynamic results. Its own limitations
@@ -66,7 +71,7 @@ reported only as maintenance facts. Increasing them is not a research result.
 | --- | --- | --- | --- |
 | [Horizon 1: finite synthesis and falsification](horizon-1-finite-synthesis.md) | One synthetic finite one-step posterior--decision--action certificate, native decision/information bridges, and countermodels for stronger blanket-to-inference readings | The prerequisite pin and ownership audit is green | A connected finite theorem chain, positive witnesses, negative boundary theorems, warning-free native and declaration/axiom evidence |
 | [Horizon 2: smooth and stochastic lifting](horizon-2-smooth-stochastic.md) | The reusable parts of the finite chain lifted on one scalar Gaussian vertical carrier, plus a required pre-H2.7 symmetric-precision `Fin 4` OU export for H3 | Horizon 1 exits and every required Mathlib API passes an exact compile spike | A same-carrier scalar smooth/stochastic kernel, the accepted four-coordinate export, and mechanical exclusion of unsupported global geometry, Itô, SDE, and path-measure claims |
-| [Horizon 3: end-to-end scientific case study](horizon-3-scientific-case-study.md) | One preregistered, typed, executable model on exactly one continuous or finite branch, confronted with synthetic recovery tests and then an optional separately licensed real-data branch | Horizon 2 exits; read-only H3.G0 accepts source-bound carriers and selects one branch; H3.0 freezes that branch and model/data protocol | Formal, numerical, synthetic, optional empirical, and publication claim matrices; retained no-go/null results; independent replication |
+| [Horizon 3: end-to-end scientific case study](horizon-3-scientific-case-study.md) | One preregistered, typed, executable model on exactly one continuous or finite branch, confronted with synthetic recovery tests and then an optional separately licensed real-data branch | Horizon 2 and read-only H3.G0 exit with the continuous formal/synthetic carrier selected; H3.0 freezes that branch and protocol | Formal, numerical, synthetic, optional empirical, and publication claim matrices; retained no-go/null results; independent replication |
 
 These are dependency horizons, not calendar promises. Work may proceed in
 parallel only where the [dependency map](dependency-map.md) permits it.
@@ -118,8 +123,8 @@ fixes the following choices so an implementing agent does not reopen them:
     interface.
 12. **The coupled Gaussian carrier lands in H2.5.** The exact symmetric
     precision `K`, derived `Sigma = K⁻¹`, four-coordinate semigroup, and scalar
-    specialization are merge prerequisites for H2.7. H3.G0 only accepts their
-    source-bound evidence and selects a branch.
+    specialization are merge prerequisites for H2.7. H3.G0 accepted their
+    source-bound evidence and selected the continuous formal/synthetic branch.
 13. **H3 derives scientific conclusions from primitives.** `Axis ≃ Fin 4`, the
     explicit H1 tuple permutation, dimensionless state, and positive affine
     raw-unit bridge are fixed seams. Covariance, invariance, recognition, and
@@ -179,11 +184,13 @@ fixes the following choices so an implementing agent does not reopen them:
       reward--EFE or policy-recursion relabeling.
 - [x] H2.6c prove monotone finite-grid path-law and support-aware native-KL
       results without continuous-path or physical-entropy claims.
-- [ ] H2.7 assemble the scalar terminal theorem and separately verify the
+- [x] H2.7 assemble the scalar terminal theorem and separately verify the
       accepted H2.5c export and accepted H2.5d conditioning result.
-- [ ] H3.G0 inspect already-landed H1/H2 source and evidence read-only, record
-      exactly one continuous or finite branch, and prove or patch nothing.
-- [ ] H3.0 preregister the model-selection and empirical protocol.
+- [x] H3.G0 inspect already-landed H1/H2 source and evidence read-only, select
+      the continuous formal/synthetic branch, and prove or patch nothing.
+- [ ] H3.0 preregister the selected continuous formal/synthetic protocol before
+      outcomes; keep H3.6E and causal claims blocked while canonical capability
+      metadata are absent.
 - [ ] H3.1 fix `Axis ≃ Fin 4`, dimensionless state, the positive affine
       raw-unit bridge, and primitive-only model boundary; H3.2 then owns the H1
       tuple-permutation bridge and H3.2--H3.5 derive dynamics,

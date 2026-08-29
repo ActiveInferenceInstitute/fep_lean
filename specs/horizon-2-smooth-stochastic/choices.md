@@ -882,6 +882,68 @@ failed invocation.
   spike, H2.0 row, acceptance receipt, probe, theorem, or scientific decision;
   both before/after test hashes remain explicit.
 
+### Use one named scalar Gaussian model across the H2.7 vertical
+
+- **Choice:** Fix the terminal scalar carrier to rate-one, center-zero OU
+  dynamics with diffusion variance rate two, invariant/prior law
+  `N(0, 1)`, unit observation variance, unit filter/control/grid duration, and
+  zero datum. Use only a diffusion-rate-four alternative for the explicit
+  Boolean one-step control comparison.
+- **Reason:** These values make the H2.3 observation rows, H2.5 invariant law,
+  H2.6 prediction/filter, selected action transition, and finite-grid step
+  definitionally or theorem-equal on one named real carrier. Allowing separate
+  per-lane parameters would turn the terminal result into an unshared
+  conjunction; calling the alternative a policy or EFE choice would exceed the
+  proved one-step quadratic-risk theorem.
+- **Verdict:** Sound, high confidence. Every equality is compiler checked, the
+  two action kernels are proved distinct from actual risk separation, and the
+  static-parameter and latent-state posterior carriers remain explicitly
+  distinct.
+
+### Keep the continuous VFE density-relative and the flow local
+
+- **Choice:** Define continuous Gaussian VFE as recognition-to-posterior native
+  KL plus surprisal of the actual evidence density, restrict recognition laws
+  to the posterior's fixed variance with a free mean, and expose only the
+  time-zero derivative along one negative-natural-gradient line.
+- **Reason:** Singleton evidence mass is zero on the continuous carrier, while
+  H1 finite VFE and H2 coordinate duality are not substitutes for a native
+  density-relative objective. A global flow, arbitrary recognition covariance,
+  EFE, physical-energy, or dissipation statement needs additional owners.
+- **Verdict:** Sound, high confidence. The maintained terminal theorem preserves
+  KL orientation, exact-posterior optimality, metric duality, and strict local
+  descent without broadening the R0 result.
+
+### Export the Fin4 carrier separately from the scalar vertical
+
+- **Choice:** Keep `fin4ReferenceKernel_terminal` as a separate theorem over
+  the accepted named axis, precision, derived covariance, semigroup,
+  conditioning, and perturbation owners. Do not identify it with the scalar
+  learning/filter/control carrier.
+- **Reason:** H2.5c supplies an exact scalar eigenmode projection but not a
+  four-dimensional filter or controller. A merged carrier would fabricate
+  state/action bridges. The separate export still makes H2.5d's
+  blanket-marginal conditional law and the zero-precision/nonzero-covariance
+  boundary available to the next read-only gate.
+- **Verdict:** Sound, high confidence. The typed terminal consumer pins every
+  Fin4 clause, including the native conditional-independence and negative
+  perturbed-independence boundaries.
+
+### Bind H2.7 acceptance at compiler and receipt boundaries
+
+- **Choice:** Compile independent `rfl` consumers for all ten definition bodies
+  and exact typed consumers for all thirty theorem signatures, reject added
+  premises and weakened scalar/Fin4 terminal clauses by mutation, import the
+  generated projection through a fresh `.olean`, and require an exit receipt
+  with an exact source-key set and reviewer hashes.
+- **Reason:** Lexical declaration counts, token-presence tests, and a partial
+  receipt hash map can all remain green after a hidden premise, weakened
+  terminal claim, stale projection, or unbound predecessor enters the tree.
+- **Verdict:** Sound, high confidence. The adversarial mutations fail at the
+  independent Lean type oracle, while the accepted current source passes the
+  public-environment, standard-axiom, projection, manifest, and recursive R0
+  source-binding checks.
+
 ## Needs user
 
 None for the accepted H2 lanes. Any blocking no-go that removes a solid H2.7

@@ -11,7 +11,7 @@ continues to describe the longer research dependency.
 
 | Program | Purpose | Status |
 | --- | --- | --- |
-| [FEP research horizons](fep-research-program/README.md) | Move from the released finite catalogue to a falsifiable, carrier-spanning, end-to-end scientific theorem chain | Active: [Horizon 1 accepted](../../specs/done/horizon-1-finite-synthesis/README.md); H2.0 open; H3 gated |
+| [FEP research horizons](fep-research-program/README.md) | Move from the released finite catalogue to a falsifiable, carrier-spanning, end-to-end scientific theorem chain | Active: [Horizon 1 accepted](../../specs/done/horizon-1-finite-synthesis/README.md) and [Horizon 2 accepted](../../specs/horizon-2-smooth-stochastic/README.md); H3.0 preregistration open; H3.1--H3.7 gated |
 
 ## Lifecycle
 

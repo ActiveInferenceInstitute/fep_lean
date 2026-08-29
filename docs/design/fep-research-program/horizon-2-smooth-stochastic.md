@@ -1,5 +1,12 @@
 # Horizon 2: smooth and stochastic lifting
 
+Status: **accepted and closed under the
+[H2.7 exit receipt](../../../specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json).
+H3.G0 is accepted and closed under the prospective
+[source-bound acceptance receipt](../../../specs/h3-reference-study/carrier-acceptance.json);
+H3.0 preregistration is the sole open gate, and H3.1--H3.7 remain closed until
+it freezes.**
+
 ## Outcome
 
 Horizon 2 lifts only the reusable parts of the H1 finite theorem chain to one
@@ -7,7 +14,7 @@ shared Gaussian location-family carrier, native probability measures, a native
 action-indexed Markov-semigroup interface, and explicit
 Ornstein--Uhlenbeck transition laws. The scalar law remains the shared carrier
 for the H2 vertical theorem. A four-coordinate symmetric-precision Gaussian
-extension is a required H2.5 export and H2.7 merge prerequisite so H3 never
+extension was a required H2.5 export and H2.7 merge prerequisite so H3 never
 develops that carrier after the fact. H2 ends with a single smooth/stochastic
 terminal theorem and a precise list of results that did not transfer.
 
@@ -17,26 +24,27 @@ lemmas are worth proving.
 
 The mainline intentionally chooses a Gaussian location exponential family with
 fixed positive variance/covariance. A general finite-outcome vector exponential
-family remains optional. The multidimensional OU lift is not optional: H2.5
-must construct it on the exact symmetric-precision `Fin 4` carrier and H2.7
-must verify it as an accepted export alongside the scalar terminal theorem.
-H3.G0 is therefore a post-H2, read-only acceptance and branch-selection gate.
-It may accept the H2 evidence or select the finite H1 fallback; it may not
-extend `fin4_gaussian_semigroup.lean` under an H3 work package.
+family remains optional. The multidimensional OU lift was not optional: H2.5
+constructed it on the exact symmetric-precision `Fin 4` carrier and H2.7
+verified it as an accepted export alongside the scalar terminal theorem.
+H3.G0 therefore accepted the H2 evidence read-only and selected the continuous
+formal/synthetic branch. The finite H1 carrier remains fallback and
+negative-control evidence behind an explicit reviewed H2 terminal no-go plus
+reviewed H3 DAG revision. H3 may not extend `fin4_gaussian_semigroup.lean` under
+an H3 work package.
 
 ## Implementation authority and refined owner map
 
-The [active H2 spec](../../../specs/horizon-2-smooth-stochastic/README.md)
+The [accepted H2 record](../../../specs/horizon-2-smooth-stochastic/README.md)
 owns implementation state, refined slice dependencies, exact probe evidence,
-provisional imports, and package-level stop/go decisions. This design owns the
+final imports, and package-level stop/go decisions. This design owns the
 mathematical targets and scientific firewalls. If the two disagree, dependent
 implementation stops until both documents are reconciled.
 
-H2.0 has frozen the pinned external API routes. Exact project direct imports
-remain provisional until each maintained slice starts. The
+H2.0 froze the pinned external API routes. Each maintained slice and its exit
+evidence freeze the exact source-true project direct imports. The
 [readiness matrix](../../../specs/horizon-2-smooth-stochastic/readiness/matrix.yaml)
-and each active slice freeze the source-true import tuple before its maintained
-resource opens.
+and accepted slice records preserve the source-true import tuples.
 
 | Slice | Canonical owner | Role and declaration namespace | Solid predecessors |
 | --- | --- | --- | --- |
@@ -56,19 +64,19 @@ resource opens.
 | H2.6a | `compositions/gaussian_filter.lean` | composition; `FEPComposed.GaussianFilter` | H2.6a-R0 |
 | H2.6b | `compositions/gaussian_control.lean` | composition; `FEPComposed.GaussianControl` | H2.4b, H2.6a, and accepted H1.4 |
 | H2.6c | `compositions/gaussian_grid_path.lean` | composition; `FEPComposed.GaussianGridPath` | H2.4b and H2.5a |
-| H2.7 | `compositions/smooth_reference_kernel.lean` | composition; `FEPComposed.SmoothReferenceKernel` | every solid predecessor named in the active H2 DAG |
+| H2.7 | `compositions/smooth_reference_kernel.lean` | composition; `FEPComposed.SmoothReferenceKernel` | every solid predecessor named in the accepted H2 DAG |
 
 H2.3 parameter learning and H2.6a latent-state filtering are distinct lanes.
-Neither is a substitute for the other; they meet only at H2.7. The live
-generated aggregate directly imports the three accepted H2 composition leaves.
-The prospective H2 end state adds `smooth_reference_kernel.lean` as the fourth
-only after H2.7 passes; explicit imports provide the foundation closure.
+Neither is a substitute for the other; they meet only at H2.7. The generated
+aggregate directly imports all four accepted H2 composition leaves, including
+`smooth_reference_kernel.lean`; explicit imports provide the foundation
+closure.
 
 ## H2.0 — pinned-library readiness matrix
 
 **Depends on:** H1 exit.
 
-**Single owner:** the active H2 spec owns exact probe files; stable pin claims
+**Single owner:** the accepted H2 record owns exact probe files; stable pin claims
 remain in [`docs/lean4.md`](../../lean4.md).
 
 **Accepted result:** 25 `go`, 13 optional no-go, three historical blocking
@@ -550,9 +558,9 @@ blanket interpretation.
    generic converse. This slice is accepted; its exact declarations are solid
    H2.7 inputs. Failure would have blocked H2.7 and continuous H3 eligibility.
 
-All four maintained resources and the R0 decision land before H2.7. H3.G0 may inspect their accepted
-declarations and source-bound evidence; it may not prove, patch, extend, or
-replace them.
+All four maintained resources and the R0 decision landed before H2.7. H3.G0
+inspected their accepted declarations and source-bound evidence without proving,
+patching, extending, or replacing them.
 
 ### Brownian representation branch
 
@@ -632,12 +640,22 @@ path entropy production are stretch goals blocked on their own API spikes.
 **Depends on:** accepted H2.7-R0 plus H2.1b, H2.2a, H2.3b, H2.4b,
 H2.5a, H2.5c, H2.5d, H2.6a, H2.6b, and H2.6c. H2.2b is optional.
 
-H2.7-R0 is the source-bound proof gate for the previously missing continuous
-Gaussian seam. It must derive density-relative evidence surprisal, the
+H2.7-R0 is the accepted source-bound proof gate for the previously missing
+continuous Gaussian seam. It derives density-relative evidence surprisal, the
 recognition-to-exact-posterior native-KL VFE gap, its mean-coordinate
 differential, the Fisher-metric-dual natural-gradient tangent, and strict local
 descent away from the posterior mean. H1 finite-law VFE and H2.2a coordinate
 duality are not substitutes.
+
+**Accepted result:** the terminal owner connects the selected scalar geometry,
+learning, filtering, VFE, control, finite-grid path, and native-KL definitions
+through exact typed equalities and separately exports the accepted `Fin 4`
+carrier. Its 10 definitions, 30 theorems, focused 12-test evidence, owner/import
+and projection contracts, axiom census, and independent reviews are bound by
+the
+[exit receipt](../../../specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json),
+SHA-256
+`5bbee4453542c5e59a9fdb1db50d41327b5f2e0ffeede3f87097611ff798190e`.
 
 **Single owner:** one manifested composition leaf
 `formal/compositions/smooth_reference_kernel.lean`, namespace
@@ -645,7 +663,8 @@ duality are not substitutes.
 
 ### Terminal certificate
 
-On the one H2.1 Gaussian location-family/H2.5 OU model, prove a connected chain:
+On the one H2.1 Gaussian location-family/H2.5 OU model, the accepted theorem
+connects this chain:
 
 1. transition and observation kernels are normalized;
 2. the chosen law is invariant or evolves by the proved semigroup;
@@ -661,7 +680,7 @@ On the one H2.1 Gaussian location-family/H2.5 OU model, prove a connected chain:
 7. the finite-horizon control result consumes the same filtered state; and
 8. native KL or an explicitly named Lyapunov functional dissipates.
 
-The theorem docstring must list the H1 clauses that did not transfer. In
+The theorem docstring lists the H1 clauses that did not transfer. In
 particular, a finite log-mass identity is not automatically a continuous
 density identity.
 
@@ -679,7 +698,9 @@ density identity.
   H2.6 uses both equalities rather than name-level similarity.
 - Unsupported Itô/SDE/path-measure statements are absent from declarations and
   scientific prose.
-- The terminal theorem receives formal, domain, and skeptical review under the
+- The terminal theorem received formal, domain, and skeptical review under the
   [research contract](research-contract.md).
 
-Horizon 3 remains closed until this gate and its claim review pass.
+This gate and its claim review passed. H2 is closed. H3.G0 is accepted and
+closed; H3.0 preregistration is the sole open gate, and H3.1--H3.7 remain closed
+until it freezes.

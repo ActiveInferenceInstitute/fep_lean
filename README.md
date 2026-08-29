@@ -95,9 +95,10 @@ carrier-merge no-go. It does not establish transition-aware planning,
 EFE-optimal control, physical or causal adequacy, empirical validation, or a
 universal FEP claim.
 
-The active [Horizon 2 spec](specs/horizon-2-smooth-stochastic/README.md) has
-accepted H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0, H2.5d-R0,
-H2.6a/b/c, and H2.6a-R0. The current smooth surface includes fixed-variance scalar Gaussian
+The accepted [Horizon 2 record](specs/horizon-2-smooth-stochastic/README.md)
+closes every required slice through terminal H2.7, including the H2.5b-R0,
+H2.5d-R0, H2.6a-R0, and H2.7-R0 proof gates. The smooth surface includes
+fixed-variance scalar Gaussian
 KL/information geometry, local coordinate duality, a same-joint native
 posterior martingale with its limiting-observation conditional-expectation
 endpoint, selected-model identification, joint-law and fixed-truth posterior
@@ -114,10 +115,21 @@ stationary joint. Maintained H2.5d extends that native conditional product to
 every stationary center, proves blanket-a.e. pair and scalar conditional laws
 plus endpoint `CondIndepFun`, and derives a fixed bivariate precision
 perturbation with actual covariance `-1 / 15` and native non-independence.
-H2.7-R0 has accepted the continuous density-relative exact-posterior VFE and
-derived local natural-gradient seam. H2.7 is now the sole legal implementation
-slice. H3 remains closed until the connected H2.7 terminal merge and its
-separate review gate pass.
+H2.7-R0 accepted the continuous density-relative exact-posterior VFE and
+derived local natural-gradient seam. The terminal H2.7 merge then connected the
+selected scalar geometry, learning, filtering, VFE, control, grid-path, and KL
+definitions while retaining a separate exact `Fin 4` export. The
+[H2 exit receipt](specs/horizon-2-smooth-stochastic/readiness/exits/07-smooth-reference-kernel.json)
+(`5bbee4453542c5e59a9fdb1db50d41327b5f2e0ffeede3f87097611ff798190e`)
+accepts and closes H2. At that exit, the current generated formal graph contains
+52 maintained modules: 33 foundations, 18 compositions, and one
+declaration-free aggregate, with 1,477 theorem declarations. H3.G0 is accepted
+and closed under the prospective
+[source-bound acceptance receipt](specs/h3-reference-study/carrier-acceptance.json),
+which selects the continuous carrier for formal H3.1--H3.5 and synthetic H3.6S
+work. H3.0 preregistration is the sole open gate; H3.1--H3.7 remain closed until
+it freezes. The absent canonical `data-capability.yaml` keeps H3.6E and causal
+claims blocked, and no protected outcomes were inspected.
 
 That formal exit is not current publication evidence. The retained exact-roster
 native, declaration/axiom, Python, and Chrome receipts validate the frozen

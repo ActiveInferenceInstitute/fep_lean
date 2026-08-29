@@ -1,10 +1,14 @@
 # Horizon 2 smooth and stochastic lifting
 
-Status: **active; H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0,
-H2.5d-R0, H2.6a/b/c, H2.6a-R0, and H2.7-R0 accepted; H2.7 is the sole legal
-implementation slice and H3 remains closed**. Last updated: 2026-08-24.
+Status: **accepted and closed; every required slice through terminal H2.7 and
+every required R0 proof gate have exited under the source-bound
+[H2.7 receipt](readiness/exits/07-smooth-reference-kernel.json). H3.G0 is
+accepted and closed under the prospective
+[H3.G0 receipt](../h3-reference-study/carrier-acceptance.json); H3.0
+preregistration is the sole open gate, and H3.1--H3.7 remain closed until it
+freezes**. Last updated: 2026-08-24.
 
-This spec activates the prospective
+This accepted record implements the
 [Horizon 2 design](../../docs/design/fep-research-program/horizon-2-smooth-stochastic.md)
 under the shared [research contract](../../docs/design/fep-research-program/research-contract.md).
 The accepted [Horizon 1 record](../done/horizon-1-finite-synthesis/README.md)
@@ -12,12 +16,16 @@ is the immutable predecessor boundary.
 
 ## Next Agent Prompt
 
-Implement only the
-[`H2.7 smooth reference-kernel terminal merge`](slices/07-terminal-certificate.md)
-against the accepted H2.7-R0 density-relative VFE and local natural-gradient
-bridge. Keep one connected scalar carrier and a separate accepted Fin4 export;
-do not substitute event mass, EFE, physical energy, or an unshared predecessor
-conjunction. Optional H2.2b and all H3 work remain closed.
+Perform H3.0 only: freeze the formal/synthetic protocol for the continuous
+branch selected by accepted H3.G0 before any outcome inspection. H2 is frozen
+at exit receipt
+`5bbee4453542c5e59a9fdb1db50d41327b5f2e0ffeede3f87097611ff798190e`.
+Optional H2.2b remains unopened outside the accepted H2 exit. H3.1--H3.7 remain
+closed until H3.0 freezes; the absent canonical `data-capability.yaml` keeps
+H3.6E and causal claims blocked. `tests/test_h3_g0_carrier_acceptance.py` owns
+the closed G0 gate, while `tests/test_h3_preregistration.py` belongs exclusively
+to H3.0. The finite carrier remains fallback and negative-control evidence and
+requires an explicit reviewed H2 terminal no-go plus reviewed H3 DAG revision.
 
 Current checklist:
 
@@ -30,7 +38,7 @@ Current checklist:
 - [x] [H2.2a](slices/02a-coordinate-duality.md): required local coordinate
   duality and rank boundary.
 - [ ] [H2.2b](slices/02b-manifold-bundle.md): optional Mathlib manifold
-  packaging, accepted only if it reduces rather than duplicates structure.
+  packaging, deliberately unopened and excluded from the accepted H2 exit.
 - [x] [H2.3a](slices/03a-posterior-martingale.md): selected Gaussian posterior
   process and martingale limit.
 - [x] [H2.3b](slices/03b-identifiability-risk.md): identification, consistency,
@@ -59,18 +67,22 @@ Current checklist:
 - [x] [H2.7-R0](slices/07-r0-gaussian-vfe-natural-gradient.md): continuous
   density-relative VFE, exact-posterior gap, mean-coordinate natural gradient,
   and strict local descent proof gate.
-- [ ] [H2.7](slices/07-terminal-certificate.md): terminal scalar theorem,
-  separate four-coordinate export, and independent review quorum.
+- [x] [H2.7](slices/07-terminal-certificate.md): accepted terminal scalar
+  theorem, separate four-coordinate export, and independent review quorum;
+  see the [exit receipt](readiness/exits/07-smooth-reference-kernel.json).
 
-Before ending an H2 pass, update this section and [`HANDOFF.md`](HANDOFF.md)
-from live results. Keep Lean/Lake processes serialized.
+The accepted generated exit snapshot contains 52 maintained modules: 33
+foundations, 18 compositions, and one declaration-free aggregate, with 1,477
+theorem declarations. The exit receipt, rather than these human-readable
+counts, is the source-bound H2 closure authority.
 
 ## Outcome
 
 Horizon 2 lifts the reusable H1 interfaces to native measures and kernels on a
-single fixed-variance scalar Gaussian location/OU carrier. A distinct exact
-four-coordinate symmetric-precision Gaussian export is required before the H2
-exit so H3 never invents its continuous carrier after preregistration.
+single fixed-variance scalar Gaussian location/OU carrier. The distinct exact
+four-coordinate symmetric-precision Gaussian export was required and accepted
+before the H2 exit so H3 never invents its continuous carrier after
+preregistration.
 
 The terminal result is not an SDE solution, Itô theorem, Fokker--Planck
 solution, continuous-path thermodynamic law, global statistical-manifold
@@ -113,7 +125,7 @@ accepted H1
      -> {H2.1b, H2.2a, H2.3b, H2.4b,
          H2.5a, H2.5c, H2.5d, H2.6a, H2.6b, H2.6c,
          H2.7-R0} -> H2.7
-H2.7 -> H3.G0 read-only -> exactly one H3 branch
+H2.7 -> H3.G0 accepted continuous branch -> H3.0 preregistration open
 ```
 
 H2.3 parameter learning and H2.6 latent-state filtering remain separate. The
@@ -140,14 +152,14 @@ use the word posterior; they meet only in H2.7.
 H2.4a deliberately extends `native_blanket.lean`, the existing owner of
 `embeddedKernel`; it does not create a module. H2.0 and H3.G0 likewise own no
 formal resource. The H2.5b-R0, H2.5d-R0, and H2.6a-R0 proof gates likewise
-create only source-bound spike/decision evidence and no maintained module. If all required
-owners land, the manifest contains 32
-foundations, 18 compositions, and one declaration-free aggregate.
+create only source-bound spike/decision evidence and no maintained module. At
+the accepted H2 exit, the generated manifest contains 52 maintained modules:
+33 foundations, 18 compositions, and one declaration-free aggregate, with
+1,477 theorem declarations.
 
-H2.0 has frozen the pinned external API routes. Project direct imports remain
-provisional until a maintained slice starts; its slice file and manifest test
-then freeze the final source-true tuple, with no transitive or aspirational
-import retained.
+H2.0 froze the pinned external API routes. Each maintained slice file and
+manifest test freezes its final source-true project direct-import tuple, with no
+transitive or aspirational import retained.
 
 ## Scientific and architectural invariants
 
@@ -185,8 +197,9 @@ import retained.
   structures use native-specific names where ambiguity would hide provenance.
 - H2 resources remain outside the 155-topic roster. Capability/relation owners
   change only after a theorem is accepted, never merely because a spec opened.
-- H3.G0 reads accepted H1/H2 sources and evidence, selects exactly one branch,
-  and mutates no carrier or proof.
+- H3.G0 read accepted H1/H2 sources and evidence, selected the continuous
+  formal/synthetic branch, and mutated no carrier or proof. H3.0 is the sole
+  open gate.
 
 ## H2.0 risk barrier
 
@@ -229,14 +242,16 @@ with warning-free native compilation, an approved axiom probe, exact
 manifest/namespace/import/projection checks, and scientific review. Numerical
 diagnostics may consume exact theorem values but never replace proofs.
 
-H2.7-R0 first requires independent Lean, probability/information-geometry,
-and skeptical approvals for the continuous density-relative VFE and actual
-natural-gradient seam. H2.7 then requires three independent approvals: Lean,
-domain, and skeptical. Its
-terminal module must expose one connected scalar theorem and a separate formal
-four-coordinate export. If any solid predecessor is missing, H2.7 ships no
-positive terminal theorem; accepted predecessors and a blocked-merge record
-remain valid.
+H2.7-R0 received independent Lean, probability/information-geometry, and
+skeptical approvals for the continuous density-relative VFE and actual
+natural-gradient seam. H2.7 then received its Lean, domain, and skeptical
+approvals. The terminal module exposes one connected scalar theorem and a
+separate formal four-coordinate export across a public roster of 10 definitions
+and 30 theorems. The
+[exit receipt](readiness/exits/07-smooth-reference-kernel.json) binds the
+source, toolchain, imports, owner, projection, declaration census, focused
+12-test evidence, and review decisions. Its publication scope is H2 formal
+terminal acceptance only.
 
 GitNexus cannot currently index this nested checkout. Source/import/consumer
 tracing supplies the fallback evidence, so graph-completeness confidence is
@@ -247,6 +262,7 @@ directly verifiable.
 
 H2 is additive. It introduces no compatibility aliases, data migrations,
 preallocated topic identifiers, or alternate registries. Public H1 names and
-the v1.1.0 release snapshot remain unchanged. Opening H2 invalidates future
-current-source publication receipts once source lands; receipt regeneration is
-deferred until the final H2/H3 source freeze.
+the v1.1.0 release snapshot remain unchanged. The accepted post-v1.1.0 H2
+source invalidates the retained publication receipts' current-source binding;
+`FEP-EVIDENCE-CURRENT` and `FEP-FULL-155` remain open, and no publication claim
+is implied by the H2 exit receipt.

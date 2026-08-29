@@ -1,7 +1,9 @@
 # H2.7: smooth reference-kernel terminal merge
 
-Status: **closed pending H2.7-R0; all earlier solid predecessors are accepted,
-but the continuous VFE/natural-gradient seam is not yet proved**.
+Status: **accepted, with the source-bound exit receipt at
+`readiness/exits/07-smooth-reference-kernel.json` as the authoritative gate**.
+H2.7-R0 and every solid predecessor are accepted; the optional H2.2b package
+remains outside the terminal dependency closure.
 
 ## Outcome
 
@@ -35,8 +37,10 @@ One theorem must connect, by exact equalities on one selected model:
 - H2.3 distinct parameter-posterior convergence and bounded-continuous risk;
 - H2.1b/H2.2a coordinate-qualified Fisher/duality plus the derived H2.7-R0
   local natural-gradient descent theorem;
-- H2.6b finite filter-consuming action, connected to the accepted H1.2/H1.4
-  decision orientation without claiming EFE-optimal control;
+- H2.6b finite filter-consuming action on the same scalar Gaussian filter and
+  transition. H1.2/H1.4 remain must-stay-green decision-orientation
+  regressions, not direct continuous-carrier owners; no EFE-optimal control is
+  claimed;
 - H2.6c finite-grid path law; and
 - native KL nonincrease under the same transition and invariant reference.
 
