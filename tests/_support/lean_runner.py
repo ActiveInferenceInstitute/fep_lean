@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 import signal
 import subprocess
+import threading
 from pathlib import Path
 
 __all__ = ["run_lean_probe"]
@@ -42,13 +43,35 @@ def run_lean_probe(
         text=True,
         start_new_session=True,
     )
+    # Backstop watchdog: kill the whole process group if ``timeout_s`` elapses,
+    # even when the caller dies first (e.g. pytest-timeout terminates the test
+    # thread without running our ``except`` block). Without this, timed-out
+    # lean grandchildren survive as PPID=1 orphans, hold gigabytes, and wedge
+    # every later compile on the machine.
+    timed_out = threading.Event()
+
+    def _watchdog() -> None:
+        if not timed_out.wait(timeout_s):
+            return
+        try:
+            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+
+    watchdog = threading.Thread(target=_watchdog, daemon=True)
+    watchdog.start()
     try:
-        stdout, stderr = process.communicate(timeout=timeout_s)
+        stdout, stderr = process.communicate(timeout=timeout_s + 60)
     except subprocess.TimeoutExpired:
-        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+        timed_out.set()
+        try:
+            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+        except ProcessLookupError:
+            pass
         try:
             process.communicate(timeout=30)
         except Exception:
             pass
         raise
+    timed_out.set()
     return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
