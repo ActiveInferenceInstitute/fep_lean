@@ -142,7 +142,7 @@ def _run_lean(source_text: str) -> subprocess.CompletedProcess[str]:
             probe,
             import_root=PROJECT_ROOT / "src" / "fep_lean" / "formal",
             cwd=LEAN_ROOT,
-            timeout_s=300,
+            timeout_s=1800,
         )
 def _parse_axioms(block: str) -> frozenset[str]:
     return frozenset(

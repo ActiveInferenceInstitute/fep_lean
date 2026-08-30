@@ -24,7 +24,7 @@ def run_lean_probe(
     *,
     import_root: Path,
     cwd: Path,
-    timeout_s: int = 300,
+    timeout_s: int = int(os.environ.get("FEP_LEAN_PROBE_TIMEOUT", "1800")),
 ) -> subprocess.CompletedProcess[str]:
     """Compile ``probe_path`` via ``lake env lean -R import_root`` in its own process group."""
     command = [

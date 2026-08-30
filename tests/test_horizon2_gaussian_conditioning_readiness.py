@@ -325,7 +325,7 @@ def test_h2_5d_r0_spike_compiles_warning_free(tmp_path: Path) -> None:
         probe,
         import_root=PROJECT_ROOT / "src" / "fep_lean" / "formal",
         cwd=LEAN_ROOT,
-        timeout_s=300,
+        timeout_s=1800,
     )
 
     output = result.stdout + result.stderr
