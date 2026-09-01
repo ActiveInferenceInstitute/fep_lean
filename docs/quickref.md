@@ -7,6 +7,7 @@ uv run fep-lean setup
 uv run fep-lean verify
 uv run python scripts/audit_formalisms.py \
   --receipt output/formalism-audit.json
+uv run python scripts/_maint_build_lean_landscape.py --check
 uv run fep-lean atlas --check
 uv run fep-lean dashboard --check
 uv run fep-lean preflight

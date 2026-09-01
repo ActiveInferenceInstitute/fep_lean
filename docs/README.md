@@ -11,6 +11,7 @@
 - [CLI reference](cli-reference.md) — canonical command surface.
 - [Configuration](configuration.md) — settings and environment overrides.
 - [Lean 4](lean4.md) — pinned workspace and aggregate generation.
+- [Lean landscape](lean-landscape.md) — generated dependency-ordered map of the formal modules.
 - [Hermes](hermes.md) — HTTP client, cache, retries, and response validation.
 - [OpenGauss](opengauss.md) — SQLite state and artifact persistence.
 - [Testing](testing.md) — local and CI validation.
