@@ -16,6 +16,7 @@ Required release gates are:
 uv run python scripts/_maint_build_topics_catalogue.py --check
 uv run python scripts/_maint_build_fep_all_lean.py --check
 uv run python scripts/_maint_build_formal_modules.py --check
+uv run python scripts/_maint_build_lean_landscape.py --check
 uv run python scripts/theorem_maturity_audit.py --check
 uv run python scripts/build_formalism_coverage.py --check
 uv run fep-lean atlas --check
