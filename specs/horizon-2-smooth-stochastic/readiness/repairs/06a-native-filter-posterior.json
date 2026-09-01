@@ -167,6 +167,6 @@
     "src/fep_lean/formal/scalar_gaussian_semigroup.lean": "d99665db1366fd8cfa58c43313fb85fc81f68d36eb70a768b26d4c2f9570a05e",
     "specs/horizon-2-smooth-stochastic/slices/06a-r0-native-posterior.md": "a315c5a2ac630e26d59ea2eade17d384597c6fb4811f5a287309f41fd4022b7e",
     "specs/horizon-2-smooth-stochastic/spikes/06a_native_filter_posterior.lean": "cd9bf8532d7748283f39148c3d80cea4ba49a276a69f21e7404d9fdb4c3e81d5",
-    "tests/test_horizon2_native_filter_posterior_readiness.py": "8d88a2130710a00e3f6fda2a5a051e288600d225ffd7a8f5e6de0372c0bb545d"
+    "tests/test_horizon2_native_filter_posterior_readiness.py": "3f19b9bb87e5ee58cf38128702665d4f7be717c476c54c6b648ff4cb52775a49"
   }
 }

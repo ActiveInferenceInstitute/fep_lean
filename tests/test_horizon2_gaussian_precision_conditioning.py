@@ -11,10 +11,9 @@ from pathlib import Path
 
 import pytest
 
-from tests._support.lean_runner import run_lean_probe
-
 from fep_lean.formal import formal_projection_pairs, render_formal_aggregate
 from fep_lean.formal.manifest import FORMAL_MODULES, FormalModuleRole
+from tests._support.lean_runner import run_lean_probe
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LEAN_ROOT = PROJECT_ROOT / "lean"
@@ -117,15 +116,15 @@ PUBLIC_ENVIRONMENT_DECLARATIONS = frozenset(
     )
 )
 ALLOWED_AXIOMS = frozenset({"propext", "Classical.choice", "Quot.sound"})
-R0_REPAIR_SHA256 = "a3ad0324d2ede27096d4c1b39da6d82dce3316dc6bb8d495730af731bbfe99c8"
-R0_LIFECYCLE_SHA256 = "ce4eb45adb36de4055754947e292cc85b54a0cbfc68e03c021560142cb448d5d"
+R0_REPAIR_SHA256 = "a7092b45672616fbb88144683ab99c0d29d29819459825c8f1740b4360573d5f"
+R0_LIFECYCLE_SHA256 = "64e5abcfe7cbcaf5f5164378e65a230e8dd13904c3f1462aa4b73678338270d6"
 ORIGINAL_R0_TEST_SHA256 = (
     "0e7606ed93161751c945f459cd33aeed90a4829c4f886ba04461a909e9b8326f"
 )
 PRESERVED_HASHES = {
     H2_5C_SOURCE: "d8d15d0abdfe6eb53c9e1b94d6f1e90a076e97c9507a3532021aea090deb630b",
     R0_SPIKE: "551bcf412f037f0a1f4a5ca180b244074c3df910a6c502d8eaef8eed402a6df8",
-    R0_TEST: "e5345257132111b9fa6231bda28989061f8a8f0cf2d0963b50b52734ce6b6da9",
+    R0_TEST: "16562762a0c0a8fc06bde2858b26a5b0526164fcfe91c3d56ae39b4fe7b42ade",
 }
 
 pytestmark = pytest.mark.serial_lean

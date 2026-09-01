@@ -10,6 +10,7 @@ group on timeout closes that leak (fep-tests HANDOFF, 2026-08-28/29).
 
 from __future__ import annotations
 
+import contextlib
 import os
 import signal
 import subprocess
@@ -53,10 +54,8 @@ def run_lean_probe(
     def _watchdog() -> None:
         if not timed_out.wait(timeout_s):
             return
-        try:
+        with contextlib.suppress(ProcessLookupError):
             os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-        except ProcessLookupError:
-            pass
 
     watchdog = threading.Thread(target=_watchdog, daemon=True)
     watchdog.start()
@@ -64,14 +63,10 @@ def run_lean_probe(
         stdout, stderr = process.communicate(timeout=timeout_s + 60)
     except subprocess.TimeoutExpired:
         timed_out.set()
-        try:
+        with contextlib.suppress(ProcessLookupError):
             os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             process.communicate(timeout=30)
-        except Exception:
-            pass
         raise
     timed_out.set()
     return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)

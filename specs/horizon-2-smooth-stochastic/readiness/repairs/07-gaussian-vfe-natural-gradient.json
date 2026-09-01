@@ -92,7 +92,7 @@
     "independent_skeptical_claim_scope": "approved_fail_closed_source_bound_contract",
     "reviewed_spike_sha256": "40a7bfd1e00f593c1bdab0f2872e8abbc140e68de61253508f1e32b1eed464c5",
     "reviewed_slice_sha256": "3b41191f2a26c55ddad5eeb21982c145d814be259264330f97ca3ce731e802f7",
-    "reviewed_pre_receipt_test_sha256": "8193d9a254f1622158a6309ac95351b12a20835a941c4c38027236aece4c096e",
+    "reviewed_pre_receipt_test_sha256": "6d96b39290a822337d64cfde7c0f4a6b7a7c85c84e255fea71f0316e107b8ed8",
     "review_scope": "Lean API and proof surface; Gaussian information geometry and claim scope; fail-closed source, owner, projection, toolchain, receipt, and downstream boundaries",
     "code_review": "clean_no_stale_owner_or_stored_certificate",
     "choice_audit": "approved_no_hidden_substitution_or_scope_expansion",
@@ -134,6 +134,6 @@
     "lean/FepSketches/compositions/gaussian_filter.lean": "2b0ec699ab07e19800fb978157721e82420b650478479368aa3c4a7878ea156e",
     "specs/horizon-2-smooth-stochastic/slices/07-r0-gaussian-vfe-natural-gradient.md": "3b41191f2a26c55ddad5eeb21982c145d814be259264330f97ca3ce731e802f7",
     "specs/horizon-2-smooth-stochastic/spikes/07_gaussian_vfe_natural_gradient.lean": "40a7bfd1e00f593c1bdab0f2872e8abbc140e68de61253508f1e32b1eed464c5",
-    "tests/test_horizon2_gaussian_vfe_readiness.py": "8193d9a254f1622158a6309ac95351b12a20835a941c4c38027236aece4c096e"
+    "tests/test_horizon2_gaussian_vfe_readiness.py": "6d96b39290a822337d64cfde7c0f4a6b7a7c85c84e255fea71f0316e107b8ed8"
   }
 }
