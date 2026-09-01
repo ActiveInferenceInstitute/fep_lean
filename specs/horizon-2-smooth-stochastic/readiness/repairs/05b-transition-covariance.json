@@ -126,6 +126,6 @@
     "src/fep_lean/formal/scalar_gaussian_semigroup.lean": "d99665db1366fd8cfa58c43313fb85fc81f68d36eb70a768b26d4c2f9570a05e",
     "specs/horizon-2-smooth-stochastic/slices/05b-r0-transition-covariance.md": "d68e4651aa7e9d5eb86e9e3a8852a167e5e6fd01c5a80c57e719a8031bd39ca5",
     "specs/horizon-2-smooth-stochastic/spikes/05b_transition_covariance.lean": "6dbf96396535587a02fbbe95a24f1f0a35609d1ed8d26389cb5385765e62674f",
-    "tests/test_horizon2_transition_covariance_readiness.py": "caa326e85b2a812b222845f08fe7cccd168ccedff157ae3d800a21053489eb2f"
+    "tests/test_horizon2_transition_covariance_readiness.py": "150b0593e56847c55c4b896dd4b5c1af8246cf87c2f39f70800dc2930811bee4"
   }
 }
