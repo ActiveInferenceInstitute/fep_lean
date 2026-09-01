@@ -11,8 +11,6 @@ Covers gaps found in the fep-tests coverage audit (2026-08-28):
 
 from __future__ import annotations
 
-import json
-import os
 from pathlib import Path
 
 import pytest
@@ -33,11 +31,19 @@ LEAN_DIR = PROJ / "lean"
 
 
 def test_has_sorry_ignores_line_comments() -> None:
-    assert verifier_module._has_sorry("-- sorry in a comment\ntheorem t : True := trivial") is False
+    assert (
+        verifier_module._has_sorry("-- sorry in a comment\ntheorem t : True := trivial")
+        is False
+    )
 
 
 def test_has_sorry_ignores_block_comments() -> None:
-    assert verifier_module._has_sorry("/- sorry inside block -/\ntheorem t : True := trivial") is False
+    assert (
+        verifier_module._has_sorry(
+            "/- sorry inside block -/\ntheorem t : True := trivial"
+        )
+        is False
+    )
 
 
 def test_has_sorry_detects_real_sorry() -> None:

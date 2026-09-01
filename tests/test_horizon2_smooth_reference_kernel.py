@@ -11,10 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from tests._support.lean_runner import run_lean_probe
-
 from fep_lean.formal.manifest import FORMAL_MODULES, FormalModuleRole
-
+from tests._support.lean_runner import run_lean_probe
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LEAN_ROOT = PROJECT_ROOT / "lean"
@@ -144,6 +142,8 @@ def _run_lean(source_text: str) -> subprocess.CompletedProcess[str]:
             cwd=LEAN_ROOT,
             timeout_s=1800,
         )
+
+
 def _parse_axioms(block: str) -> frozenset[str]:
     return frozenset(
         token.strip().strip("'")
@@ -175,9 +175,7 @@ def _axiom_reports(output: str) -> dict[str, frozenset[str]]:
 
 def _namespace_names(output: str) -> frozenset[str]:
     prefix = re.escape(f"{NAMESPACE}.")
-    return frozenset(
-        re.findall(rf"(?m)^{prefix}([A-Za-z_][A-Za-z0-9_']*)\b", output)
-    )
+    return frozenset(re.findall(rf"(?m)^{prefix}([A-Za-z_][A-Za-z0-9_']*)\b", output))
 
 
 def test_h2_7_owns_one_terminal_composition_leaf() -> None:
@@ -191,13 +189,9 @@ def test_h2_7_owns_one_terminal_composition_leaf() -> None:
 def test_h2_7_public_surface_is_exact_and_has_no_stored_certificate() -> None:
     source = _without_lean_comments(SOURCE.read_text(encoding="utf-8"))
     definitions = tuple(
-        re.findall(
-            r"(?m)^(?:noncomputable )?def ([A-Za-z_][A-Za-z0-9_']*)\b", source
-        )
+        re.findall(r"(?m)^(?:noncomputable )?def ([A-Za-z_][A-Za-z0-9_']*)\b", source)
     )
-    theorems = tuple(
-        re.findall(r"(?m)^theorem ([A-Za-z_][A-Za-z0-9_']*)\b", source)
-    )
+    theorems = tuple(re.findall(r"(?m)^theorem ([A-Za-z_][A-Za-z0-9_']*)\b", source))
     assert definitions == PUBLIC_DEFINITIONS
     assert theorems == PUBLIC_THEOREMS
     assert not re.search(
@@ -298,7 +292,9 @@ def test_h2_7_is_manifested_projected_and_aggregated_exactly_once() -> None:
     assert owner.declaration_namespace == NAMESPACE
     assert PROJECTION.read_bytes() == SOURCE.read_bytes()
     expected_import = "import FepSketches.compositions.smooth_reference_kernel"
-    assert AGGREGATE.read_text(encoding="utf-8").splitlines().count(expected_import) == 1
+    assert (
+        AGGREGATE.read_text(encoding="utf-8").splitlines().count(expected_import) == 1
+    )
     assert WORKSPACE_AGGREGATE.read_bytes() == AGGREGATE.read_bytes()
 
 

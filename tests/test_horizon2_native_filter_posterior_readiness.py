@@ -6,15 +6,12 @@ import hashlib
 import json
 import re
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
 
-from tests._support.lean_runner import run_lean_probe
-
-
 from fep_lean.formal.manifest import FORMAL_MODULES
+from tests._support.lean_runner import run_lean_probe
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LEAN_ROOT = PROJECT_ROOT / "lean"
