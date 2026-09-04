@@ -1,6 +1,9 @@
 # GNN bridge P3 certificate protocol
 
-Status: **active; P3 in progress — protocol defined, run pending**. This
+Status: **complete; P3 verified** — protocol defined, custody run executed,
+C1/C2 pass within tolerance, C3 boundary and O1 divergence filed, and the
+whole protocol independently re-verified 2026-09-04 (REPORT.md,
+"Verification (2026-09-04)"). This
 slice implements Phase P3 of the
 [GNN bridge program](../../docs/design/gnn-bridge/README.md) under the
 [bridge contract](../../docs/design/gnn-bridge/bridge-contract.md)
