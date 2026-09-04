@@ -148,16 +148,18 @@ Blanket structure and the ontology bindings `s=HiddenState`, `o=Observation`,
       ([report](../../../specs/gnn-bridge-p1-finite-spike/REPORT.md)).
 - [x] P3 — certificate protocol run on the P1 instance: C1
       (policy posterior, |Δtrue| = 5.96e-08) and C2 (VFE vs `log 2`,
-      |Δ| = 1.91e-09) pass within 1e-6, each with both evidence planes
-      labeled; C3 recorded as a conditional boundary; O1 cross-convention
-      EFE divergence (pymdp 0.5 vs Lean `log 2`) filed as a finding with
-      exact numbers
-      ([report](../../../specs/gnn-bridge-p3-certificates/REPORT.md)).
 - [x] P4 — closed at the extraction boundary: `F = e^{-1}`,
       `Q = 1 − e^{-2}` are transcendental and the contract's fixed
       rounding policy admits terminating decimals only; documented no-go
       with a recorded unblock path (owner-level rounding extension)
       ([report](../../../specs/gnn-bridge-p4-continuous-spike/REPORT.md)).
+      **Superseded by P4b** — contract v0.2 (float64 rounding extension
+      for non-terminating exact reals) reopened the phase; the scalar-OU
+      instance emitted, strict-validated, rendered on all five
+      continuous-capable backends, and executed on four (pytorch
+      skipped: torch absent), with the four discrete-only backends
+      honestly reporting `unsupported`
+      ([P4b report](../../../specs/gnn-bridge-p4b-continuous-emission/REPORT.md)).
 - [x] Q1 — GNN document AST and decidable well-formedness:
       `src/fep_lean/formal/gnn_document.lean` (`FEP.GnnDocument`),
       warning-free, no `sorry`, Init-only, manifest-registered; both
