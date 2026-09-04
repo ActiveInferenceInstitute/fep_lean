@@ -1,0 +1,36 @@
+{
+  "results_path": "/Users/hum/Documents/GitHub/HumOS/projects/outside_of_hum/fep_lean/specs/gnn-bridge-p3-certificates/gnn_output/12_execute_output/FepLeanSymmetricBool/pymdp/simulation_data/simulation_results.json",
+  "tolerance": 1e-06,
+  "all_certificates_pass": true,
+  "certificates": [
+    {
+      "certificate": "C1",
+      "passed": true,
+      "lean_value": "Q = (0.25, 0.75) exact",
+      "executed_value": "policy_posterior[0] = (0.25, 0.7500000596046448)",
+      "delta": "|dfalse| = 0.000e+00, |dtrue| = 5.960e-08",
+      "lean_evidence_plane": "native Lean compilation (pinned workspace) + numerical witness",
+      "executed_evidence_plane": "GNN pipeline execution",
+      "detail": "Lean equality Q(pi)=prior (:816-826) vs pymdp infer_policies posterior; argmax executed = true"
+    },
+    {
+      "certificate": "C2",
+      "passed": true,
+      "lean_value": "VFE_initial = log 2 = 0.6931471805599453",
+      "executed_value": "variational_free_energy[0] = 0.6931471824645996",
+      "delta": "|d| = 1.905e-09",
+      "lean_evidence_plane": "native Lean compilation (pinned workspace) + numerical witness",
+      "executed_evidence_plane": "GNN pipeline execution",
+      "detail": "Lean VFE on initial belief (closed form, README C2) vs pymdp infer_states VFE"
+    }
+  ],
+  "observations": [
+    {
+      "id": "O1",
+      "lean_value": "expectedFreeEnergy = log 2 = 0.6931471805599453 (active_inference.lean:148-150, :789-812)",
+      "executed_value": "expected_free_energy[0] = 0.5 (pymdp neg_efe, linear utility, pymdp/control.py:422-445)",
+      "delta": "0.193147",
+      "note": "different C conventions across the bridge surface; filed, not smoothed over (README O1)"
+    }
+  ]
+}
