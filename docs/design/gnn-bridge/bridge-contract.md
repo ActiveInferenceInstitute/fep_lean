@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| Version | 0.1 (draft) |
-| Date | 2026-09-03 |
+| Version | 0.2 |
+| Date | 2026-09-04 |
 | Canonical copy | this file, `fep_lean/docs/design/gnn-bridge/bridge-contract.md` |
 | Mirror copy | `GeneralizedNotationNotation/doc/other/fep_lean/bridge-contract.md` |
 | Change rule | substance changes bump the version and land in both checkouts in the same working session |
@@ -140,7 +140,7 @@ proved property.
 | --- | --- |
 | A field of the GNN document cannot be derived deterministically from the named Lean definition | stop; narrow the extraction contract; never hand-fit the document |
 | Syntax surface drift in `doc/gnn/gnn_syntax.md` | freeze the pinned version per slice; re-freeze explicitly before extending |
-| Numeric rounding of exact Lean values | rounding policy fixed once in this contract's first slice; the digest of the exact source is recorded in provenance |
+| Numeric rounding of exact Lean values — terminating decimals emit exactly; non-terminating exact Lean reals emit as float64 (shortest round-trip repr), with the exact formula recorded verbatim in provenance, and consumers treat the float as an approximation, never as the Lean value | rounding policy fixed once in this contract's first slice and extended by v0.2; the digest of the exact source is recorded in provenance |
 | A projected model exceeds a backend (e.g. continuous model on a categorical-only renderer) | report `unsupported`; never distort the model |
 | A desired ontology binding is absent from the GNN canonical vocabulary | either use existing terms or open an explicit vocabulary-extension request on the GNN side; never emit bindings that fail step 10 |
 | Contract edit without the mirror edit | revert until both land |
