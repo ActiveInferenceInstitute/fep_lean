@@ -123,7 +123,32 @@ def audit_citations(project_root: Path = PROJECT_ROOT) -> tuple[str, ...]:
                 errors.append(
                     f"{key}: {field} must be {value!r}, found {entry.fields.get(field)!r}"
                 )
+    errors.extend(audit_citation_cff_version(root))
     return tuple(errors)
+
+
+def audit_citation_cff_version(project_root: Path) -> tuple[str, ...]:
+    """Fail when CITATION.cff version drifts from pyproject metadata."""
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
+        return ()
+
+    metadata = tomllib.loads(
+        (Path(project_root) / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    package_version = str(metadata["project"]["version"])
+    cff_text = (Path(project_root) / "CITATION.cff").read_text(encoding="utf-8")
+    match = re.search(r'(?m)^version:\s*"?(?P<version>[^"\s]+)"?\s*$', cff_text)
+    if match is None:
+        return ("CITATION.cff does not declare a version",)
+    if match.group("version") != package_version:
+        message = (
+            f"CITATION.cff version {match.group('version')!r} "
+            f"!= pyproject version {package_version!r}"
+        )
+        return (message,)
+    return ()
 
 
 def main(argv: list[str] | None = None) -> int:

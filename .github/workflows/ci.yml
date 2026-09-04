@@ -1,8 +1,7 @@
 name: fep_lean
 
-on:
-  push:
-  pull_request:
+permissions:
+  contents: read
 
 jobs:
   python:
@@ -21,6 +20,7 @@ jobs:
           uv run python scripts/_maint_build_formal_modules.py --check
           uv run python scripts/theorem_maturity_audit.py --check
           uv run python scripts/build_formalism_coverage.py --check
+          uv run python scripts/_maint_build_lean_landscape.py --check
           uv run python scripts/build_formalism_atlas.py --check
           uv run python scripts/build_formal_kernel_dashboard.py --check
       - name: Generate and validate publication inputs

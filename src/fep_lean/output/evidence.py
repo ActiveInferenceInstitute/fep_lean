@@ -468,9 +468,11 @@ def latest_claim_ready_full_report(
         "config_digest": report_config_digest(root),
         "catalogue_sources_sha256": catalogue_sources_digest(root),
     }
+    # run_id directory names embed microsecond timestamps, so name order is
+    # the deterministic recency order; mtime is environment-dependent.
     summary_paths = sorted(
         reports.glob("*/summary.json"),
-        key=lambda path: path.stat().st_mtime,
+        key=lambda path: path.parent.name,
         reverse=True,
     )
     for summary_path in summary_paths:

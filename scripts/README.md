@@ -16,6 +16,7 @@ projections after editing those sources:
 
 ```bash
 uv run python scripts/_maint_build_topics_catalogue.py
+uv run python scripts/_maint_build_lean_landscape.py
 uv run python scripts/_maint_build_fep_all_lean.py
 uv run python scripts/_maint_build_formal_modules.py
 uv run python scripts/theorem_maturity_audit.py --write

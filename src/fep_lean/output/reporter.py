@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import hashlib
 import json
 import logging
@@ -54,6 +55,12 @@ _REQUIRED_REPORT_ARTIFACTS = frozenset(
 )
 
 log = logging.getLogger(__name__)
+
+
+def _default_run_id() -> str:
+    """Timestamped run identifier; names report directories, never digests."""
+    stamp = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+    return f"run_{stamp}"
 
 
 def _toolchain_snapshot(
@@ -1531,10 +1538,7 @@ class Reporter:
             else self.project_root / "output"
         )
         self.reports_dir = self.output_root / "reports"
-        self.run_id = (
-            run_id
-            or f"run_{__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
-        )
+        self.run_id = run_id or _default_run_id()
 
     @staticmethod
     def build_verification_manifest(results: Iterable[Any]) -> dict[str, Any]:

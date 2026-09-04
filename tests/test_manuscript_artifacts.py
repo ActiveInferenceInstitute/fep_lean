@@ -415,7 +415,10 @@ def test_latest_verification_manifest_rejects_unvalidated_runs(tmp_path: Path) -
     import os
     import time
 
-    os.utime(incomplete / "summary.json", (time.time() + 10, time.time() + 10))
+    # One clock read for both stamps: separate time.time() calls could
+    # straddle an NTP step or coarse-FS-timestamp boundary and flip ordering.
+    now = time.time()
+    os.utime(incomplete / "summary.json", (now + 1, now + 1))
     assert _get_latest_verification_manifest(tmp_path) is None
 
 

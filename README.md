@@ -215,6 +215,7 @@ uv run python scripts/_maint_build_fep_all_lean.py --check
 uv run python scripts/_maint_build_formal_modules.py --check
 uv run python scripts/theorem_maturity_audit.py --check
 uv run python scripts/build_formalism_coverage.py --check
+uv run python scripts/_maint_build_lean_landscape.py --check
 uv run fep-lean atlas --check
 uv run fep-lean dashboard --check
 uv run python scripts/audit_formalisms.py \
@@ -232,10 +233,11 @@ uv run python docs/pin_audit.py
 uv run python docs/xref_audit.py
 ```
 
-The reproducible build and publication gates are documented in
-[`docs/getting-started.md`](docs/getting-started.md),
-[`docs/pipeline.md`](docs/pipeline.md), and
-[`docs/cold-start-and-cleanup.md`](docs/cold-start-and-cleanup.md).
+The reproducible build and publication gates (release-bundle determinism,
+browser acceptance capture, receipt validation) are documented in
+[`HANDOFF.md`](HANDOFF.md); setup and pipeline gates live in
+[`docs/getting-started.md`](docs/getting-started.md) and
+[`docs/pipeline.md`](docs/pipeline.md).
 
 ## Layout
 

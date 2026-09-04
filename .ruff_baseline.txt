@@ -3,8 +3,8 @@
 # Policy: docs/quality.md
 
 This file records the current Ruff finding count for reproducibility.
-Steps 2–4 of the staged debt plan will reduce this to zero.
+The staged debt plan is complete; docs/quality.md owns the current policy.
 
 Count: 0
-Version: ruff 0.16.1
+Version: ruff 0.16.1 (stability guaranteed by uv.lock)
 Date: 2026-07-31

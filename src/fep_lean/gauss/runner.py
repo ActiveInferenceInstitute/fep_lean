@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any
 from typing_extensions import Self
 
 from fep_lean.gauss.cli import check_gauss_cli
-from fep_lean.gauss.client import OpenGaussClient
+from fep_lean.gauss.client import OpenGaussClient, resolve_gauss_home
 from fep_lean.llm.hermes import (
     HermesConfig,
     HermesExplainer,
@@ -897,21 +897,8 @@ class GaussRunner:
 
         lean = LeanVerifier(project_root / "lean", project_root)
         hermes = HermesExplainer(HermesConfig.from_settings(project_root))
-        gauss_home: str | Path | None = os.environ.get("GAUSS_HOME")
-        if not gauss_home:
-            try:
-                import yaml
-
-                settings = (
-                    yaml.safe_load(
-                        (project_root / "config" / "settings.yaml").read_text(
-                            encoding="utf-8"
-                        )
-                    )
-                    or {}
-                )
-                gauss_home = settings.get("gauss", {}).get("home")
-            except (OSError, yaml.YAMLError, AttributeError):
-                gauss_home = None
+        # Same resolution order the preflight validation uses, so the run
+        # never writes to a directory validation did not check.
+        gauss_home: str | Path | None = resolve_gauss_home(project_root)
         client = OpenGaussClient(gauss_home=gauss_home)
         return cls(lean, hermes, client, project_root)

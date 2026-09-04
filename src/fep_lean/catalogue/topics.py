@@ -297,7 +297,11 @@ class FEPTopicCatalogue:
         for t in self._topics:
             areas[t.area] = areas.get(t.area, 0) + 1
             family_counts[t.family] = family_counts.get(t.family, 0) + 1
-            st = t.mathlib_status if t.mathlib_status in maturity_totals else "partial"
+            st = t.mathlib_status
+            if st not in maturity_totals:
+                raise CatalogueValidationError(
+                    f"{t.id}: unsupported mathlib_status {st!r}"
+                )
             maturity_totals[st] = maturity_totals.get(st, 0) + 1
             if t.area not in area_maturity:
                 area_maturity[t.area] = {k: 0 for k in _MATURITY_ORDER}
@@ -333,7 +337,7 @@ def _validate_body_source_parity(
     topics: list[TopicEntry], expected_ids: tuple[str, ...]
 ) -> None:
     """Ensure generated YAML bodies exactly match the packaged authoring registry."""
-    from .registry import BODIES, assert_roster
+    from .registry import BODIES, LATEX_EQUATIONS, assert_roster
 
     assert_roster(expected_ids)
     for topic in topics:
@@ -345,4 +349,9 @@ def _validate_body_source_parity(
         if source != topic.lean_sketch:
             raise CatalogueValidationError(
                 f"{topic.id}: YAML lean_sketch differs from fep_lean.catalogue.registry"
+            )
+        if tuple(LATEX_EQUATIONS.get(topic.id, ())) != topic.latex_equations:
+            raise CatalogueValidationError(
+                f"{topic.id}: YAML latex_equations differ from "
+                "fep_lean.catalogue.registry"
             )

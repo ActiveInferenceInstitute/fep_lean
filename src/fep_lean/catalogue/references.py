@@ -46,7 +46,10 @@ def unresolved_manuscript_references(
     for path in sorted(Path(manuscript_dir).glob("*.md")):
         if path.name in _EXCLUDED_MANUSCRIPT_FILES:
             continue
-        text = _FENCE_RE.sub("", path.read_text(encoding="utf-8"))
+        text = _FENCE_RE.sub(
+            lambda match: "\n" * match.group(0).count("\n"),
+            path.read_text(encoding="utf-8"),
+        )
         for line_number, line in enumerate(text.splitlines(), 1):
             for reference in _REFERENCE_RE.findall(line):
                 if reference not in known:

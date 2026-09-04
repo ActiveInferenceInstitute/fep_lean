@@ -7,6 +7,8 @@ mode reproducible and safe to run in a clean checkout.
 
 from __future__ import annotations
 
+import os
+import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -23,7 +25,16 @@ from fep_lean.catalogue.topics import FEPTopicCatalogue
 def _save(fig: Figure, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
-    fig.savefig(path, dpi=150, format="png", metadata={"Software": "fep_lean"})
+    # Render to a temporary file and atomically replace the canonical path so
+    # a crash mid-encode cannot leave a torn PNG for downstream consumers.
+    fd, raw_path = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    os.close(fd)
+    try:
+        fig.savefig(raw_path, dpi=150, format="png", metadata={"Software": "fep_lean"})
+        os.replace(raw_path, path)
+    finally:
+        if os.path.exists(raw_path):
+            os.unlink(raw_path)
     plt.close(fig)
     return path
 
@@ -74,7 +85,7 @@ def _write_maturity_heatmap(
     return _save(fig, out)
 
 
-def _write_sorry_distribution(values: Mapping[str, int], out: Path) -> Path:
+def _write_status_distribution(values: Mapping[str, int], out: Path) -> Path:
     labels = [k for k, v in values.items() if int(v) > 0]
     nums = [int(values[k]) for k in labels]
     fig, ax = plt.subplots(figsize=(5.2, 4.4))
@@ -150,7 +161,9 @@ def write_all_catalogue_figures(
             show_pct=True,
         ),
         _write_maturity_heatmap(summary["area_maturity"], out / "area_maturity.png"),
-        _write_sorry_distribution(summary["maturity"], out / "status_distribution.png"),
+        _write_status_distribution(
+            summary["maturity"], out / "status_distribution.png"
+        ),
         _write_pipeline_dag(out / "pipeline_dag.png"),
         _write_sequence_diagram(out / "execution_sequence.png"),
         _write_bar_chart(

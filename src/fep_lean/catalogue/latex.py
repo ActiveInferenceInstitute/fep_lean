@@ -349,12 +349,6 @@ def _convert_lean_expr(s: str) -> str:
     t = re.sub(r"(?<![A-Za-z])Unit(?![A-Za-z])", r"\\mathsf{Unit}", t)
     t = re.sub(r"(?<![A-Za-z])Real(?![A-Za-z])", r"\\mathbb{R}", t)
     t = re.sub(r"(?<![A-Za-z])Nat(?![A-Za-z])", r"\\mathbb{N}", t)
-    t = t.replace("f∘g", r"f\circ g")
-    t = t.replace("T⁻¹", r"T^{-1}")
-    t = t.replace("f⁻¹", r"f^{-1}")
-    t = t.replace("π_A", r"\pi_A")
-    t = t.replace("π_1", r"\pi_1")
-    t = t.replace("π_2", r"\pi_2")
     t = re.sub(r"(?<![A-Za-z])id(?![A-Za-z])", r"\\mathsf{id}", t)
     t = re.sub(r"(?<![A-Za-z])log(?![A-Za-z])", r"\\log", t, flags=re.IGNORECASE)
     t = re.sub(r"(?<![A-Za-z])ln(?![A-Za-z])", r"\\ln", t, flags=re.IGNORECASE)
@@ -562,8 +556,9 @@ def build_theorem_latex(
                 raise ValueError(f"duplicate theorem LaTeX key: {key!r}")
             stmt = _extract_theorem_stmt(code, name)
             if not stmt:
-                out[key] = r"\mathsf{?}"
-                continue
+                raise ValueError(
+                    f"{topic_id}: cannot extract statement for theorem {name}"
+                )
             b, g = _split_binders_and_goal(stmt)
             out[key] = _one_theorem_latex(vblock, b, g, with_ctx=bool(vblock.strip()))
     return out

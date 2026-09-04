@@ -1,6 +1,59 @@
-# Changelog
-
 ## Unreleased — connected Horizon research program
+
+- Hardened every production Lean/Lake probe against orphaned-grandchild
+  timeouts: new `src/fep_lean/verification/_subprocess.py` runs each external
+  probe in its own process group with a watchdog `SIGKILL` of the whole group
+  on deadline (mirroring the test-suite's `run_lean_probe`), wired into the
+  verifier compile probe, the declaration/axiom audit probes, and the `setup`
+  bootstrap/lake commands. A wedged `lean`/`elan` grandchild can no longer
+  hold the pipes and the `.olean` lock region past the advertised deadline.
+- Made the theorem LaTeX projection fail closed: an unextractable statement
+  raises instead of silently emitting a `\mathsf{?}` placeholder into the
+  generated appendix.
+- Extended generated-catalogue parity: `from_yaml` now also asserts
+  `latex_equations` against `registry.LATEX_EQUATIONS`, matching the existing
+  `lean_sketch` contract, wherever the catalogue is loaded (including wheels).
+- Extended the coverage join to fail closed when a `theorem_maturity.yaml`
+  primary/supporting/boundary reference is not a resolvable formal
+  declaration (qualified namespace form).
+- Preserved line numbers when the manuscript reference audit strips fenced
+  blocks, so reported locations match the real file.
+- Unified OpenGauss state-directory resolution (`resolve_gauss_home`:
+  `GAUSS_HOME` → `config/settings.yaml` `gauss.home` → `~/.gauss`) across the
+  SQLite client, `GaussRunner.create_default`, preflight validation, and the
+  Hermes dotenv loader's home, so validation always checks the directory the
+  run writes.
+- Guarded CITATION.cff publication metadata: `docs/citation_audit.py` now
+  fails when the CFF `version` drifts from the pyproject package version
+  (same drift class as the toolchain pin audit).
+- Output layer: atlas/dashboard/figure writers now render through atomic
+  temp-file + `os.replace` semantics like every other projection writer; the
+  dashboard y-axis label derives from the actual plotted floor instead of a
+  hardcoded `0`; `latest_claim_ready_full_report` orders candidate reports by
+  the deterministic run-id directory name instead of filesystem mtime; the
+  reporter run-id helper drops the inline `__import__` and uses a tz-aware
+  timestamp; and the stale `_write_sorry_distribution` figure helper is
+  renamed to `_write_status_distribution`.
+- Catalogue loaders fail closed: `FEPTopicCatalogue.summary()` raises on an
+  unknown `mathlib_status` instead of silently counting it as `partial`, and
+  the roster seal rejects `first_id` below `fep-001` (the canonical interval
+  definition shared with novelty loading).
+- Tests: the `serial_lean` marker now pins Lean-probe tests to a single xdist
+  group via `pytest_collection_modifyitems`; live OpenRouter tests are
+  strictly opt-in (`FEP_LEAN_LIVE_TESTS=1` required, never inferred from key
+  presence); the Hermes deadline-abort ceiling allows scheduler slack; the
+  future-mtime manuscript test stamps both times from one clock; and new
+  `tests/test_core_body_modules.py` pins the five core_* body modules'
+  exact rosters.
+- Docs: scoped `formal/README.md`'s audit-inclusion claim to public theorems
+  (private helpers are covered transitively), refreshed the stale
+  `.ruff_baseline.txt` narrative, and removed six dead no-op LaTeX rewrite
+  rules whose inputs were consumed by earlier loops.
+- CI: added the `docs/lean-landscape.md` drift gate
+  (`scripts/_maint_build_lean_landscape.py --check`) to the projection-check
+  step and a least-privilege `permissions: contents: read` block.
+- Tests: replaced the nip.io DNS dependency in the OpenRouter fallback test
+  with a loopback httpserver plus an explicit `_build_model_chain` patch.
 
 - Accepted H1.0--H1.8 of the dependency-gated Horizon research program, with
   optional H1.5 accepted separately. The archived

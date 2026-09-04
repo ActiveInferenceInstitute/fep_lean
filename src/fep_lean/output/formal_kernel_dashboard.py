@@ -12,6 +12,7 @@ from fep_lean.output.formalism_presentation import (
     build_formalism_presentation,
     humanize_formalism_identifier,
 )
+from fep_lean.output.rendering import _atomic_text
 from fep_lean.verification.numerical_witnesses import NumericalWitness, Scalar
 
 DASHBOARD_SVG = Path("docs/formal-kernel-dashboard.svg")
@@ -371,7 +372,7 @@ def _plot_elements(
         ),
     ]
     minimum_class = "scale-zero" if zero_baseline else "scale-minimum"
-    minimum_label = "0" if zero_baseline else f"{y_min:.3g}"
+    minimum_label = "0" if zero_baseline and y_min == 0.0 else f"{y_min:.3g}"
     lines.extend(
         [
             (
@@ -1287,12 +1288,8 @@ def write_formal_kernel_dashboard(
     svg_path, html_path = dashboard_projection_paths(
         project_root, output_root=output_root
     )
-    svg_path.parent.mkdir(parents=True, exist_ok=True)
-    html_path.parent.mkdir(parents=True, exist_ok=True)
-    svg_path.write_text(render_formal_kernel_dashboard_svg(dashboard), encoding="utf-8")
-    html_path.write_text(
-        render_formal_kernel_dashboard_html(dashboard), encoding="utf-8"
-    )
+    _atomic_text(svg_path, render_formal_kernel_dashboard_svg(dashboard))
+    _atomic_text(html_path, render_formal_kernel_dashboard_html(dashboard))
     return svg_path, html_path
 
 

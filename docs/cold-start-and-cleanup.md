@@ -68,6 +68,7 @@ uv run python scripts/_maint_build_fep_all_lean.py --check
 uv run python scripts/_maint_build_formal_modules.py --check
 uv run python scripts/theorem_maturity_audit.py --check
 uv run python scripts/build_formalism_coverage.py --check
+uv run python scripts/_maint_build_lean_landscape.py --check
 uv run fep-lean atlas --check
 uv run fep-lean dashboard --check
 uv run fep-lean catalogue
@@ -119,6 +120,7 @@ uv run python docs/xref_audit.py
 uv run python docs/theorem_ref_audit.py
 uv run python docs/citation_audit.py
 uv run python scripts/build_formalism_coverage.py --check
+uv run python scripts/_maint_build_lean_landscape.py --check
 uv run fep-lean atlas --check
 uv run fep-lean dashboard --check
 uv run python scripts/render_manuscript.py --check

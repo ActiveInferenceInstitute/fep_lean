@@ -72,6 +72,24 @@ def build_formalism_coverage(project_root: Path) -> dict[str, Any]:
             "unresolved formal evidence declarations: "
             + ", ".join(unresolved_declarations)
         )
+    reviewed_declarations = sorted(
+        {
+            theorem
+            for review in audit.records
+            for theorem in (
+                review.primary_theorem,
+                *review.supporting_theorems,
+                *review.boundary_theorems,
+            )
+            if "." in theorem
+        }
+        - known_declarations
+    )
+    if reviewed_declarations:
+        raise ValueError(
+            "theorem-maturity references not resolvable as formal declarations: "
+            + ", ".join(reviewed_declarations)
+        )
     composed_sources = composed_theorem_sources(root)
     endpoint_failures: list[str] = []
     pairing_shape_failures: list[str] = []

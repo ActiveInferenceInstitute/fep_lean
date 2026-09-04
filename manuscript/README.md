@@ -26,6 +26,9 @@ The formal development is read in order: `04g_finite_active_inference_kernel.md`
 introduces the reusable kernel, `04h_expanded_formalism_program.md` documents
 the first ten seven-topic expansion families, and
 `04i_formalism_catalogue_155.md` documents the five families that extend the
-roster from 120 to 155. Keep that last chapter source-grounded: current native,
-declaration, Python, and browser receipts bind the 155-topic checkout, while
-the retained 50-topic provider receipt remains historical.
+roster from 120 to 155. Keep that last chapter source-grounded: the retained
+native, declaration, Python, and browser receipts bind the frozen v1.1.0
+release snapshot only — the accepted post-v1.1.0 Horizon 1/Horizon 2 source
+wave invalidated their current-source binding, and
+[`FEP-EVIDENCE-CURRENT`](../TODO.md) owns the coordinated refresh. The
+retained 50-topic provider receipt remains historical.

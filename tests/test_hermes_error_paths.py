@@ -36,8 +36,14 @@ FIRST_TOPIC = TOPICS.topics[0]
 
 
 def _openrouter_like_url(httpserver: HTTPServer) -> str:
-    """httpserver base that _build_model_chain treats as OpenRouter."""
-    return f"http://openrouter.ai.127.0.0.1.nip.io:{httpserver.port}/api/v1"
+    """Loopback httpserver base for the OpenRouter-shape 429/fallback test.
+
+    OpenRouter treatment (multi-model fallback chain) is enabled per-test by
+    monkeypatching ``_build_model_chain`` instead of embedding "openrouter.ai"
+    in the host, so the suite never depends on external DNS (nip.io) or any
+    external name resolution.
+    """
+    return httpserver.url_for("/api/v1").rstrip("/")
 
 
 def _local_url(httpserver: HTTPServer) -> str:
@@ -205,12 +211,14 @@ def test_build_model_chain_single_for_anthropic() -> None:
 
 def test_fallback_models_used_when_primary_returns_429(
     httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Primary model returns 429 (exhausted), fallback model returns 200.
 
-    Uses a local httpserver pretending to be OpenRouter (the base_url string
-    contains 'openrouter.ai' so that ``_build_model_chain`` activates the
-    fallback chain).  Two ordered handlers match POST /api/v1/chat/completions:
+    Uses a loopback httpserver; the OpenRouter fallback-chain shape is
+    enabled by monkeypatching ``_build_model_chain`` instead of embedding
+    "openrouter.ai" in the host, so the test never needs external DNS.
+    Two ordered handlers match POST /api/v1/chat/completions:
     first with model=primary/model → 429, second with model=user/fb-a → 200.
     """
 
@@ -255,14 +263,16 @@ def test_fallback_models_used_when_primary_returns_429(
         timeout_s=5,
     )
     exp = HermesExplainer(cfg)
-    # Patch the 429 retry count to 0 so we advance to the fallback model quickly.
-    import os as _os
-
-    _os.environ["HERMES_429_MAX_RETRIES"] = "0"
-    try:
-        result = exp.explain_topic(FIRST_TOPIC)
-    finally:
-        _os.environ.pop("HERMES_429_MAX_RETRIES", None)
+    # Enable the OpenRouter fallback-chain shape on a loopback base_url:
+    # without "openrouter.ai" in the host the chain would be single-model.
+    monkeypatch.setattr(
+        HermesExplainer,
+        "_build_model_chain",
+        lambda self: ["primary/model", "user/fb-a"],
+    )
+    # Patch the 429 retry count to 0 so we advance to the fallback quickly.
+    monkeypatch.setenv("HERMES_429_MAX_RETRIES", "0")
+    result = exp.explain_topic(FIRST_TOPIC)
     assert result.success is True, result.error
     assert result.model_used == "user/fb-a"
     assert "theorem t" in (result.refined_lean_sketch or "")

@@ -18,12 +18,13 @@ roster and roles live in the manifest; this page projects them for navigation.
   [`formalism-atlas.html`](formalism-atlas.html); generated counts are in
   [`formalism-coverage.md`](formalism-coverage.md).
 
-## Layer 0 (5 modules)
+## Layer 0 (6 modules)
 
 | Module | Role | Namespace | Depends on |
 | --- | --- | --- | --- |
 | `finite_probability` | foundation | `FEP` | — |
 | `gaussian_information_geometry` | foundation | `FEP.GaussianInformationGeometry` | — |
+| `gnn_document` | foundation | `FEP.GnnDocument` | — |
 | `ness_flow` | foundation | `FEP.NessFlow` | — |
 | `predictive_coding` | foundation | `FEP.PredictiveCoding` | — |
 | `statistical_convergence` | foundation | `FEP.StatisticalConvergence` | — |
@@ -49,7 +50,7 @@ roster and roles live in the manifest; this page projects them for navigation.
 | `markov_blanket` | foundation | `FEP.MarkovBlanket` | finite_information |
 | `variational_duality` | foundation | `FEP.VariationalDuality` | finite_information |
 
-## Layer 3 (8 modules)
+## Layer 3 (9 modules)
 
 | Module | Role | Namespace | Depends on |
 | --- | --- | --- | --- |
@@ -58,6 +59,7 @@ roster and roles live in the manifest; this page projects them for navigation.
 | `compositions.exponential_family` | composition | `FEPComposed` | fep_all, exponential_family |
 | `compositions.measure_variational` | composition | `FEPComposed` | fep_all, measure_bayes, variational_duality |
 | `controlled_markov` | foundation | `FEP.ControlledMarkov` | active_inference |
+| `gnn_denotation` | foundation | `FEP.GnnDenotation` | gnn_document, active_inference |
 | `learning_theory` | foundation | `FEP.LearningTheory` | variational_duality |
 | `native_blanket` | foundation | `FEP.NativeBlanket` | markov_blanket |
 | `path_thermodynamics` | foundation | `FEP.PathThermodynamics` | finite_markov_dynamics, variational_duality |
@@ -135,7 +137,7 @@ roster and roles live in the manifest; this page projects them for navigation.
 | --- | --- | --- | --- |
 | `composed` | aggregate | `—` | compositions.core, compositions.measure_variational, compositions.control_temporal, compositions.causal_predictive, compositions.thermo_geometry, compositions.collective_learning, compositions.risk_calibration, compositions.policy_trees, compositions.native_blanket_transfer, compositions.exponential_family, compositions.continuous_time, compositions.finite_scientific_implications, compositions.finite_policy_action, compositions.finite_reference_agent, compositions.gaussian_filter, compositions.gaussian_control, compositions.gaussian_grid_path, compositions.smooth_reference_kernel |
 
-Total maintained formal modules: **52** across **13** dependency layers.
+Total maintained formal modules: **54** across **13** dependency layers.
 
 
 ## Reading order

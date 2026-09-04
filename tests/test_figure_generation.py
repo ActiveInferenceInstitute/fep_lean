@@ -12,7 +12,7 @@ from fep_lean.output.figures import (
     _write_maturity_heatmap,
     _write_pipeline_dag,
     _write_sequence_diagram,
-    _write_sorry_distribution,
+    _write_status_distribution,
     write_all_catalogue_figures,
 )
 
@@ -82,17 +82,17 @@ def test_write_maturity_heatmap_mixed(tmp_path: Path) -> None:
     assert out.stat().st_size > 1000
 
 
-def test_write_sorry_distribution_all_real(tmp_path: Path) -> None:
+def test_write_status_distribution_all_real(tmp_path: Path) -> None:
     """All-real corpus produces single-slice donut with center label."""
     out = tmp_path / "donut_real.png"
-    _write_sorry_distribution({"real": 50, "partial": 0, "aspirational": 0}, out)
+    _write_status_distribution({"real": 50, "partial": 0, "aspirational": 0}, out)
     assert out.stat().st_size > 1000
 
 
-def test_write_sorry_distribution_mixed(tmp_path: Path) -> None:
+def test_write_status_distribution_mixed(tmp_path: Path) -> None:
     """Mixed maturity corpus produces multi-slice donut."""
     out = tmp_path / "donut_mixed.png"
-    _write_sorry_distribution({"real": 30, "partial": 12, "aspirational": 8}, out)
+    _write_status_distribution({"real": 30, "partial": 12, "aspirational": 8}, out)
     assert out.stat().st_size > 1000
 
 

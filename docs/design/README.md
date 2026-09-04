@@ -12,6 +12,7 @@ continues to describe the longer research dependency.
 | Program | Purpose | Status |
 | --- | --- | --- |
 | [FEP research horizons](fep-research-program/README.md) | Move from the released finite catalogue to a falsifiable, carrier-spanning, end-to-end scientific theorem chain | Active: [Horizon 1 accepted](../../specs/done/horizon-1-finite-synthesis/README.md); H2.0 open; H3 gated |
+| [GNN bridge](gnn-bridge/README.md) | Cross-repo articulation with the GNN pipeline: render and execute Lean-expressed generative models (Direction 1) and formalize GNN steps and methods in Lean (Direction 2) | Draft: design goal and bridge contract; no bounded spec for this program open |
 
 ## Lifecycle
 

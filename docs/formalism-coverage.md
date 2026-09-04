@@ -11,23 +11,23 @@ Counts describe canonical source coverage. Compilation evidence and full externa
 | Metric | Count |
 | --- | ---: |
 | Stable topics | 155 |
-| Maintained formal modules | 52 |
-| Foundation modules | 33 |
+| Maintained formal modules | 54 |
+| Foundation modules | 35 |
 | Topic theorem declarations | 487 |
-| Formal-resource theorem declarations | 993 |
-| Foundation theorem declarations | 767 |
-| Total theorem declarations | 1480 |
+| Formal-resource theorem declarations | 1000 |
+| Foundation theorem declarations | 774 |
+| Total theorem declarations | 1487 |
 | Topic definitions | 91 |
-| Formal-resource definitions | 547 |
-| Total definitions | 638 |
+| Formal-resource definitions | 605 |
+| Total definitions | 696 |
 | Topic abbreviations | 7 |
 | Formal-resource abbreviations | 21 |
 | Total abbreviations | 28 |
-| Formal-resource structures | 38 |
+| Formal-resource structures | 47 |
 | Distinct Mathlib imports | 64 |
 | Topic-to-import edges | 212 |
-| Formal-resource import edges | 184 |
-| Internal formal-module dependencies | 111 |
+| Formal-resource import edges | 189 |
+| Internal formal-module dependencies | 113 |
 | Authored formalism relations | 133 |
 | Derivational formal relations | 20 |
 | Checked formal pairings | 105 |
@@ -253,6 +253,8 @@ These packaged modules are a distinct proof surface from the generated topic ske
 | `FepSketches.decision_risk` | `foundation` | 15 | 10 | 0 | `FepSketches.finite_information`, `FepSketches.native_blanket` |
 | `FepSketches.finite_posterior_learning` | `foundation` | 13 | 18 | 0 | `FepSketches.decision_risk`, `FepSketches.learning_theory`, `FepSketches.native_blanket`, `FepSketches.statistical_convergence` |
 | `FepSketches.posterior_convergence` | `foundation` | 26 | 22 | 0 | `FepSketches.finite_posterior_learning`, `FepSketches.gaussian_information_geometry`, `FepSketches.measure_bayes` |
+| `FepSketches.gnn_document` | `foundation` | 0 | 42 | 7 | — |
+| `FepSketches.gnn_denotation` | `foundation` | 7 | 16 | 2 | `FepSketches.active_inference`, `FepSketches.gnn_document` |
 | `FepSketches.compositions.core` | `composition` | 22 | 1 | 0 | `FepSketches.active_inference`, `FepSketches.information_geometry`, `FepSketches.markov_blanket`, `FepSketches.statistical_convergence` |
 | `FepSketches.compositions.measure_variational` | `composition` | 14 | 0 | 0 | `FepSketches.measure_bayes`, `FepSketches.variational_duality` |
 | `FepSketches.compositions.control_temporal` | `composition` | 14 | 0 | 0 | `FepSketches.controlled_markov`, `FepSketches.temporal_inference` |

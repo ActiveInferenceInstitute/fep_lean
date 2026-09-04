@@ -42,6 +42,8 @@ class RosterSeal:
     def topic_ids(self) -> tuple[str, ...]:
         first = _topic_number(self.first_id, "roster.first_id")
         last = _topic_number(self.last_id, "roster.last_id")
+        if first < 1:
+            raise SemanticValidationError("roster.first_id must start at fep-001")
         if first > last:
             raise SemanticValidationError(
                 "roster.first_id must not follow roster.last_id"

@@ -15,6 +15,7 @@ from fep_lean.output.formalism_presentation import (
     build_formalism_presentation,
     humanize_formalism_identifier,
 )
+from fep_lean.output.rendering import _atomic_text
 
 ATLAS_SVG = Path("docs/formalism-atlas.svg")
 ATLAS_HTML = Path("docs/formalism-atlas.html")
@@ -903,10 +904,8 @@ def write_formalism_atlas(
     """Write deterministic SVG and interactive HTML atlas projections."""
     atlas = build_formalism_atlas(Path(project_root))
     svg_path, html_path = atlas_projection_paths(project_root, output_root=output_root)
-    svg_path.parent.mkdir(parents=True, exist_ok=True)
-    html_path.parent.mkdir(parents=True, exist_ok=True)
-    svg_path.write_text(render_formalism_atlas_svg(atlas), encoding="utf-8")
-    html_path.write_text(render_formalism_atlas_html(atlas), encoding="utf-8")
+    _atomic_text(svg_path, render_formalism_atlas_svg(atlas))
+    _atomic_text(html_path, render_formalism_atlas_html(atlas))
     return svg_path, html_path
 
 

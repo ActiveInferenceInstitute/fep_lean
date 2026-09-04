@@ -137,6 +137,33 @@ class SessionRecord:
     turns: list[dict[str, Any]] = field(default_factory=list)
 
 
+def resolve_gauss_home(project_root: Path | None = None) -> str | None:
+    """Resolve the OpenGauss state directory the same way at every call site.
+
+    Order (highest → lowest): the ``GAUSS_HOME`` environment variable, then
+    ``gauss.home`` from ``config/settings.yaml`` when a project root is
+    given, then ``None`` (callers fall back to ``~/.gauss``). Validation and
+    execution must agree on this order; a divergence lets a full run write
+    sessions to a directory that preflight never checked.
+    """
+    configured = os.environ.get("GAUSS_HOME", "").strip()
+    if configured:
+        return configured
+    if project_root is not None:
+        settings_path = Path(project_root) / "config" / "settings.yaml"
+        if settings_path.is_file():
+            try:
+                import yaml  # available via PyYAML in project deps
+
+                raw = yaml.safe_load(settings_path.read_text(encoding="utf-8")) or {}
+                home = (raw.get("gauss") or {}).get("home")
+                if isinstance(home, str) and home.strip():
+                    return home
+            except (OSError, yaml.YAMLError, AttributeError):
+                return None
+    return None
+
+
 class OpenGaussClient:
     """SQLite-backed session store for math-inc OpenGauss Lean formalization.
 
@@ -157,9 +184,12 @@ class OpenGaussClient:
     """
 
     def __init__(self, gauss_home: str | Path | None = None) -> None:
-        default_home = os.environ.get("GAUSS_HOME", str(Path.home() / ".gauss"))
-        self._home = Path(gauss_home or default_home).expanduser().resolve()
-        self._home.mkdir(parents=True, exist_ok=True)
+        default_home = resolve_gauss_home()
+        self._home = (
+            Path(gauss_home or default_home or str(Path.home() / ".gauss"))
+            .expanduser()
+            .resolve()
+        )
         self._artifacts_dir = self._home / "fep_artifacts"
         self._logs_dir = self._home / "fep_logs"
         self._artifacts_dir.mkdir(exist_ok=True)

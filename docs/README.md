@@ -25,7 +25,7 @@
 - [Quality-gate decision](quality.md) — Ruff baseline, ownership, and staged policy.
 - [Test suite review](test-suite-review.md) — dated historical snapshot, retained as review provenance.
 - [Mahakala adversarial review](mahakala-review.md) — dated historical adversarial-review snapshot.
-- [Publication](development.md) — documentation and rendered-artifact gates.
+- [Publication](development.md) — documentation, rendered-artifact, and projection-freshness gates (release-bundle and receipt validation live in `../HANDOFF.md`).
 
 All paths in this directory resolve within this repository. Catalogue-derived
 manuscript inputs are created by `uv run fep-lean catalogue`; coverage, atlas,

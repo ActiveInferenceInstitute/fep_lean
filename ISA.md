@@ -1,8 +1,8 @@
 ---
 title: fep_lean Ideal State Assessment
 status: released
-phase: catalogue-155-v1.1.0
-updated: 2026-08-23
+phase: horizon2-h2.7-open
+updated: 2026-09-03
 ---
 
 # fep_lean Ideal State Assessment
@@ -100,6 +100,7 @@ uv run python scripts/_maint_build_fep_all_lean.py --check
 uv run python scripts/_maint_build_formal_modules.py --check
 uv run python scripts/theorem_maturity_audit.py --check
 uv run python scripts/build_formalism_coverage.py --check
+uv run python scripts/_maint_build_lean_landscape.py --check
 uv run fep-lean atlas --check
 uv run fep-lean dashboard --check
 uv run python docs/pin_audit.py --check-latest

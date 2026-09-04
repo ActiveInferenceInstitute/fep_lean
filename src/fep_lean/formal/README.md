@@ -48,8 +48,11 @@ The exact resource list is the typed manifest, rather than this synopsis. The
 remaining support, positivity, independence, and invertibility premises in the
 declarations are part of the results, not removable prose.
 
-Every maintained theorem is included in the declaration/axiom audit, and every
-formal relation or capability witness must resolve from canonical declarations.
+Every maintained public theorem is included in the declaration/axiom audit,
+and every formal relation or capability witness must resolve from canonical
+declarations. Private helper lemmas are covered transitively through the
+public probed theorems that depend on them and are folded into the coverage
+report's declaration totals.
 Validate projection, compilation, and evidence axioms with:
 
 ```bash

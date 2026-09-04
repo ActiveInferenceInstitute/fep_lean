@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-24
 **Repository:** `ActiveInferenceInstitute/fep_lean`
-**Checkout:** `/home/trim/Documents/Git/HumOS/projects/outside_of_hum/fep_lean`
+**Checkout:** this repository checkout (see the `origin` remote)
 **Release line:** `v1.1.0`
 
 ## Mission and evidence boundary
@@ -162,6 +162,7 @@ uv run python scripts/_maint_build_fep_all_lean.py --check
 uv run python scripts/_maint_build_formal_modules.py --check
 uv run python scripts/theorem_maturity_audit.py --check
 uv run python scripts/build_formalism_coverage.py --check
+uv run python scripts/_maint_build_lean_landscape.py --check
 uv run python scripts/build_formalism_atlas.py --check
 uv run fep-lean dashboard --check
 uv run python docs/pin_audit.py --check-latest

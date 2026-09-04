@@ -40,9 +40,10 @@ _HAS_API_KEY = bool(
 # Set FEP_LEAN_LIVE_TESTS=0 in CI to skip expensive API calls even when keys exist.
 # Set FEP_LEAN_LIVE_TESTS=1 to force-run even without a key (will fail at API level).
 _FEP_LEAN_LIVE_VAR = os.environ.get("FEP_LEAN_LIVE_TESTS", "").lower()
-_LIVE_TESTS_ENABLED = _FEP_LEAN_LIVE_VAR in ("1", "true", "yes") or (
-    _HAS_API_KEY and _FEP_LEAN_LIVE_VAR not in ("0", "false", "no")
-)
+# Live OpenRouter tests run only when FEP_LEAN_LIVE_TESTS is explicitly
+# enabled. Key presence alone never opts a default pytest run into paid
+# API calls.
+_LIVE_TESTS_ENABLED = _FEP_LEAN_LIVE_VAR in ("1", "true", "yes")
 
 
 def test_hermes_config_defaults() -> None:
