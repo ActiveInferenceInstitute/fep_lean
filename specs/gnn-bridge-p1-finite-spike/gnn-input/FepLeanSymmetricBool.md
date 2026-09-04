@@ -147,7 +147,7 @@ no planning depth, no precision modulation.
 
 ## Signature
 source_repository: fep_lean
-source_commit: e6480167c3fbbd42db29ca2431aec57f7e94df15
+source_commit: 8ebae7313882833057f36dc15e6bcead6e58b758
 pipeline_repository: GeneralizedNotationNotation
 pipeline_commit: 64d49355acf197a0570b06ab334d97570774be64
 lean_module: lean/FepSketches/active_inference.lean
