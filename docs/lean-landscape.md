@@ -64,7 +64,7 @@ roster and roles live in the manifest; this page projects them for navigation.
 | `native_blanket` | foundation | `FEP.NativeBlanket` | markov_blanket |
 | `path_thermodynamics` | foundation | `FEP.PathThermodynamics` | finite_markov_dynamics, variational_duality |
 
-## Layer 4 (9 modules)
+## Layer 4 (10 modules)
 
 | Module | Role | Namespace | Depends on |
 | --- | --- | --- | --- |
@@ -75,6 +75,7 @@ roster and roles live in the manifest; this page projects them for navigation.
 | `compositions.thermo_geometry` | composition | `FEPComposed` | fep_all, path_thermodynamics, geometric_optimization |
 | `decision_risk` | foundation | `FEP.DecisionRisk` | native_blanket, finite_information |
 | `empirical_risk` | foundation | `FEP.EmpiricalRisk` | learning_theory |
+| `gnn_render_statements` | foundation | `FEP.GnnRenderStatements` | gnn_document, gnn_denotation, active_inference, finite_probability, finite_markov_dynamics |
 | `policy_tree` | foundation | `FEP.PolicyTrees` | controlled_markov |
 | `temporal_inference` | foundation | `FEP.TemporalInference` | controlled_markov |
 
@@ -112,12 +113,13 @@ roster and roles live in the manifest; this page projects them for navigation.
 | `compositions.gaussian_grid_path` | composition | `FEPComposed.GaussianGridPath` | scalar_gaussian_semigroup |
 | `linear_gaussian_semigroup` | foundation | `FEP.LinearGaussianSemigroup` | markov_semigroup, scalar_gaussian_semigroup |
 
-## Layer 9 (2 modules)
+## Layer 9 (3 modules)
 
 | Module | Role | Namespace | Depends on |
 | --- | --- | --- | --- |
 | `compositions.gaussian_control` | composition | `FEPComposed.GaussianControl` | compositions.gaussian_filter, controlled_markov, gaussian_information_geometry, markov_semigroup, scalar_gaussian_semigroup |
 | `fin4_gaussian_semigroup` | foundation | `FEP.Fin4GaussianSemigroup` | linear_gaussian_semigroup |
+| `gnn_denotation_continuous` | foundation | `FEP.GnnContinuous` | gnn_document, linear_gaussian_semigroup |
 
 ## Layer 10 (1 modules)
 
@@ -137,7 +139,7 @@ roster and roles live in the manifest; this page projects them for navigation.
 | --- | --- | --- | --- |
 | `composed` | aggregate | `—` | compositions.core, compositions.measure_variational, compositions.control_temporal, compositions.causal_predictive, compositions.thermo_geometry, compositions.collective_learning, compositions.risk_calibration, compositions.policy_trees, compositions.native_blanket_transfer, compositions.exponential_family, compositions.continuous_time, compositions.finite_scientific_implications, compositions.finite_policy_action, compositions.finite_reference_agent, compositions.gaussian_filter, compositions.gaussian_control, compositions.gaussian_grid_path, compositions.smooth_reference_kernel |
 
-Total maintained formal modules: **54** across **13** dependency layers.
+Total maintained formal modules: **56** across **13** dependency layers.
 
 
 ## Reading order

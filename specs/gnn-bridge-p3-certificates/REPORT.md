@@ -109,6 +109,13 @@ Independent end-to-end verification of the committed slice. No consumed
 artifact was modified; `git status` is clean for the slice before and
 after the re-run.
 
+README reconciliation: the committed acceptance checklist was found
+already fully checked (P3.1–P3.7 all `[x]`) — the briefing expected
+P3.3 unchecked; only the status line ("active; P3 in progress —
+protocol defined, run pending") was stale. Every named command behind
+the boxes was independently re-verified here (all exit 0); this pass
+flipped no box — the status line was the only checklist-area edit.
+
 ### Re-run (from the fep_lean repo root)
 
 ```text

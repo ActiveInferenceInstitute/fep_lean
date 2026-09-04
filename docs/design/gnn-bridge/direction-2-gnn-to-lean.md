@@ -1,11 +1,22 @@
 # Direction 2 — formalize GNN steps and methods in Lean
 
-Status: **research program; Q1 accepted under
-`specs/gnn-bridge-q1-syntax-ast/`** (document AST and decidable
-well-formedness compiled warning-free and registered in the formal
-manifest). Q2–Q4 and the alignment statements below are prospective; every
-Lean artifact other than the Q1 module is a target, not an existing
-declaration. Parent program:
+Status: **research program; Q1–Q4 accepted** — Q1 (document AST and
+decidable well-formedness) under `specs/gnn-bridge-q1-syntax-ast/`
+(module `src/fep_lean/formal/gnn_document.lean`, `FEP.GnnDocument`);
+Q2 (discrete denotation, `src/fep_lean/formal/gnn_denotation.lean`,
+`FEP.GnnDenotation`) under `specs/gnn-bridge-q2-discrete-denotation/`;
+Q3 (continuous denotation,
+`src/fep_lean/formal/gnn_denotation_continuous.lean`,
+`FEP.GnnContinuous`) under
+`specs/gnn-bridge-q3-continuous-denotation/`; Q4 (renderer and execution
+statements, `src/fep_lean/formal/gnn_render_statements.lean`,
+`FEP.GnnRenderStatements`) under
+`specs/gnn-bridge-q4-renderer-execution-statements/`. Alignment
+statements 1, 3, and 5 (matrix fragment plus the kernel-power execution
+semantics) are landed declarations; statement 2, statement 4, the
+full program-denotation fragments, and the jax continuous / bnlearn CPT
+fragments remain prospective targets with recorded reopen conditions.
+Parent program:
 [GNN bridge README](README.md). Shared rules:
 [bridge contract](bridge-contract.md).
 

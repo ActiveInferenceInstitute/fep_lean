@@ -290,6 +290,18 @@ FORMAL_MODULES: tuple[FormalModule, ...] = (
         declaration_namespace="FEP.GnnDenotation",
     ),
     FormalModule(
+        resource="gnn_denotation_continuous.lean",
+        lean_module="FepSketches.gnn_denotation_continuous",
+        role=FormalModuleRole.FOUNDATION,
+        declaration_namespace="FEP.GnnContinuous",
+    ),
+    FormalModule(
+        resource="gnn_render_statements.lean",
+        lean_module="FepSketches.gnn_render_statements",
+        role=FormalModuleRole.FOUNDATION,
+        declaration_namespace="FEP.GnnRenderStatements",
+    ),
+    FormalModule(
         resource="compositions/core.lean",
         lean_module="FepSketches.compositions.core",
         role=FormalModuleRole.COMPOSITION,

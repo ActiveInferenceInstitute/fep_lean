@@ -113,6 +113,8 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
         "posterior_convergence.lean",
         "gnn_document.lean",
         "gnn_denotation.lean",
+        "gnn_denotation_continuous.lean",
+        "gnn_render_statements.lean",
     )
     released_composition_resources = (
         "compositions/core.lean",
@@ -185,6 +187,8 @@ def test_formal_module_manifest_is_the_single_explicit_resource_roster() -> None
         "FEP.PosteriorConvergence",
         "FEP.GnnDocument",
         "FEP.GnnDenotation",
+        "FEP.GnnContinuous",
+        "FEP.GnnRenderStatements",
         *("FEPComposed",) * len(released_composition_resources),
         "FEPComposed.FiniteScientificImplications",
         "FEPComposed.FinitePolicyAction",
