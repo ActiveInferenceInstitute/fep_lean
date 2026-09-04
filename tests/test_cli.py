@@ -125,7 +125,7 @@ def test_setup_bootstraps_when_lake_is_not_on_path(monkeypatch, tmp_path: Path) 
         calls.append(command)
         return type("Completed", (), {"returncode": 0})()
 
-    monkeypatch.setattr(cli.subprocess, "run", fake_run)
+    monkeypatch.setattr(cli, "run_process_group", fake_run)
     assert cli._setup(tmp_path) == 0
     assert calls == [["bash", str(bootstrap)]]
 

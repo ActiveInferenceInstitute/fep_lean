@@ -28,6 +28,23 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    """Pin ``serial_lean`` tests to one xdist group.
+
+    The Lean probe files compile against the shared ``lean/.lake`` tree and
+    must never run in parallel with each other; this makes the documented
+    marker enforce that constraint instead of relying on serial-only runs.
+    """
+    group_started = False
+    for item in items:
+        if item.get_closest_marker("serial_lean") is not None:
+            item.add_marker(pytest.mark.xdist_group("lean"))
+            group_started = True
+    del group_started  # marker presence is the only contract
+
+
 def pytest_configure(config: pytest.Config) -> None:
     """Warn (not hard-exit) when gauss / lake / lean are not on PATH.
 

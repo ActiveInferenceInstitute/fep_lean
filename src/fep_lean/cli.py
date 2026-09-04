@@ -28,6 +28,7 @@ from fep_lean.output.formalism_atlas import (
     write_formalism_atlas,
 )
 from fep_lean.pipeline.orchestrator import run_pipeline, run_single_topic
+from fep_lean.verification._subprocess import run_process_group
 from fep_lean.verification._toolchain import find_executable, subprocess_env
 from fep_lean.verification.environment import run_validation_checks
 from fep_lean.verification.lean_verifier import LeanVerifier
@@ -67,41 +68,43 @@ def _setup(root: Path) -> int:
         bootstrap_env["PATH"] = (
             str(Path(elan_home) / "bin") + ":" + bootstrap_env.get("PATH", "")
         )
+        bootstrap_result: subprocess.CompletedProcess[None]
         try:
-            result = subprocess.run(
+            bootstrap_result = run_process_group(
                 ["bash", str(bootstrap)],
                 cwd=root,
                 env=bootstrap_env,
                 timeout=max(1, int(deadline - time.monotonic())),
                 check=False,
+                capture=False,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             print(f"setup failed: {exc}", flush=True)
             return 1
-        if result.returncode:
+        if bootstrap_result.returncode:
             print(
-                f"setup failed with exit code {result.returncode}: {bootstrap}",
+                f"setup failed with exit code {bootstrap_result.returncode}: {bootstrap}",
                 flush=True,
             )
-            return result.returncode
+            return bootstrap_result.returncode
         return 0
 
     env = subprocess_env(lean_dir)
     for command in ((lake, "update"), (lake, "exe", "cache", "get"), (lake, "build")):
         try:
             remaining = max(1, int(deadline - time.monotonic()))
-            result = subprocess.run(
+            lake_result = run_process_group(
                 command, cwd=lean_dir, env=env, timeout=remaining, check=False
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             print(f"setup failed: {exc}", flush=True)
             return 1
-        if result.returncode:
+        if lake_result.returncode:
             print(
-                f"setup failed with exit code {result.returncode}: {' '.join(command)}",
+                f"setup failed with exit code {lake_result.returncode}: {' '.join(command)}",
                 flush=True,
             )
-            return result.returncode
+            return lake_result.returncode
     return 0
 
 

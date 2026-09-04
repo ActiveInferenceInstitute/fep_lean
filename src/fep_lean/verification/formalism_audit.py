@@ -22,6 +22,7 @@ from fep_lean.formal import (
     formal_resource_relative_paths,
     formal_theorem_modules,
 )
+from fep_lean.verification._subprocess import run_process_group
 from fep_lean.verification._toolchain import (
     find_executable,
     lean_version_matches_pin,
@@ -345,12 +346,10 @@ def _probe_lean_version(
 ) -> tuple[str, str]:
     """Record the exact compiler identity used by ``lake env lean``."""
     try:
-        completed = subprocess.run(
+        completed = run_process_group(
             [lake, "env", "lean", "--version"],
             cwd=lean_dir,
             env=subprocess_env(lean_dir),
-            capture_output=True,
-            text=True,
             timeout=timeout,
             check=False,
         )
@@ -468,12 +467,10 @@ def run_formalism_audit(
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(probe)
         try:
-            completed = subprocess.run(
+            completed = run_process_group(
                 [lake, "env", "lean", str(probe_path.relative_to(lean_dir))],
                 cwd=lean_dir,
                 env=subprocess_env(lean_dir),
-                capture_output=True,
-                text=True,
                 timeout=timeout,
                 check=False,
             )

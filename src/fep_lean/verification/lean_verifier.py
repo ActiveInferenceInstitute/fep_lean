@@ -62,6 +62,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
+from fep_lean.verification._subprocess import run_process_group
 from fep_lean.verification._toolchain import (
     ensure_writable_elan_home as _ensure_elan_home,
 )
@@ -650,16 +651,19 @@ class LeanVerifier:
         Uses ``_subprocess_env()`` which sets ``ELAN_HOME`` to a writable
         temp directory and injects the direct toolchain bin into PATH,
         bypassing the elan proxy's settings.toml write requirement.
+
+        Runs through :func:`run_process_group` so a deadline kills the whole
+        ``lake`` → ``lean`` process group; bare ``subprocess.run`` kills only
+        the direct child and lets the ``lean`` grandchild hold the pipes and
+        the ``.olean`` lock region past the advertised timeout.
         """
         env = _subprocess_env()
         if self._lake_exe is None:
             raise RuntimeError("lake executable is unavailable")
-        return subprocess.run(
+        return run_process_group(
             [self._lake_exe, "env", "lean", str(lean_file)],
-            capture_output=True,
-            text=True,
-            timeout=_get_timeout(),
-            check=False,
             cwd=str(self._lean_dir),
             env=env,
+            timeout=_get_timeout(),
+            check=False,
         )

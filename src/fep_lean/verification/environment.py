@@ -14,6 +14,7 @@ from typing import Any
 
 from fep_lean._paths import project_root as default_project_root
 from fep_lean.gauss.cli import check_gauss_cli
+from fep_lean.gauss.client import resolve_gauss_home
 from fep_lean.verification._toolchain import (
     find_executable,
     find_toolchain_bin,
@@ -167,7 +168,7 @@ def _check_lake(project_root: Path) -> tuple[bool, str]:
 
 
 def _check_gauss_config(project_root: Path) -> tuple[bool, str]:
-    configured = os.environ.get("GAUSS_HOME", "").strip()
+    configured = resolve_gauss_home(project_root)
     path = Path(configured).expanduser() if configured else Path.home() / ".gauss"
     parent = path if path.is_dir() else path.parent
     if not parent.is_dir():
