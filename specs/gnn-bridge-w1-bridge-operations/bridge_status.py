@@ -1,0 +1,317 @@
+#!/usr/bin/env python3
+"""Bridge operations status command for the fep_lean <-> GNN bridge (W1).
+
+Read-only health surface over the accepted Direction 1 slices. Four
+checks, each reported PASS/FAIL with one evidence line; overall exit 0
+iff every check passes:
+
+1. Freshness      — regenerate the P1 document via the accepted emitter
+                    (imported, never edited) and compare against the
+                    on-disk artifact. Mismatch is classified
+                    STALE-CUSTODY (digest-only) vs CONTENT-DRIFT.
+2. Certificates   — re-run specs/gnn-bridge-p3-certificates/certify.py
+                    (subprocess) against its default artifacts.
+3. Syntax-surface pin — recompute sha256 of GNN doc/gnn/gnn_syntax.md
+                    and src/pipeline/step_registry.py against
+                    syntax-pin.json (created at the Q1 pin).
+4. Projection     — scripts/_maint_build_formal_modules.py --check
+                    (subprocess).
+
+`--refresh-digests` rewrites the P1 document via the emitter's
+build_document(current heads); it heals custody drift only (digest
+lines), never content. Default run is read-only.
+
+Spec: specs/gnn-bridge-w1-bridge-operations/README.md (W1 slice).
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.util
+import json
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+FEP_LEAN_ROOT = SCRIPT_DIR.parents[1]
+GNN_ROOT = FEP_LEAN_ROOT.parent / "GeneralizedNotationNotation"
+PIN_PATH = SCRIPT_DIR / "syntax-pin.json"
+P1_SLICE = FEP_LEAN_ROOT / "specs" / "gnn-bridge-p1-finite-spike"
+P1_EMITTER = P1_SLICE / "projection.py"
+P1_ARTIFACT = P1_SLICE / "gnn-input" / "FepLeanSymmetricBool.md"
+P3_CERTIFY = FEP_LEAN_ROOT / "specs" / "gnn-bridge-p3-certificates" / "certify.py"
+PROJECTION_GATE = FEP_LEAN_ROOT / "scripts" / "_maint_build_formal_modules.py"
+
+PINNED_GNN_FILES = (
+    "doc/gnn/gnn_syntax.md",
+    "src/pipeline/step_registry.py",
+)
+
+# The only lines allowed to differ under STALE-CUSTODY (digest-only):
+# provenance digest lines inside the Signature section. The emitter's
+# `source_commit` / `pipeline_commit` rows carry the repo heads.
+DIGEST_LINE_PREFIXES = (
+    "source_commit:",
+    "pipeline_commit:",
+)
+
+PASS = "PASS"
+FAIL = "FAIL"
+STALE_CUSTODY = "STALE-CUSTODY (digest-only)"
+CONTENT_DRIFT = "CONTENT-DRIFT"
+
+
+@dataclass(frozen=True)
+class CheckResult:
+    """One status-check outcome with its evidence line."""
+
+    name: str
+    passed: bool
+    evidence: str
+
+
+def repo_head(repo: Path) -> str:
+    """Return `git rev-parse HEAD` for *repo* (read-only query)."""
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+
+def sha256_of(path: Path) -> str:
+    """Return the sha256 hex digest of *path*'s bytes."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _load_p1_emitter() -> Any:
+    """Import the accepted P1 emitter module without executing main."""
+    spec = importlib.util.spec_from_file_location(
+        "bridge_w1_p1_projection", P1_EMITTER
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load P1 emitter at {P1_EMITTER}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _classify_diff(
+    on_disk: str, regenerated: str
+) -> str:
+    """Classify a freshness mismatch as digest-only custody or content drift."""
+    disk_lines = on_disk.splitlines()
+    regen_lines = regenerated.splitlines()
+    for line in disk_lines:
+        if line not in regen_lines and not any(
+            line.startswith(prefix) for prefix in DIGEST_LINE_PREFIXES
+        ):
+            return CONTENT_DRIFT
+    for line in regen_lines:
+        if line not in disk_lines and not any(
+            line.startswith(prefix) for prefix in DIGEST_LINE_PREFIXES
+        ):
+            return CONTENT_DRIFT
+    return STALE_CUSTODY
+
+
+def check_freshness() -> CheckResult:
+    """Check 1: P1 emitter regeneration vs on-disk document."""
+    if not P1_EMITTER.is_file():
+        return CheckResult(
+            "freshness", False, f"P1 emitter missing: {P1_EMITTER}"
+        )
+    emitter = _load_p1_emitter()
+    fep_lean_head = repo_head(FEP_LEAN_ROOT)
+    gnn_head = repo_head(GNN_ROOT)
+    regenerated = emitter.build_document(fep_lean_head, gnn_head)
+    if not emitter.ARTIFACT_PATH.is_file():
+        return CheckResult(
+            "freshness",
+            False,
+            f"missing artifact {emitter.ARTIFACT_PATH}",
+        )
+    on_disk = emitter.ARTIFACT_PATH.read_text(encoding="utf-8")
+    if on_disk == regenerated:
+        return CheckResult(
+            "freshness",
+            True,
+            f"regenerated bytes match on-disk artifact at fep_lean"
+            f" {fep_lean_head[:12]} / GNN {gnn_head[:12]}",
+        )
+    classification = _classify_diff(on_disk, regenerated)
+    if classification == STALE_CUSTODY:
+        remediation = "run with --refresh-digests"
+    else:
+        remediation = "review and re-emit; do not hand-edit the artifact"
+    return CheckResult(
+        "freshness",
+        False,
+        f"{classification}: on-disk document differs from regeneration"
+        f" at fep_lean {fep_lean_head[:12]} / GNN {gnn_head[:12]}"
+        f" — {remediation}",
+    )
+
+
+def check_certificates() -> CheckResult:
+    """Check 2: re-run the P3 certificate protocol, PASS iff exit 0."""
+    result = subprocess.run(
+        ["uv", "run", "python", "specs/gnn-bridge-p3-certificates/certify.py"],
+        cwd=FEP_LEAN_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        tail = (result.stdout.strip().splitlines() or [""])[-1]
+        return CheckResult("certificates", True, tail)
+    return CheckResult(
+        "certificates",
+        False,
+        f"certify.py exit {result.returncode}: "
+        f"{(result.stdout.strip().splitlines() or [''])[-1]}"
+        f" {(result.stderr.strip().splitlines() or [''])[-1]}",
+    )
+
+
+def check_syntax_pin() -> CheckResult:
+    """Check 3: GNN syntax/step-registry surface against the Q1 pin."""
+    if not PIN_PATH.is_file():
+        return CheckResult(
+            "syntax-surface pin",
+            False,
+            f"pin file missing: {PIN_PATH} — create it from the GNN HEAD"
+            " surface with sha256 of"
+            f" {', '.join(PINNED_GNN_FILES)} plus the GNN commit digest",
+        )
+    pin = json.loads(PIN_PATH.read_text(encoding="utf-8"))
+    gnn_head = repo_head(GNN_ROOT)
+    recorded_head = str(pin.get("gnn_commit", ""))
+    evidence: list[str] = []
+    ok = True
+    for rel in PINNED_GNN_FILES:
+        recorded = str(pin.get(rel, ""))
+        actual = sha256_of(GNN_ROOT / rel)
+        if actual != recorded:
+            ok = False
+            evidence.append(f"{rel} drifted")
+        else:
+            evidence.append(f"{rel} matches pin")
+    if not ok:
+        return CheckResult(
+            "syntax-surface pin",
+            False,
+            "; ".join(evidence)
+            + " — the pinned syntax surface drifted; open a re-freeze"
+            " slice per bridge contract section 9 and re-pin"
+            " specs/gnn-bridge-w1-bridge-operations/syntax-pin.json from"
+            " the new GNN surface; never silently accept a moved surface",
+        )
+    if recorded_head and gnn_head != recorded_head:
+        # The pin is a surface pin: file digests are the contract; a
+        # moved HEAD with identical file bytes is informational.
+        evidence.append(
+            f"note: GNN HEAD moved {recorded_head[:12]} ->"
+            f" {gnn_head[:12]} with pinned files byte-identical"
+        )
+    return CheckResult("syntax-surface pin", True, "; ".join(evidence))
+
+
+def check_projection() -> CheckResult:
+    """Check 4: canonical->mirror formal projection drift gate."""
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "python",
+            "scripts/_maint_build_formal_modules.py",
+            "--check",
+        ],
+        cwd=FEP_LEAN_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return CheckResult(
+            "formal projection drift",
+            True,
+            (result.stdout.strip().splitlines() or [""])[-1],
+        )
+    return CheckResult(
+        "formal projection drift",
+        False,
+        f"exit {result.returncode}: "
+        f"{(result.stdout.strip().splitlines() or [''])[-1]}"
+        f" {(result.stderr.strip().splitlines() or [''])[-1]}",
+    )
+
+
+def refresh_digests() -> int:
+    """Rewrite the P1 document at current heads (custody-drift healing)."""
+    emitter = _load_p1_emitter()
+    document = emitter.build_document(
+        repo_head(FEP_LEAN_ROOT), repo_head(GNN_ROOT)
+    )
+    emitter.ARTIFACT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    emitter.ARTIFACT_PATH.write_text(document, encoding="utf-8")
+    print(f"refreshed {emitter.ARTIFACT_PATH} ({len(document)} bytes)")
+    return 0
+
+
+def _print_summary(results: list[CheckResult]) -> None:
+    name_width = max(len(r.name) for r in results)
+    verdict_width = max(len(PASS), len(FAIL), len(STALE_CUSTODY))
+    print()
+    print(f"{'check':<{name_width}}  {'result':<{verdict_width}}  evidence")
+    print(f"{'-' * name_width}  {'-' * verdict_width}  ---------")
+    for r in results:
+        label = PASS if r.passed else FAIL
+        print(f"{r.name:<{name_width}}  {label:<{verdict_width}}  {r.evidence}")
+    all_pass = all(r.passed for r in results)
+    print()
+    print(
+        f"BRIDGE STATUS: {'ALL CHECKS PASS' if all_pass else 'FAILED'}"
+        f" ({sum(r.passed for r in results)}/{len(results)} pass)"
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Bridge operations status: emitter freshness, certificate"
+            " protocol, syntax-surface pin, formal projection drift."
+            " Exit 0 iff all checks pass."
+        )
+    )
+    parser.add_argument(
+        "--refresh-digests",
+        action="store_true",
+        help=(
+            "rewrite the P1 document at current heads (heals custody"
+            " drift only); default run is read-only"
+        ),
+    )
+    args = parser.parse_args(argv)
+    if args.refresh_digests:
+        return refresh_digests()
+
+    results = [
+        check_freshness(),
+        check_certificates(),
+        check_syntax_pin(),
+        check_projection(),
+    ]
+    _print_summary(results)
+    return 0 if all(r.passed for r in results) else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
