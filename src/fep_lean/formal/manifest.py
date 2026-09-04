@@ -278,6 +278,18 @@ FORMAL_MODULES: tuple[FormalModule, ...] = (
         declaration_namespace="FEP.PosteriorConvergence",
     ),
     FormalModule(
+        resource="gnn_document.lean",
+        lean_module="FepSketches.gnn_document",
+        role=FormalModuleRole.FOUNDATION,
+        declaration_namespace="FEP.GnnDocument",
+    ),
+    FormalModule(
+        resource="gnn_denotation.lean",
+        lean_module="FepSketches.gnn_denotation",
+        role=FormalModuleRole.FOUNDATION,
+        declaration_namespace="FEP.GnnDenotation",
+    ),
+    FormalModule(
         resource="compositions/core.lean",
         lean_module="FepSketches.compositions.core",
         role=FormalModuleRole.COMPOSITION,
