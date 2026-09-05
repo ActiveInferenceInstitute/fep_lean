@@ -1,33 +1,51 @@
 #!/usr/bin/env python3
-"""Audit cross-reference integrity in the manuscript.
+"""Audit cross-reference integrity against the pandoc-crossref standard.
 
-For every ``*.md`` under this checkout's ``manuscript/`` directory, the script:
+Scope
+-----
 
-1. Collects pandoc anchor definitions (``{#id}``).
-2. Collects LaTeX label definitions (``\\label{id}``) inside displayed-equation
-   environments (``\\begin{equation}...\\label{eq:foo}``) and elsewhere.
-3. Collects every reference (``\\ref{id}``, ``\\eqref{id}``, ``\\Cref{id}``).
-4. Reports references that resolve to neither a pandoc anchor nor a LaTeX label.
+The audit runs over **exactly the files the renderer emits** --
+``fep_lean.output.rendering.manuscript_source_files`` -- rather than re-globbing
+``manuscript/*.md``. A gate that measures a different file set than the artifact
+reports "all resolve" while references dangle in every produced PDF, which is
+what a wider glob did here: the excluded ``09z_unified_formalism_catalogue.md``
+supplied 27 anchor definitions that no rendered section can see.
 
-This freezes the audit shape used in the Tier 8 hygiene closeout so a future
-``\\ref{eq:foo}`` lacking either a ``{#eq:foo}`` anchor or an inline
-``\\label{eq:foo}`` fails CI loudly. Both definition styles are accepted because
-pandoc-citeproc + ``pandoc-crossref`` resolve both at PDF render time.
+Standard enforced
+-----------------
+
+Definitions are pandoc anchors carrying a prefix -- ``{#sec:x}``, ``{#eq:x}``,
+``{#fig:x width=80%}``, ``{#tbl:x}``. References are the pandoc-crossref bracket
+form ``[@sec:x]`` / ``[@eq:x]`` / ``[@fig:x]`` / ``[@tbl:x]``.
+
+Four failure classes, each reported with ``file:line``:
+
+1. ``raw-ref`` -- ``\\ref``/``\\eqref``/``\\cref``/``\\Cref``/``\\autoref``/
+   ``\\nameref`` in Markdown. These survive the LaTeX path but pandoc deletes
+   them from HTML, so they are not portable across output formats.
+2. ``raw-equation`` -- ``\\begin{equation}`` or a ``$$\\label{...}`` line.
+   pandoc parses the former as a RawBlock that ``pandoc-crossref`` cannot see
+   and renders the latter as an unnumbered display, so neither can ever carry a
+   resolvable equation number. The crossref form is ``$$ ... $$ {#eq:x}``.
+3. ``hand-number`` -- a hand-typed ``Figure 3`` / ``Table 1`` / ``Section 2``.
+   Numbering is the filter's to assign; a typed literal silently goes stale.
+4. ``unresolved`` -- a ``[@prefix:id]`` reference whose anchor is defined in no
+   rendered file.
 
 Exit codes
 ----------
 
-- ``0`` -- every reference resolves.
-- ``1`` -- at least one unresolved reference (CI-friendly).
+- ``0`` -- every reference resolves and no forbidden construct is present.
+- ``1`` -- at least one finding (CI-friendly).
 
 Usage
 -----
 
 .. code-block:: bash
 
-    uv run python xref_audit.py            # default
-    uv run python xref_audit.py --verbose  # list every defined anchor/label
-    uv run python xref_audit.py --root path/to/manuscript
+    uv run python docs/xref_audit.py            # default
+    uv run python docs/xref_audit.py --verbose  # list every defined anchor
+    uv run python docs/xref_audit.py --root path/to/manuscript
 """
 
 from __future__ import annotations
@@ -42,16 +60,92 @@ DOCS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = DOCS_DIR.parent
 DEFAULT_ROOT = PROJECT_ROOT / "manuscript"
 
-_RE_PANDOC_ANCHOR = re.compile(r"\{#([\w:_-]+)\}")
-_RE_LATEX_LABEL = re.compile(r"\\label\{([\w:_-]+)\}")
-_RE_REF = re.compile(r"\\(?:ref|eqref|Cref|cref)\{([\w:_-]+)\}")
+if str(PROJECT_ROOT / "src") not in sys.path:  # pragma: no cover - import shim
+    sys.path.insert(0, str(PROJECT_ROOT / "src"))
+
+from fep_lean.output.rendering import manuscript_source_files
+
+#: Anchor definition. Tolerates trailing attributes (``{#fig:x width=100%}``).
+_RE_ANCHOR = re.compile(r"\{#([A-Za-z]+:[\w:.-]+)(?=[\s}])")
+#: pandoc-crossref reference, including ``[@a:x; @a:y]`` continuations.
+_RE_BRACKET_REF = re.compile(r"[\[;]\s*@([A-Za-z]+:[\w:.-]+)")
+_RE_RAW_REF = re.compile(r"\\(?:ref|eqref|cref|Cref|autoref|nameref)\{([\w:.-]+)\}")
+_RE_RAW_EQUATION = re.compile(r"\\begin\{equation\*?\}|^\$\$\\label\{")
+_RE_HAND_NUMBER = re.compile(r"\b(?:Figure|Table|Section|Equation|Appendix)\s+\d+\b")
+
+#: Prefixes pandoc-crossref owns. Other anchors (plain ids) are not audited.
+_CROSSREF_PREFIXES = ("sec", "eq", "fig", "tbl", "lst")
 
 
-def _scan(text: str) -> tuple[set[str], set[str], set[str]]:
-    pandoc = set(_RE_PANDOC_ANCHOR.findall(text))
-    labels = set(_RE_LATEX_LABEL.findall(text))
-    refs = set(_RE_REF.findall(text))
-    return pandoc, labels, refs
+class Finding(tuple[str, Path, int, str]):
+    """``(kind, path, line, detail)`` -- a tuple subclass for stable sorting."""
+
+    __slots__ = ()
+
+
+def _iter_prose_lines(text: str) -> list[tuple[int, str]]:
+    """Yield ``(lineno, line)`` outside fenced code blocks."""
+    out: list[tuple[int, str]] = []
+    in_fence = False
+    for number, line in enumerate(text.splitlines(), start=1):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        out.append((number, line))
+    return out
+
+
+def audit(
+    files: tuple[Path, ...],
+    definition_files: tuple[Path, ...] | None = None,
+) -> tuple[list[Finding], set[str], set[str]]:
+    """Return findings plus the defined-anchor and referenced-id sets.
+
+    Definitions are collected from ``definition_files`` when given, falling
+    back to ``files``. Generated appendix projections are excluded from the
+    renderable source list but still define anchors that chapters reference,
+    so callers pass the full manuscript glob as ``definition_files``.
+    """
+    defined: set[str] = set()
+    for path in definition_files if definition_files is not None else files:
+        for _, line in _iter_prose_lines(path.read_text(encoding="utf-8")):
+            defined |= set(_RE_ANCHOR.findall(line))
+    referenced: set[str] = set()
+    ref_origin: dict[str, list[tuple[Path, int]]] = defaultdict(list)
+    findings: list[Finding] = []
+
+    parsed: list[tuple[Path, list[tuple[int, str]]]] = []
+    for path in files:
+        lines = _iter_prose_lines(path.read_text(encoding="utf-8"))
+        parsed.append((path, lines))
+
+    for path, lines in parsed:
+        for number, line in lines:
+            for match in _RE_RAW_REF.finditer(line):
+                findings.append(
+                    Finding(("raw-ref", path, number, f"\\ref{{{match.group(1)}}}"))
+                )
+            if _RE_RAW_EQUATION.search(line):
+                findings.append(
+                    Finding(("raw-equation", path, number, line.strip()[:60]))
+                )
+            for match in _RE_HAND_NUMBER.finditer(line):
+                findings.append(Finding(("hand-number", path, number, match.group(0))))
+            for match in _RE_BRACKET_REF.finditer(line):
+                ref_id = match.group(1)
+                if ref_id.split(":", 1)[0] not in _CROSSREF_PREFIXES:
+                    continue  # a bibliography key such as [@friston2010], not a xref
+                referenced.add(ref_id)
+                ref_origin[ref_id].append((path, number))
+
+    for ref_id in sorted(referenced - defined):
+        for path, number in ref_origin[ref_id]:
+            findings.append(Finding(("unresolved", path, number, f"[@{ref_id}]")))
+
+    findings.sort(key=lambda f: (f[0], str(f[1]), f[2]))
+    return findings, defined, referenced
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -66,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
         "-v",
         "--verbose",
         action="store_true",
-        help="Also list every anchor/label definition found.",
+        help="Also list every anchor definition found.",
     )
     args = parser.parse_args(argv)
 
@@ -75,54 +169,41 @@ def main(argv: list[str] | None = None) -> int:
         print(f"FAIL: manuscript root does not exist: {root}")
         return 1
 
-    files = sorted(root.glob("*.md"))
+    files = manuscript_source_files(root)
     if not files:
-        print(f"FAIL: no *.md files under {root}")
+        print(f"FAIL: no renderable *.md files under {root}")
         return 1
 
-    pandoc_anchors: set[str] = set()
-    latex_labels: set[str] = set()
-    referenced: set[str] = set()
-    ref_origin: dict[str, list[tuple[Path, int]]] = defaultdict(list)
-    for path in files:
-        text = path.read_text(encoding="utf-8")
-        p, line, r = _scan(text)
-        pandoc_anchors |= p
-        latex_labels |= line
-        referenced |= r
-        for i, line in enumerate(text.splitlines(), start=1):
-            for m in _RE_REF.finditer(line):
-                ref_origin[m.group(1)].append((path, i))
+    findings, defined, referenced = audit(files, tuple(sorted(root.glob("*.md"))))
 
-    defined = pandoc_anchors | latex_labels
-    unresolved = sorted(referenced - defined)
-
-    if unresolved:
-        for ref_id in unresolved:
-            origins = ref_origin.get(ref_id, [])
-            for path, line in origins:
+    if findings:
+        for kind, path, number, detail in findings:
+            try:
                 rel = path.relative_to(PROJECT_ROOT)
-                print(f"{rel}:{line}: unresolved \\ref{{{ref_id}}}")
+            except ValueError:
+                rel = path
+            print(f"{rel}:{number}: {kind}: {detail}")
         print()
+        counts: dict[str, int] = defaultdict(int)
+        for kind, _, _, _ in findings:
+            counts[kind] += 1
+        breakdown = ", ".join(f"{kind}={counts[kind]}" for kind in sorted(counts))
         print(
-            f"FAIL: {len(unresolved)} unresolved reference(s); "
-            f"{len(referenced)} referenced, {len(defined)} defined "
-            f"({len(pandoc_anchors)} pandoc + {len(latex_labels)} \\label)"
+            f"FAIL: {len(findings)} finding(s) over {len(files)} rendered file(s) "
+            f"[{breakdown}]; {len(defined)} anchors defined, "
+            f"{len(referenced)} crossref reference(s)."
         )
         return 1
 
     if args.verbose:
-        print(f"Pandoc anchors ({len(pandoc_anchors)}):")
-        for a in sorted(pandoc_anchors):
-            print(f"  {a}")
-        print(f"\\label definitions ({len(latex_labels)}):")
-        for a in sorted(latex_labels):
-            print(f"  {a}")
+        print(f"Anchors ({len(defined)}):")
+        for anchor in sorted(defined):
+            print(f"  {anchor}")
 
     print(
-        f"OK: {len(defined)} defined "
-        f"({len(pandoc_anchors)} pandoc + {len(latex_labels)} \\label), "
-        f"{len(referenced)} referenced — all resolve."
+        f"OK: {len(files)} rendered file(s), {len(defined)} anchor(s) defined, "
+        f"{len(referenced)} crossref reference(s) — all resolve, "
+        "no forbidden construct."
     )
     return 0
 

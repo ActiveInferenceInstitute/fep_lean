@@ -27,6 +27,7 @@ internal implementation details.
 
 ```bash
 uv run pytest tests/ -q --cov=src --cov-fail-under=89
+uv run pytest tests/ -q -n auto --dist loadgroup -m "not serial_lean"
 uv run pytest tests/ --collect-only -q
 FEP_LEAN_CATALOGUE_COMPILE_TEST=1 \
   uv run pytest tests/test_catalogue_bodies_compile.py -q --no-cov

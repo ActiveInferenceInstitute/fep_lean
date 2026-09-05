@@ -46,15 +46,15 @@ Each canonical topic body declares the narrow Mathlib modules it uses. Narrow im
 
 For a generative model and variational posterior, the familiar ELBO identity is:
 
-\begin{equation}\label{eq:mathlib_elbo}
+$$
 \mathrm{ELBO}(q)=\log p(o)-\KL\!\left(q\,\middle\|\,p(\cdot\mid o)\right).
-\end{equation}
+$$ {#eq:mathlib_elbo}
 
 Equivalently,
 
-\begin{equation}\label{eq:mathlib_vfe_kl}
+$$
 F(q)=-\mathrm{ELBO}(q)= -\log p(o)+\KL\!\left(q\,\middle\|\,p(\cdot\mid o)\right).
-\end{equation}
+$$ {#eq:mathlib_vfe_kl}
 
 fep-002 formalizes the algebraic KL remainder in the native extended codomain: surprisal plus `klDiv` is at least surprisal, and equality holds at the posterior under `SigmaFinite`. That row does not derive `p(o)` or the posterior from a joint measure. fep-014 separately proves KL nonnegativity, self-zero, zero characterization, and the composition-product chain rule. The maintained finite model closes the corresponding discrete bridge by constructing predicted evidence and a posterior from normalized kernels, then proving VFE attainment and a support-qualified equality characterization. This layered design avoids pretending that a library theorem alone supplies the generative-model interpretation or that the finite real-valued result automatically lifts to arbitrary measures.
 

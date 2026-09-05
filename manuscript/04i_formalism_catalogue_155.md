@@ -59,29 +59,29 @@ $\widehat p=K/n$, and let the add-one estimate be
 $\widetilde p=(K+1)/(n+2)$. The `FEP.EmpiricalRisk` foundation exposes the
 exact error decomposition
 
-\begin{equation}\label{eq:catalogue_155_laplace_error}
+$$
 \widetilde p-p
 =\frac{n}{n+2}(\widehat p-p)+\frac{1-2p}{n+2}.
-\end{equation}
+$$ {#eq:catalogue_155_laplace_error}
 
 For $p\in[0,1]$, the offset has absolute value at most $1/(n+2)$. Squaring
 with the explicit factor-two inequality and integrating under any normalized
 finite law gives
 
-\begin{equation}\label{eq:catalogue_155_laplace_risk}
+$$
 \mathbb E[(\widetilde p-p)^2]
 \le 2\left(\frac{n}{n+2}\right)^2
        \mathbb E[(\widehat p-p)^2]
    +\frac{2}{(n+2)^2}.
-\end{equation}
+$$ {#eq:catalogue_155_laplace_risk}
 
 For a Bernoulli target, the Brier score has the exact excess-risk identity
 
-\begin{equation}\label{eq:catalogue_155_brier}
+$$
 \operatorname{BS}(p,q)-\operatorname{BS}(p,p)=(q-p)^2,
-\end{equation}
+$$ {#eq:catalogue_155_brier}
 
-which specializes Equation \ref{eq:catalogue_155_laplace_risk} to finite-law
+which specializes [@eq:catalogue_155_laplace_risk] to finite-law
 Brier excess risk. This formal target follows the proper probabilistic scoring
 rule introduced by Brier [@brier1950verification], while making no empirical
 forecast-calibration claim.
@@ -108,11 +108,11 @@ A depth-indexed `PolicyTree Action Observation d` chooses an action at each
 node and an observation-indexed continuation tree. Given a finite
 `PolicyTreeModel`, its recursive value is
 
-\begin{equation}\label{eq:catalogue_155_policy_tree}
+$$
 V_{d+1}(b;(a,\tau))
 =c_d(b,a)+\sum_o P(o\mid b,a)
   V_d\!\left(u(b,a,o);\tau(o)\right).
-\end{equation}
+$$ {#eq:catalogue_155_policy_tree}
 
 Finite nonempty actions make the Bellman minimizer concrete at every node.
 Open-loop plans embed by using the same continuation after every observation,
@@ -145,9 +145,9 @@ equivalence conditions, and refinement to an executable online agent.
 For a normalized finite law $p$, `FEP.NativeBlanket.embeddedLaw` constructs
 the native measure
 
-\begin{equation}\label{eq:catalogue_155_embedded_law}
+$$
 \mu_p=\sum_x \operatorname{ofReal}(p(x))\,\delta_x.
-\end{equation}
+$$ {#eq:catalogue_155_embedded_law}
 
 Singleton evaluation reflects the original mass, equality of embedded
 measures is injective back to finite laws, native integration agrees with the
@@ -155,9 +155,9 @@ finite weighted sum, and finite prediction agrees with Mathlib
 measure--kernel composition. For a static blanket model, the embedded joint
 retains the rectangle factorization
 
-\begin{equation}\label{eq:catalogue_155_blanket_factorization}
+$$
 \mu(b,i,e)=p_B(b)\,p_I(i\mid b)\,p_E(e\mid b).
-\end{equation}
+$$ {#eq:catalogue_155_blanket_factorization}
 
 The key step is not a zero-mutual-information proxy. The theorem
 `fep139_staticJoint_condIndepFun` states Mathlib's native `CondIndepFun` for the
@@ -183,23 +183,23 @@ that the authored finite coordinates identify a biological boundary.
 For a finite nonempty outcome carrier, positive base weights $h(x)>0$, and a
 real sufficient statistic $T(x)$, the scalar family is
 
-\begin{equation}\label{eq:catalogue_155_exponential_family}
+$$
 p_\theta(x)=\frac{h(x)e^{\theta T(x)}}{Z(\theta)},
 \qquad
 A(\theta)=\log Z(\theta).
-\end{equation}
+$$ {#eq:catalogue_155_exponential_family}
 
 The maintained source proves normalization and full support, the affine
 log-density ratio, $A'(\theta)=\mathbb E_\theta[T]$, the centered-score
 identity, and
 
-\begin{equation}\label{eq:catalogue_155_dual_geometry}
+$$
 A''(\theta)=\operatorname{Var}_\theta[T]
 =I(\theta),
 \qquad
 D_{\mathrm{KL}}(p_\theta\Vert p_\eta)
 =A(\eta)-A(\theta)-A'(\theta)(\eta-\theta).
-\end{equation}
+$$ {#eq:catalogue_155_dual_geometry}
 
 These are the finite scalar counterparts of the metric and affine structures
 that motivate information geometry [@amari1983foundation]. They do not by
@@ -225,32 +225,32 @@ constant statistic supplies an exact zero-information boundary.
 Let $a>0$ be the false-to-true rate and $b>0$ the true-to-false rate. The
 generator and stationary law are
 
-\begin{equation}\label{eq:catalogue_155_generator}
+$$
 Q=\begin{pmatrix}-a&a\\ b&-b\end{pmatrix},
 \qquad
 \pi=\left(\frac{b}{a+b},\frac{a}{a+b}\right).
-\end{equation}
+$$ {#eq:catalogue_155_generator}
 
 Using $\rho(t)=e^{-(a+b)t}$, the source defines the four entries of an exact
 transition matrix $P_t$. For nonnegative time the rows are nonnegative and
 normalized; for all real $s,t$, the closed form satisfies
 
-\begin{equation}\label{eq:catalogue_155_semigroup_master}
+$$
 P_{s+t}=P_sP_t,
 \qquad
 \frac{\mathrm d}{\mathrm dt}P_t=QP_t=P_tQ.
-\end{equation}
+$$ {#eq:catalogue_155_semigroup_master}
 
 The stationary law is invariant and obeys detailed balance. If $m_t$ is the
 true-state mass from an arbitrary initial finite law, then
 
-\begin{equation}\label{eq:catalogue_155_relaxation}
+$$
 m_t-\pi_1=e^{-(a+b)t}(m_0-\pi_1),
 \qquad
 L(t)=(m_t-\pi_1)^2=e^{-2(a+b)t}L(0),
 \qquad
 L'(t)=-2(a+b)L(t).
-\end{equation}
+$$ {#eq:catalogue_155_relaxation}
 
 | Topic | Primary and supporting declarations | Explicit assumptions and non-vacuity |
 | --- | --- | --- |

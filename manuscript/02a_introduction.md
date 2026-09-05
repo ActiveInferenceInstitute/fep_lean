@@ -6,11 +6,11 @@ The Free Energy Principle (FEP) offers a proposed unifying account of perception
 
 This difficulty is not merely pedagogical. Recent critiques [@biehl2021critique; @aguilera2022particular; @andrews2021math] raise substantive concerns about the mathematical status of key FEP claims: the uniqueness of Markov blanket decompositions, the conditions under which steady-state densities exist, and the extent to which variational bounds apply beyond specific model classes. Such debates expose a **verification gap** in mathematical physics: informal review does not provide a mechanically replayable check of every inference. In a literature where results are repeatedly reused, an unstated hypothesis can propagate into later derivations. Formal verification provides a precise checksum: an accepted theorem is derivable from the stated definitions, hypotheses, imported lemmas, and Lean's trusted kernel. That certificate does not establish that the definitions model the world correctly, that the hypotheses hold empirically, or that a narrowed theorem captures the motivating scientific claim. A catalogue of theorem statements, semantic audits, and reproducible compiler evidence lets later work inspect those three questions separately. When the free energy $F$ is claimed to upper-bound surprise, the argument hinges on a chain of measure-theoretic manipulations:
 
-\begin{equation}\label{eq:intro_vfe_bound}
+$$
 F[q, p] = \KL[q(\psi \mid m) \,\|\, p(\psi \mid s, m)] - \log p(s \mid m) \geq -\log p(s \mid m),
-\end{equation}
+$$ {#eq:intro_vfe_bound}
 
-(Equation \ref{eq:intro_vfe_bound}.) The inequality holds because Kullback–Leibler divergence is non-negative by Gibbs' inequality. Each of those symbols—$q$, $p$, $\KL$, $\log p(s \mid m)$—carries type-theoretic weight: $q$ is a probability measure absolutely continuous with respect to $p$, $\KL$ is the Radon–Nikodym-derivative integral $\int \log \frac{dq}{dp}\, dq$, and $\log p(s \mid m)$ is a real-valued random variable. In a journal proof these conditions are implicit; in a theorem prover they must be declared, and the compiler rejects the proof if they are not.
+The inequality in [@eq:intro_vfe_bound] holds because Kullback–Leibler divergence is non-negative by Gibbs' inequality. Each of those symbols—$q$, $p$, $\KL$, $\log p(s \mid m)$—carries type-theoretic weight: $q$ is a probability measure absolutely continuous with respect to $p$, $\KL$ is the Radon–Nikodym-derivative integral $\int \log \frac{dq}{dp}\, dq$, and $\log p(s \mid m)$ is a real-valued random variable. In a journal proof these conditions are implicit; in a theorem prover they must be declared, and the compiler rejects the proof if they are not.
 
 ## Why Formal Verification of FEP Matters for Cognitive Science {#sec:why_formal_verification_matters}
 
@@ -22,7 +22,7 @@ The stakes are concrete. Active Inference is now used to model cortical processi
 
 ## Interactive Theorem Provers as Resolution Mechanism {#sec:interactive_theorem_provers_as_resolution_mechanism}
 
-Interactive Theorem Provers (ITPs) such as Lean 4 [@moura2021lean] address this challenge directly. Lean 4's dependent type system implements the Calculus of Inductive Constructions, so accepted theorems are checked against the kernel. A theorem proven in Lean produces a *proof object*—a certificate that an independent verifier can re-check. Its community library, Mathlib4 [@mathlib2020], covers topology, measure theory, algebra, geometry, and many other areas. Notable successes include the Lean 4 formalization of the polynomial Freiman–Ruzsa proof [@pfr2023lean] and the Liquid Tensor Experiment [@scholze2022liquid]. Stochastic process foundations—critical for FEP path integrals—remain uneven in Mathlib4 at large; the shipped catalogue rows are nonetheless `sorry`-free under this project's maturity policy, while broader SDE and continuous-time stochastic infrastructure remains aspirational where the pinned revision does not supply a reviewed interface (see §\ref{sec:gap_analysis}).
+Interactive Theorem Provers (ITPs) such as Lean 4 [@moura2021lean] address this challenge directly. Lean 4's dependent type system implements the Calculus of Inductive Constructions, so accepted theorems are checked against the kernel. A theorem proven in Lean produces a *proof object*—a certificate that an independent verifier can re-check. Its community library, Mathlib4 [@mathlib2020], covers topology, measure theory, algebra, geometry, and many other areas. Notable successes include the Lean 4 formalization of the polynomial Freiman–Ruzsa proof [@pfr2023lean] and the Liquid Tensor Experiment [@scholze2022liquid]. Stochastic process foundations—critical for FEP path integrals—remain uneven in Mathlib4 at large; the shipped catalogue rows are nonetheless `sorry`-free under this project's maturity policy, while broader SDE and continuous-time stochastic infrastructure remains aspirational where the pinned revision does not supply a reviewed interface (see [@sec:gap_analysis]).
 
 Lean 4 was selected for project-specific, reproducible reasons rather than a mutable cross-prover ranking:
 
@@ -39,11 +39,11 @@ This is a fitness claim for the present catalogue, not a claim that Lean dominat
 
 The FEP was introduced by Karl Friston in a sequence of papers between 2005 and 2010 [@friston2005theory; @friston2006free; @friston2010free], extending Helmholtz-machine and predictive-coding ideas. Active-Inference accounts subsequently developed perception–action formulations [@friston2017active], while recent Bayesian-mechanics work developed path-integral and non-equilibrium-statistical-mechanics connections under explicit modeling assumptions [@dacosta2024bayesian; @friston2024path]. The core variational objective is often written as
 
-\begin{equation}\label{eq:intro_vfe_expected}
+$$
 F = \mathbb{E}_{q}[\log q(s) - \log p(o, s)]
-\end{equation}
+$$ {#eq:intro_vfe_expected}
 
-(Equation \ref{eq:intro_vfe_expected}.) It is the negative evidence lower bound under the usual variational-Bayes construction. Connections to Helmholtz free energy require a specified energy map, normalization, and units; §\ref{sec:thermo_helmholtz_bridge_derivation} states one such bridge and separates it from the current Lean result.
+[@eq:intro_vfe_expected] is the negative evidence lower bound under the usual variational-Bayes construction. Connections to Helmholtz free energy require a specified energy map, normalization, and units; [@sec:thermo_helmholtz_bridge_derivation] states one such bridge and separates it from the current Lean result.
 
 Lean 4 reached a comparable inflection point in parallel. Lean 4.0.0 was released in 2023, Mathlib4 completed its migration from Lean 3 in the same year, and the pinned toolchain used in this work (**`{{lean_toolchain}}`**, Mathlib4 **`{{mathlib_tag}}`**) includes mature measure theory and a native Kullback--Leibler divergence API. The catalogue imports `Mathlib.InformationTheory.KullbackLeibler.Basic` and `.ChainRule` directly. This matters methodologically: library availability is established from the pinned source and compiled declarations, not inferred from secondary roadmap commentary.
 
@@ -69,7 +69,7 @@ This manuscript makes five principal contributions:
 - **(C4) Evidence-separated verification.** Native Lean and full Hermes/OpenGauss evidence have different receipt schemas and claim predicates. Both bind evidence to the current source, while catalogue-only output is ineligible by construction.
 - **(C5) Publication contract audits and visualization.** Generated breadth/depth coverage, an offline accessible formalism atlas, declaration/axiom checking, theorem-reference checking, placeholder validation, and source-to-build rendering make drift visible before publication.
 
-The machine-facing evidence for C1--C3 is the generated catalogue and appendix (§\ref{sec:formalisms_and_results}; Appendix \ref{sec:appendix_b_full_topic_lean_catalogue}). The methodological evidence for C4--C5 is described in §\ref{sec:native_lean_4_compilation_and_zero_direct_verification} and §\ref{sec:pipeline_architecture_and_execution_profile}. At this rendered snapshot, native evidence is **`{{verify.evidence_kind}}`** with rate **`{{compile_rate.total}}`**; full-run claim readiness is **`{{full.claim_ready}}`**.
+The machine-facing evidence for C1--C3 is the generated catalogue and appendix ([@sec:formalisms_and_results]; [@sec:appendix_b_full_topic_lean_catalogue]). The methodological evidence for C4--C5 is described in [@sec:native_lean_4_compilation_and_zero_direct_verification] and [@sec:pipeline_architecture_and_execution_profile]. At this rendered snapshot, native evidence is **`{{verify.evidence_kind}}`** with rate **`{{compile_rate.total}}`**; full-run claim readiness is **`{{full.claim_ready}}`**.
 
 **What this contribution is, and is not.** This is not a proof that the FEP is empirically true or that its many formulations are mutually equivalent. Lean establishes exactly the propositions stated under exactly their hypotheses. The high direct-formalization count reflects disciplined narrowing to exact local contracts, not an end-to-end theorem of self-organization. The contribution is therefore a formal review instrument upstream of empirical and dynamical validation, not a substitute for either.
 
@@ -77,15 +77,15 @@ The machine-facing evidence for C1--C3 is the generated catalogue and appendix (
 
 The remainder of this paper is organized as follows.
 
-**§\ref{sec:background_and_related_work}** reviews FEP and Active Inference background, the relevant Lean 4 / Mathlib4 capabilities, and adjacent ITP efforts.
+**[@sec:background_and_related_work]** reviews FEP and Active Inference background, the relevant Lean 4 / Mathlib4 capabilities, and adjacent ITP efforts.
 
-**§\ref{sec:methodology_and_system_architecture}** details the Lean 4 / Mathlib4 methodology and pipeline architecture. Six deep-dive subsections (§\ref{sec:lean_4_a_primer_for_active_inference_researchers}–§\ref{sec:pipeline_architecture_and_execution_profile}) cover Lean 4 fundamentals, Mathlib4 coverage, the `sorry` maturity taxonomy, the Hermes AI agent, native `lake env lean` compilation, and the orchestration DAG.
+**[@sec:methodology_and_system_architecture]** details the Lean 4 / Mathlib4 methodology and pipeline architecture. Six deep-dive subsections ([@sec:lean_4_a_primer_for_active_inference_researchers]–[@sec:pipeline_architecture_and_execution_profile]) cover Lean 4 fundamentals, Mathlib4 coverage, the `sorry` maturity taxonomy, the Hermes AI agent, native `lake env lean` compilation, and the orchestration DAG.
 
-**§\ref{sec:formalisms_and_results}** presents results for the {{total_topics}}-topic catalogue across the five theoretical areas—FEP foundations, Active Inference, Information Geometry, Bayesian Mechanics, and Thermodynamics—and then isolates the reusable finite kernel in §\ref{sec:finite_active_inference_kernel}. The first ten seven-topic expansion families are synthesized in §\ref{sec:expanded_formalism_program}; §\ref{sec:formalism_catalogue_155} adds finite-sample risk, finite policy trees, native blanket transfer, exponential-family dual geometry, and exact two-state continuous time. The injected `compile_rate` metrics (from `manuscript_vars.yaml`) are reported alongside Hermes and native verification statistics in §\ref{sec:quantitative_execution_metrics}.
+**[@sec:formalisms_and_results]** presents results for the {{total_topics}}-topic catalogue across the five theoretical areas—FEP foundations, Active Inference, Information Geometry, Bayesian Mechanics, and Thermodynamics—and then isolates the reusable finite kernel in [@sec:finite_active_inference_kernel]. The first ten seven-topic expansion families are synthesized in [@sec:expanded_formalism_program]; [@sec:formalism_catalogue_155] adds finite-sample risk, finite policy trees, native blanket transfer, exponential-family dual geometry, and exact two-state continuous time. The injected `compile_rate` metrics (from `manuscript_vars.yaml`) are reported alongside Hermes and native verification statistics in [@sec:quantitative_execution_metrics].
 
-**§\ref{sec:discussion}** examines Mathlib4 coverage gaps, the execution-integrity standard, and implications for the FEP debate. **§\ref{sec:conclusion_and_future_work}** concludes with an engineering-outcomes analysis and future directions.
+**[@sec:discussion]** examines Mathlib4 coverage gaps, the execution-integrity standard, and implications for the FEP debate. **[@sec:conclusion_and_future_work]** concludes with an engineering-outcomes analysis and future directions.
 
-**Appendix \ref{sec:appendix_comprehensive_formalisms_overview}** orients readers to the catalogue, anchors, and injection path. **Appendix \ref{sec:appendix_b_full_topic_lean_catalogue}** is the unified per-topic catalogue: each stable topic juxtaposes the full Lean body with typeset statement signatures and deterministic section/equation anchors for cross-references.
+**[@sec:appendix_comprehensive_formalisms_overview]** orients readers to the catalogue, anchors, and injection path. **[@sec:appendix_b_full_topic_lean_catalogue]** is the unified per-topic catalogue: each stable topic juxtaposes the full Lean body with typeset statement signatures and deterministic section/equation anchors for cross-references.
 
 ## Notation {#sec:notation}
 
@@ -93,16 +93,16 @@ The following notation is used throughout this paper:
 
 | Symbol | Definition | First use |
 |--------|-----------|-----------|
-| $\FE[q,p]$ | Variational free energy functional | §\ref{sec:formal_definition_variational_free_energy}, Eq. \ref{eq:eq_1} |
-| $\EFE(\pi)$ | Expected free energy under policy $\pi$ | §\ref{sec:the_theoretical_landscape}, Eq. \ref{eq:eq_4} |
-| $\KL[q \| p]$ | Kullback-Leibler divergence from $q$ to $p$ | §\ref{sec:formal_definition_variational_free_energy}, Eq. \ref{eq:eq_1} |
-| $\Ent[q]$ | Shannon entropy of distribution $q$ | §\ref{sec:the_theoretical_landscape} |
-| $\E_q[\cdot]$ | Expectation under distribution $q$ | §\ref{sec:formal_definition_variational_free_energy}, Eq. \ref{eq:eq_1} |
-| $\Omega, \mathcal{F}, P$ | Sample space, sigma-algebra, and probability measure | §\ref{sec:lean_4_a_primer_for_active_inference_researchers} |
-| $q \ll p$ | Absolute continuity ($q$ is abs. continuous w.r.t. $p$) | §\ref{sec:lean_4_a_primer_for_active_inference_researchers} |
-| $\frac{dq}{dp}$ | Radon-Nikodym derivative | §\ref{sec:mathlib4_and_measure_theoretic_probability} |
-| `sorry` | Lean 4 tactic admitting a goal without proof | §\ref{sec:the_sorry_mechanism_and_formalization_maturity} |
-| $\nabla$ | Gradient operator (on statistical manifold or $\R^n$) | §\ref{sec:the_theoretical_landscape} |
-| $\Gamma$ | Solenoidal flow operator | §\ref{sec:the_theoretical_landscape} |
-| $Q = -Q^\top$ | Skew-symmetric (solenoidal) matrix | §\ref{sec:the_theoretical_landscape}, Eq. \ref{eq:eq_25} |
-| $F, U, T, S$ | Helmholtz free energy, internal energy, temperature, entropy | §\ref{sec:thermodynamics_results} |
+| $\FE[q,p]$ | Variational free energy functional | [@sec:formal_definition_variational_free_energy], [@eq:eq_1] |
+| $\EFE(\pi)$ | Expected free energy under policy $\pi$ | [@sec:the_theoretical_landscape], [@eq:eq_4] |
+| $\KL[q \| p]$ | Kullback-Leibler divergence from $q$ to $p$ | [@sec:formal_definition_variational_free_energy], [@eq:eq_1] |
+| $\Ent[q]$ | Shannon entropy of distribution $q$ | [@sec:the_theoretical_landscape] |
+| $\E_q[\cdot]$ | Expectation under distribution $q$ | [@sec:formal_definition_variational_free_energy], [@eq:eq_1] |
+| $\Omega, \mathcal{F}, P$ | Sample space, sigma-algebra, and probability measure | [@sec:lean_4_a_primer_for_active_inference_researchers] |
+| $q \ll p$ | Absolute continuity ($q$ is abs. continuous w.r.t. $p$) | [@sec:lean_4_a_primer_for_active_inference_researchers] |
+| $\frac{dq}{dp}$ | Radon-Nikodym derivative | [@sec:mathlib4_and_measure_theoretic_probability] |
+| `sorry` | Lean 4 tactic admitting a goal without proof | [@sec:the_sorry_mechanism_and_formalization_maturity] |
+| $\nabla$ | Gradient operator (on statistical manifold or $\R^n$) | [@sec:the_theoretical_landscape] |
+| $\Gamma$ | Solenoidal flow operator | [@sec:the_theoretical_landscape] |
+| $Q = -Q^\top$ | Skew-symmetric (solenoidal) matrix | [@sec:the_theoretical_landscape], [@eq:eq_25] |
+| $F, U, T, S$ | Helmholtz free energy, internal energy, temperature, entropy | [@sec:thermodynamics_results] |

@@ -6,36 +6,36 @@ Transitioning into temporally extended behavior, Active Inference [@friston2017a
 
 Active Inference begins with the same generative model that underwrites the static FEP, but partitioned into observation and latent components with an explicit decomposition into likelihood and prior:
 
-\begin{equation}\label{eq:ai_generative_model}
+$$
 p(o, s) \;=\; p(o \mid s)\,p(s),
-\end{equation}
+$$ {#eq:ai_generative_model}
 
 and extended to sequences $(o_{1:T}, s_{1:T})$ under a (possibly time-varying) transition kernel $p(s_{t+1} \mid s_t, a_t)$ with action $a_t$. Writing out the full sequential generative model,
 
-\begin{equation}\label{eq:ai_sequential_gm}
+$$
 p(o_{1:T}, s_{1:T} \mid a_{0:T-1}) \;=\; p(s_1)\,\prod_{t=1}^{T} p(o_t \mid s_t)\,\prod_{t=1}^{T-1} p(s_{t+1} \mid s_t, a_t),
-\end{equation}
+$$ {#eq:ai_sequential_gm}
 
 makes the *factor graph* structure of the problem explicit. Inference is often performed by local message passing. fep-007 proves positivity and exact normalization of one finite local sum-product message; fep-047 packages a full finite forward pass as `Matrix.mulVec` and proves exact two-pass composition; fep-017 supplies Mathlib's posterior kernel and joint-reconstruction law; and fep-034 composes transition and observation kernels into a normalized filter. These results still do not define graph topology or a loopy update schedule, so tree exactness and iterative convergence are not inferred.
 
-The agent's variational posterior $q(s)$ approximates the true posterior $p(s \mid o)$ by minimizing the standard variational free energy (Eq. \ref{eq:eq_VFE_functional}); under mean-field or structured factorizations this motivates message-passing updates. The catalogue distinguishes three exact layers: finite normalized local messages (fep-007), algebraically compositional finite propagation (fep-047), and measure-valued Bayesian posterior/filter kernels (fep-017/fep-034). `FEPComposed.fep034_filter_is_fep017_posterior` proves that the filter is precisely the native posterior at the transition-predicted prior. The finite kernel adds a policy-conditioned normalized state--outcome joint and exact posterior reconstruction. What remains absent is a typed factor-graph topology with loopy-message schedules and a theorem equating those schedules to the kernel posterior, not a shared finite generative model itself.
+The agent's variational posterior $q(s)$ approximates the true posterior $p(s \mid o)$ by minimizing the standard variational free energy ([@eq:eq_VFE_functional]); under mean-field or structured factorizations this motivates message-passing updates. The catalogue distinguishes three exact layers: finite normalized local messages (fep-007), algebraically compositional finite propagation (fep-047), and measure-valued Bayesian posterior/filter kernels (fep-017/fep-034). `FEPComposed.fep034_filter_is_fep017_posterior` proves that the filter is precisely the native posterior at the transition-predicted prior. The finite kernel adds a policy-conditioned normalized state--outcome joint and exact posterior reconstruction. What remains absent is a typed factor-graph topology with loopy-message schedules and a theorem equating those schedules to the kernel posterior, not a shared finite generative model itself.
 
 ### Expected Free Energy and Policy Selection {#sec:ai_expected_free_energy}
 
 Many discrete Active-Inference formulations evaluate candidate policies with an **expected free energy** $G(\pi)$ over predicted states and outcomes. Because several inequivalent conventions appear in the literature [@millidge2021whence; @champion2026reframing], we fix the convention used by the maintained finite kernel. Let $q_\pi(s)$ be the predicted state law, $\ell(o\mid s)$ a normalized likelihood, $q_\pi(s,o)=q_\pi(s)\ell(o\mid s)$ the predictive joint, $q_\pi(s\mid o)$ its positive-evidence posterior, and $p_C(o)$ a positive preferred-outcome law. Then
 
-\begin{equation}\label{eq:ai_efe_log_ratio}
+$$
 G(\pi)
 \;=\; \mathbb{E}_{q_\pi(s,o)}\!\left[
 \log q_\pi(s)-\log q_\pi(s\mid o)-\log p_C(o)
 \right].
-\end{equation}
+$$ {#eq:ai_efe_log_ratio}
 
-The first two logarithms have expectation $-I_{q_\pi}(S;O)$, while the last contributes preference cross-entropy. Thus Equation \ref{eq:ai_efe_log_ratio} is exactly the pragmatic-minus-epistemic convention formalized by the finite carrier. For a horizon, a common stage-additive extension is
+The first two logarithms have expectation $-I_{q_\pi}(S;O)$, while the last contributes preference cross-entropy. Thus [@eq:ai_efe_log_ratio] is exactly the pragmatic-minus-epistemic convention formalized by the finite carrier. For a horizon, a common stage-additive extension is
 
-\begin{equation}\label{eq:ai_efe_total}
+$$
 G_{1:T}(\pi) \;=\; \sum_{\tau=1}^{T} G_\tau(\pi),
-\end{equation}
+$$ {#eq:ai_efe_total}
 
 where each $G_\tau$ is evaluated after replacing the model's initial law by the state prediction from the preceding stage. `cumulativeExpectedFreeEnergyFrom` implements this recursion. Lean proves exact decomposition at every prefix--suffix boundary and nonnegativity under a recursive stagewise full-support contract. That carrier remains open loop. fep-071 uses a separate finite belief/action/observation carrier to reoptimize after each observation-dependent update and proves a two-stage Boolean case where feedback strictly beats every fixed open-loop second action. The `fep-128`--`fep-134` family then defines observation-indexed policy trees at every finite depth, proves recursive Bellman minimization and optimal-tree existence, embeds open-loop plans, proves weak closed-loop dominance, transports the risk--ambiguity EFE identity under full support, and supplies a strict Boolean feedback witness [@friston2020sophisticated].
 
@@ -45,12 +45,12 @@ The terminal theorem `FEPComposed.FiniteReferenceAgent.finiteReferenceAgent_term
 
 Using $q_\pi(s,o)=q_\pi(s)\ell(o\mid s)$, the entropy identity $I(S;O)=H(O)-H(O\mid S)$, and the cross-entropy identity $\mathrm{CE}(q_\pi(o),p_C)=H(q_\pi(o))+D_{\mathrm{KL}}(q_\pi(o)\Vert p_C)$ yields the **risk--ambiguity** decomposition:
 
-\begin{equation}\label{eq:ai_risk_ambiguity}
+$$
 G(\pi) \;=\;
 \underbrace{D_{\mathrm{KL}}\!\left(q_\pi(o)\,\middle\|\,p_C(o)\right)}_{\text{preference risk}}
 \;+\;
 \underbrace{\mathbb{E}_{q_\pi(s)}\!\left[H\!\left(\ell(\cdot\mid s)\right)\right]}_{\text{ambiguity}},
-\end{equation}
+$$ {#eq:ai_risk_ambiguity}
 
 where $H[\ell(\cdot\mid s)]= -\sum_o \ell(o\mid s)\log\ell(o\mid s)$. Risk is a divergence between predicted and preferred outcomes, not merely expected preference surprise; the latter is the pragmatic cross-entropy and differs from risk by the predicted-outcome entropy. Ambiguity is the expected entropy of the observation channel: a high-ambiguity policy favors states whose likelihood is dispersed. In the finite kernel, both terms are nonnegative, so this decomposition also proves $G(\pi)\ge 0$ under the stated full-support contract.
 
@@ -58,31 +58,31 @@ where $H[\ell(\cdot\mid s)]= -\sum_o \ell(o\mid s)\log\ell(o\mid s)$. Risk is a 
 
 The defining rearrangement is the **epistemic--pragmatic** form:
 
-\begin{equation}\label{eq:ai_epistemic_pragmatic}
+$$
 G(\pi) \;=\;
 \underbrace{\operatorname{CE}\!\left(q_\pi(o),p_C(o)\right)}_{\text{pragmatic cost}}
 \;-\;
 \underbrace{I_{q_\pi}(S;O)}_{\text{epistemic value}}.
-\end{equation}
+$$ {#eq:ai_epistemic_pragmatic}
 
 Here mutual information measures anticipated information gain about the hidden state, and cross-entropy measures expected negative log preference. Expanding the two finite sums gives
 
-\begin{equation}\label{eq:ai_efe_epi_prag}
+$$
 G(\pi)
 = \sum_o q_\pi(o)\bigl[-\log p_C(o)\bigr]
 - \sum_{s,o}q_\pi(s,o)
   \log\!\frac{q_\pi(s,o)}{q_\pi(s)q_\pi(o)}.
-\end{equation}
+$$ {#eq:ai_efe_epi_prag}
 
-The maintained finite information layer defines the second sum as KL divergence from the joint to the product of its marginals. Under full support, Lean proves that Equations \ref{eq:ai_risk_ambiguity} and \ref{eq:ai_epistemic_pragmatic} agree exactly. Topic fep-021 remains a distinct `ENNReal` convention: pragmatic cost truncated-subtract epistemic value. It proves $G+\mathrm{IG}=C$ under the visible premise $\mathrm{IG}\le C$, monotonicity in cost, antitonicity in information value, and the zero boundary; `FEPComposed.fep021_informationGain_balance` instantiates its information input with fep-041's native measure KL. The finite real-to-`ENNReal` bridge uses `ENNReal.ofReal`, so negative real values would be truncated rather than silently identified.
+The maintained finite information layer defines the second sum as KL divergence from the joint to the product of its marginals. Under full support, Lean proves that [@eq:ai_risk_ambiguity] and [@eq:ai_epistemic_pragmatic] agree exactly. Topic fep-021 remains a distinct `ENNReal` convention: pragmatic cost truncated-subtract epistemic value. It proves $G+\mathrm{IG}=C$ under the visible premise $\mathrm{IG}\le C$, monotonicity in cost, antitonicity in information value, and the zero boundary; `FEPComposed.fep021_informationGain_balance` instantiates its information input with fep-041's native measure KL. The finite real-to-`ENNReal` bridge uses `ENNReal.ofReal`, so negative real values would be truncated rather than silently identified.
 
 #### Softmax Policy Selection with Precision {#sec:ai_softmax_policy}
 
 Policies are then selected via a **Boltzmann/softmax posterior** over $G$:
 
-\begin{equation}\label{eq:ai_softmax_policy}
+$$
 q(\pi) \;=\; \frac{p_0(\pi)\exp(-\gamma\, G(\pi))}{\sum_{\pi'} p_0(\pi')\exp(-\gamma\, G(\pi'))}, \qquad \gamma \ge 0,
-\end{equation}
+$$ {#eq:ai_softmax_policy}
 
 with prior policy law $p_0$ and precision $\gamma$ controlling the exploration--exploitation balance. At $\gamma=0$, the posterior equals $p_0$ rather than being uniformly distributed unless the prior is uniform. In a finite policy space, the large-precision limit concentrates on prior-supported EFE minimizers, with relative mass among tied minimizers inherited from $p_0$. The maintained kernel proves finite normalization for the one-stage EFE posterior, existence of MAP and EFE-minimizing policies, antitone ordering by EFE for equal priors and nonnegative precision, and exact pushforward of policy mass to an action law. fep-070 separately normalizes a prior-weighted exponential action score for finite control. The later policy-tree family proves deterministic finite-tree optimality but does not define a probability posterior over trees or infer precision.
 
@@ -90,11 +90,11 @@ Some Active-Inference models infer precision $\gamma$ rather than treating it as
 
 #### Exploration Bonus and Information Gain {#sec:ai_exploration_bonus}
 
-Equation \ref{eq:ai_information_gain} motivates **fep-041**, which now defines information gain directly as Mathlib's measure-valued `InformationTheory.klDiv`:
+[@eq:ai_information_gain] motivates **fep-041**, which now defines information gain directly as Mathlib's measure-valued `InformationTheory.klDiv`:
 
-\begin{equation}\label{eq:ai_information_gain}
+$$
 \mathrm{IG}(\pi) \;=\; \mathbb{E}_{q(o\mid\pi)}\!\bigl[\mathrm{KL}\bigl[q(s \mid o, \pi) \,\big\|\, q(s \mid \pi)\bigr]\bigr] \;=\; I(s; o \mid \pi) \;\ge\; 0.
-\end{equation}
+$$ {#eq:ai_information_gain}
 
 fep-041 proves nonnegativity, finite-measure separation, and vanishing expected information gain when a posterior kernel equals the prior almost everywhere under the predictive observation measure. The maintained finite carrier now builds the policy-conditioned predictive joint and defines epistemic value as its mutual information. The remaining bridge is a theorem identifying that finite joint-KL definition with fep-041's measure-valued posterior-averaged KL under matched embeddings and support assumptions. Claims about epistemic foraging also require a behavioral or dynamical model beyond either information identity.
 
@@ -102,9 +102,9 @@ fep-041 proves nonnegativity, finite-measure separation, and vanishing expected 
 
 A common comparison recovers reward-like policy objectives from log prior preferences. If the prior over preferred outcomes is written as
 
-\begin{equation}\label{eq:ai_mdp_indicator_prior}
+$$
 p(o \mid C) \;=\; \begin{cases} \exp(r(o))/Z & o \in \mathcal{G}, \\ 0 & o \notin \mathcal{G}, \end{cases}
-\end{equation}
+$$ {#eq:ai_mdp_indicator_prior}
 
 or more generally $\log p(o \mid C) = r(o) - \log Z$, the pragmatic term resembles negative expected reward up to a constant. fep-033 now defines a deterministic transition-aware finite-horizon value in `ENNReal` and proves its exact Bellman recursion, monotonicity in stage/terminal costs, and zero-cost and zero-discount boundaries. This is a genuine dynamic-programming contract, but without a shared reward/preference transformation and stochastic policy model it still does **not** prove that Active Inference contains finite-horizon MDPs.
 
@@ -119,7 +119,7 @@ The rows used in this section can be grouped heuristically along a perception/ac
 
 #### Belief Propagation on Factor Graphs (fep-007) {#sec:ai_belief_propagation}
 
-The sequential generative model of Section \ref{sec:ai_generative_model} admits a canonical factor-graph representation: variable nodes for each $s_t$ and $o_t$, factor nodes for the prior $p(s_1)$, each transition $p(s_{t+1} \mid s_t, a_t)$, and each emission $p(o_t \mid s_t)$. The *sum--product* (belief propagation) algorithm computes the marginal $q(s_t) \approx p(s_t \mid o_{1:T})$ by local message passing on this graph: forward messages $\alpha_t(s_t) = \sum_{s_{t-1}} p(s_t \mid s_{t-1}, a_{t-1})\,\alpha_{t-1}(s_{t-1})\,p(o_{t-1} \mid s_{t-1})$ and backward messages $\beta_t(s_t)$ combine into the posterior $q(s_t) \propto \alpha_t(s_t)\,\beta_t(s_t)$. In the linear-Gaussian case this reduces exactly to the Kalman filter/smoother.
+The sequential generative model of [@sec:ai_generative_model] admits a canonical factor-graph representation: variable nodes for each $s_t$ and $o_t$, factor nodes for the prior $p(s_1)$, each transition $p(s_{t+1} \mid s_t, a_t)$, and each emission $p(o_t \mid s_t)$. The *sum--product* (belief propagation) algorithm computes the marginal $q(s_t) \approx p(s_t \mid o_{1:T})$ by local message passing on this graph: forward messages $\alpha_t(s_t) = \sum_{s_{t-1}} p(s_t \mid s_{t-1}, a_{t-1})\,\alpha_{t-1}(s_{t-1})\,p(o_{t-1} \mid s_{t-1})$ and backward messages $\beta_t(s_t)$ combine into the posterior $q(s_t) \propto \alpha_t(s_t)\,\beta_t(s_t)$. In the linear-Gaussian case this reduces exactly to the Kalman filter/smoother.
 
 **fep-007** retains the local product/order lemmas and adds a support-aware normalized message. Strictly positive factors and incoming values over a nonempty support give a positive normalizer, pointwise nonnegative output, and support mass exactly one. Exactness on a tree and convergence on a loopy graph still require a formal graph and update schedule rather than follow from local normalization.
 
@@ -127,9 +127,9 @@ The sequential generative model of Section \ref{sec:ai_generative_model} admits 
 
 For discrete state and observation spaces, the single-step Bayesian update has the canonical form
 
-\begin{equation}\label{eq:ai_categorical_bayes}
+$$
 q(s \mid o) \;\propto\; p(o \mid s)\,q(s), \qquad q(s \mid o) \;=\; \frac{p(o \mid s)\,q(s)}{\sum_{s'} p(o \mid s')\,q(s')},
-\end{equation}
+$$ {#eq:ai_categorical_bayes}
 
 where the denominator is the evidence. **fep-034** now defines the transition-predicted prior as kernel--measure composition and applies Mathlib's posterior construction to the observation kernel. It proves predictive and posterior mass one, reconstruction of the transition-prediction/observation joint law, and recovery of the predicted prior. The composition theorem identifies it definitionally with fep-017's posterior at that predicted prior.
 
@@ -141,9 +141,9 @@ The normalization assumptions are carried by Mathlib's finite/Markov-kernel type
 
 The term *affordance*, borrowed from ecological psychology [@gibson1979ecological], has a precise formal meaning within Active Inference: the set of outcomes that an agent can render accessible through some choice of policy. Given a family of admissible policies $\Pi$ and a predictive distribution $q(\cdot \mid \pi)$ over outcomes for each $\pi \in \Pi$, the *affordance set* is
 
-\begin{equation}\label{eq:ai_affordance_set}
+$$
 \mathcal{A}(\Pi, q) \;=\; \{\, o : \exists \pi \in \Pi,\; q(o \mid \pi) > 0 \,\} \;=\; \bigcup_{\pi \in \Pi} \operatorname{supp}\!\bigl(q(\cdot \mid \pi)\bigr).
-\end{equation}
+$$ {#eq:ai_affordance_set}
 
 **fep-023** encodes reachability as the set of probability laws generated by an allowed finite policy set. It proves membership for an allowed policy, monotonicity under policy-set inclusion, and transfer of probability normalization to every reachable law. It does not define outcome support, optimize over the reachable-law set, or connect that set to fep-041's policy-conditioned information gain, so curiosity and niche-construction interpretations remain outside the row.
 
@@ -167,21 +167,21 @@ Policy selection reduces to minimization of $G$ over the finite policy set. **fe
 | fep-041 | Native measure-KL information gain and zero-expectation law | `{{topics.fep-041.semantic_disposition}}` | `InformationTheory.KullbackLeibler.Basic` | 0 |
 | fep-047 | `Matrix.mulVec` sum-product propagation with exact composition | `{{topics.fep-047.semantic_disposition}}` | `Data.Matrix.Mul` | 0 |
 
-**Representative formalization** — *Expected Free Energy (fep-003, Eq. \ref{eq:eq_4})*: On the maintained finite policy-conditioned carrier, EFE decomposes into pragmatic cost minus epistemic value:
+**Representative formalization** — *Expected Free Energy (fep-003, [@eq:eq_4])*: On the maintained finite policy-conditioned carrier, EFE decomposes into pragmatic cost minus epistemic value:
 
-\begin{equation*}
+$$
 \EFE(\pi)
 =
 \underbrace{\operatorname{CE}\!\bigl(q_\pi(o),p_C(o)\bigr)}_{\text{pragmatic cost}}
 -
 \underbrace{I_{q_\pi}(S;O)}_{\text{epistemic value}} .
-\end{equation*}
+$$
 
-The production fep-003 sketch defines finite-horizon discounted pragmatic cost directly in `ENNReal`, proves its exact successor-horizon increment, and establishes monotonicity in both stage costs and horizon. fep-021 then combines that cost with an epistemic value under the package's explicit sign convention, and the composed theorem checks the balance. Those topic rows do not derive the probabilistic expression above; the maintained finite carrier does so separately for a real-valued one-step policy-conditioned joint under full support. See §\ref{sec:finite_kernel_efe}, §\ref{sec:catalogue-fep-003} in Appendix B, and §\ref{sec:eqs-fep-003} in Appendix~\ref{sec:appendix_c_latex_equations}.
+The production fep-003 sketch defines finite-horizon discounted pragmatic cost directly in `ENNReal`, proves its exact successor-horizon increment, and establishes monotonicity in both stage costs and horizon. fep-021 then combines that cost with an epistemic value under the package's explicit sign convention, and the composed theorem checks the balance. Those topic rows do not derive the probabilistic expression above; the maintained finite carrier does so separately for a real-valued one-step policy-conditioned joint under full support. See [@sec:finite_kernel_efe], [@sec:catalogue-fep-003] in Appendix B, and [@sec:eqs-fep-003] in [@sec:appendix_c_latex_equations].
 
-**Representative formalization** — *Optimal Policy Existence (fep-008)*: On a nonempty finite policy set, EFE achieves its minimum. The sketch invokes `Finset.exists_min_image` (producing a certified minimizer) and then proves that any two minimizers agree on $G$ via `le_antisymm`. This turns the *soft* statement "some policy is best under $G$" into a compiler-verifiable existence theorem — a small but important piece of machinery for downstream results where the agent commits to a specific action. Note the discrete setting matches real active-inference implementations that enumerate a finite policy horizon. Typeset statements: §\ref{sec:eqs-fep-008} in Appendix~\ref{sec:appendix_c_latex_equations}; Lean: §\ref{sec:catalogue-fep-008} in Appendix B.
+**Representative formalization** — *Optimal Policy Existence (fep-008)*: On a nonempty finite policy set, EFE achieves its minimum. The sketch invokes `Finset.exists_min_image` (producing a certified minimizer) and then proves that any two minimizers agree on $G$ via `le_antisymm`. This turns the *soft* statement "some policy is best under $G$" into a compiler-verifiable existence theorem — a small but important piece of machinery for downstream results where the agent commits to a specific action. Note the discrete setting matches real active-inference implementations that enumerate a finite policy horizon. Typeset statements: [@sec:eqs-fep-008] in [@sec:appendix_c_latex_equations]; Lean: [@sec:catalogue-fep-008] in Appendix B.
 
-**Representative formalization** — *Affordances as Reachable Laws (fep-023)*: The sketch maps policies to probability measures and defines the reachable set as the image of an allowed finite policy set. It proves set monotonicity and that every reachable law inherits probability normalization. Inclusion is weak: added policies may induce an already-reachable law, so strict growth is not claimed. See §\ref{sec:eqs-fep-023} in Appendix~\ref{sec:appendix_c_latex_equations} and §\ref{sec:catalogue-fep-023} in Appendix B.
+**Representative formalization** — *Affordances as Reachable Laws (fep-023)*: The sketch maps policies to probability measures and defines the reachable set as the image of an allowed finite policy set. It proves set monotonicity and that every reachable law inherits probability normalization. Inclusion is weak: added policies may induce an already-reachable law, so strict growth is not claimed. See [@sec:eqs-fep-023] in [@sec:appendix_c_latex_equations] and [@sec:catalogue-fep-023] in Appendix B.
 
 **Depth landmarks.** fep-028 is a complete finite softmax law; fep-008 is a finite-set minimizer theorem; fep-021 fixes an explicit `ENNReal` EFE convention; fep-034 is a normalized posterior filter; and fep-041 uses native measure KL. The finite kernel supplies their missing shared model at a distinct real-valued finite layer and adds stage-updated cumulative EFE. fep-071 adds exact observation-dependent reoptimization; fep-128--134 add arbitrary finite-depth policy trees, optimality, open-loop dominance, treewise EFE, and a strict feedback witness; and fep-107--113 add independent-product and fixed two-agent collective laws. H1 then connects one exact learned posterior, one further update, one asymmetric optimal report, and the emitted action's exact transition on a selected finite model. Remaining limitations include the explicit real/`ENNReal` bridge, broader measure-level EFE equivalence, probabilistic selection or learning over policy trees, transition-aware planning on the H1 carrier, infinite or continuous carriers, arbitrary network topologies, and refinement to executable agents. Syntactic `mathlib_status`, semantic disposition, and current native evidence are reported separately in generated coverage and receipts.
 

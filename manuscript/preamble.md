@@ -70,16 +70,10 @@
 \AddToHook{package/bookmark/after}{\RequirePackage{cleveref}}
 
 % ── Styled theorem/code panels ───────────────────────────────────
-\usepackage{tcolorbox}
-\tcbuselibrary{skins,breakable}
-\tcbset{
-  lean4box/.style={
-    enhanced,breakable,
-    colback=lean4blue!5,colframe=lean4blue!60,
-    title style={fill=lean4blue!80},
-    fonttitle=\bfseries\small
-  }
-}
+% tcolorbox intentionally NOT loaded: the only style it defined (lean4box)
+% is referenced by no manuscript section, and tcolorbox is absent from a
+% TeX Live basic install, which aborted every PDF render. Re-add the
+% package here together with its first real use, not before.
 
 % ── Theorem environments ─────────────────────────────────────────
 \theoremstyle{definition}

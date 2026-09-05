@@ -37,12 +37,9 @@ def pytest_collection_modifyitems(
     must never run in parallel with each other; this makes the documented
     marker enforce that constraint instead of relying on serial-only runs.
     """
-    group_started = False
     for item in items:
         if item.get_closest_marker("serial_lean") is not None:
             item.add_marker(pytest.mark.xdist_group("lean"))
-            group_started = True
-    del group_started  # marker presence is the only contract
 
 
 def pytest_configure(config: pytest.Config) -> None:

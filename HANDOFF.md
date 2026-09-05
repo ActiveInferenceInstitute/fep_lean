@@ -27,9 +27,10 @@ Gemini 3.7 Flash. Both selected topics passed the then-current pipeline, Gauss
 session, and Lean checks. They are historical connectivity and workflow
 evidence only: the source and receipt schema subsequently changed, and the
 current validator correctly rejects both report directories as non-current.
-The retained report directories are
+The report directories for those smokes were
 `output/reports/run_20260820_150225_893319` and
-`output/reports/run_20260820_150523_744462`.
+`output/reports/run_20260820_150523_744462`; the retained copies are no longer
+present under the current `output/reports/` tree.
 
 The later 50-topic report,
 `output/reports/run_20260820_183143_709998`, superseded those one-topic smokes
@@ -148,6 +149,10 @@ planes separate.
 The 2026-08-20 Hermes/OpenGauss report likewise remains historical for its
 exact 50-topic source digest; current provider claims require a new,
 independently validated source-bound full report.
+
+The newest evidence layer — Q5/Q6/Q7 artifact proofs, W2 source custody, the
+version-0.4 bridge contract, and schema-2 receipts — is summarized in
+[specs/gnn-bridge-w2-source-custody/WAVE2-REPORT.md](specs/gnn-bridge-w2-source-custody/WAVE2-REPORT.md).
 
 ## Reproduction commands
 

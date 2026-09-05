@@ -116,8 +116,9 @@ plus endpoint `CondIndepFun`, and derives a fixed bivariate precision
 perturbation with actual covariance `-1 / 15` and native non-independence.
 H2.7-R0 has accepted the continuous density-relative exact-posterior VFE and
 derived local natural-gradient seam. The [H2.7 terminal record](specs/horizon-2-smooth-stochastic/readiness/terminal-acceptance.json)
-now validates 328 mandatory cases, the enabled Fin4 supplement, independent
-diagnostics, and three source-bound reviews. This opens only read-only H3.G0
+now validates 328 mandatory cases, the enabled Fin4 supplement, 180 bound
+source hashes, independent diagnostics, and three source-bound reviews. This
+opens only read-only H3.G0
 eligibility; no study metadata has been selected and H3.0--H3.7 remain closed.
 
 That formal exit is not current publication evidence. The retained exact-roster
@@ -126,9 +127,10 @@ v1.1.0 release snapshot only; their former counts and hashes remain historical
 until every live-source validator accepts a coordinated replacement.
 [`TODO.md`](TODO.md) retains that refresh as `FEP-EVIDENCE-CURRENT`. The local
 full-report
-path `output/reports/run_20260820_183143_709998/` remains historical evidence
+path `output/reports/run_20260820_183143_709998/` was historical evidence
 for the earlier 50-topic source snapshot and does not bind the 155-topic
-source; ignored provider reports are deliberately not shipped in a release.
+source; that retained copy is no longer present under `output/reports/`, and
+ignored provider reports are deliberately not shipped in a release.
 The earlier Kimi and Gemini one-topic runs are historical smoke evidence as
 well. No provider secret is stored in the
 repository, and no execution receipt authorizes publication or proves the FEP

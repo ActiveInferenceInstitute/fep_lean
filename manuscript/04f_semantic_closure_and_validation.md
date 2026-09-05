@@ -6,13 +6,13 @@ For the current canonical sources, {{semantic_dispositions.formalized}} of {{tot
 
 ### The Formalism Atlas {#sec:formalism_atlas}
 
-![Formalism atlas generated from the topic, relation, and capability registries. Derivational relations, checked formal pairings, and conceptual relations are separately labeled, while the schema retains an explicit blocker notation for future gaps.](../docs/formalism-atlas.svg){#fig:formalism_atlas width=100%}
+![Formalism atlas generated from the topic, relation, and capability registries. Derivational relations, checked formal pairings, and conceptual relations are separately labeled, while the schema retains an explicit blocker notation for future gaps.](../output/figures/formalism-atlas.png){#fig:formalism_atlas width=100%}
 
 The [interactive offline atlas](../docs/formalism-atlas.html) presents the same canonical join with searchable node detail. Neither view infers scientific relations from shared imports or vocabulary. Topic metadata comes from the generated catalogue, relation kinds and witness names come from `config/formalism_relations.yaml`, and capability state is recomputed from exact declarations. Authored cross-topic witnesses live in manifested composition leaves and resolve through `FepSketches.composed`; capability evidence may additionally resolve in any manifested foundation. Purple module-import arrows occupy a separate edge class and table from teal scientific theorem edges. The SVG and HTML are projections, so their `--check` gate detects drift instead of accepting manual edits.
 
 ### Established Core Theorem Strands {#sec:semantic_closure_strands}
 
-The original core is organized into the following ten mutually connected strands. The first ten expansion families and their distinct carriers are treated in §\ref{sec:expanded_formalism_program}; the five families added for topics 121--155 are treated in §\ref{sec:formalism_catalogue_155}. Neither expansion is compressed into this historical core table:
+The original core is organized into the following ten mutually connected strands. The first ten expansion families and their distinct carriers are treated in [@sec:expanded_formalism_program]; the five families added for topics 121--155 are treated in [@sec:formalism_catalogue_155]. Neither expansion is compressed into this historical core table:
 
 | Strand | Direct objects and laws | Representative witnessed seams |
 | --- | --- | --- |

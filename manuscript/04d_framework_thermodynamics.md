@@ -8,82 +8,82 @@ The thermodynamic interpretation of the FEP draws analogies to statistical mecha
 
 For a canonical equilibrium ensemble with the usual definitions of mean energy, entropy, and partition function, the thermodynamic **Helmholtz free energy** takes the equivalent forms:
 
-\begin{equation}\label{eq:thermo_helmholtz}
+$$
 \mathcal{F} \;=\; U \;-\; T\,S \;=\; -\,k_B\,T\,\log Z, \qquad Z \;=\; \sum_i \exp\!\bigl(-\beta\,E_i\bigr),\; \beta = 1 / (k_B T).
-\end{equation}
+$$ {#eq:thermo_helmholtz}
 
-Equation \ref{eq:thermo_helmholtz} motivates a formal analogy with variational free energy, but thermodynamic Helmholtz energy does not generically “upper-bound surprise.” The connection requires an explicit choice of energy $E=-k_BT\log p$ and compatible normalization. fep-031 proves positivity and energy monotonicity of exponential weights, positivity of a nonempty finite partition sum, nonnegativity of the normalized weights, and that they sum to one on the selected support. It does not derive the Gibbs form from maximum entropy or construct a thermodynamic ensemble beyond this finite mass function.
+[@eq:thermo_helmholtz] motivates a formal analogy with variational free energy, but thermodynamic Helmholtz energy does not generically “upper-bound surprise.” The connection requires an explicit choice of energy $E=-k_BT\log p$ and compatible normalization. fep-031 proves positivity and energy monotonicity of exponential weights, positivity of a nonempty finite partition sum, nonnegativity of the normalized weights, and that they sum to one on the selected support. It does not derive the Gibbs form from maximum entropy or construct a thermodynamic ensemble beyond this finite mass function.
 
 ### Helmholtz Free Energy Bridge (fep-013): Full Derivation {#sec:thermo_helmholtz_bridge_derivation}
 
 The following calculation states one precise bridge under a fixed observation, common base measure, integrability, and positive temperature. Let $p(s,o)$ be a generative joint density and $q(s)$ a normalized approximate posterior. Define
 
-\begin{equation}\label{eq:thermo_bridge_definitions}
+$$
 U_q \;:=\; \mathbb{E}_q\!\bigl[-\log p(s, o)\bigr], \qquad H[q] \;:=\; -\,\mathbb{E}_q\!\bigl[\log q(s)\bigr], \qquad T \;=\; \frac{1}{k_B\,\beta}.
-\end{equation}
+$$ {#eq:thermo_bridge_definitions}
 
 Here $U_q$ is the *internal energy* interpretation of the negative log-joint (each configuration $(s, o)$ is assigned an energy $E(s, o) = -\log p(s, o)$ in natural units), and $H[q]$ is the *Boltzmann entropy* of the posterior $q$. Substituting these definitions into the variational free energy $F_{\text{var}}[q] = \mathbb{E}_q[-\log p(s, o)] - H[q]$ (in nats) yields
 
-\begin{equation}\label{eq:thermo_bridge_nats_to_joules}
+$$
 F_{\text{var}}[q] \;=\; U_q \;-\; H[q] \;=\; \frac{1}{k_B T}\!\Bigl(\widetilde{U}_q \;-\; T\,\widetilde{S}_q\Bigr),
-\end{equation}
+$$ {#eq:thermo_bridge_nats_to_joules}
 
 where $\widetilde{U}_q = k_B T\,U_q$ and $\widetilde{S}_q = k_B\,H[q]$. Calling the bracketed quantity $\mathcal{F}[q]$ gives the bridge and its Bayesian decomposition:
 
-\begin{equation}\label{eq:thermo_helmholtz_bridge_exact}
+$$
 \boxed{\;F_{\text{var}}[q] \;=\; \frac{\mathcal{F}[q]}{k_B T}
 \;=\; D_{\mathrm{KL}}\!\left(q(s)\,\middle\|\,p(s\mid o)\right)-\log p(o)\;}
-\end{equation}
+$$ {#eq:thermo_helmholtz_bridge_exact}
 
 Here the equilibrium free energy is $\mathcal{F}_{\mathrm{eq}}=-k_BT\log p(o)$ and the excess $\mathcal{F}[q]-\mathcal{F}_{\mathrm{eq}}$ is $k_BT$ times the KL divergence. Positive rescaling preserves the argmin:
 
-\begin{equation}\label{eq:thermo_bridge_argmin_equiv}
+$$
 \mathop{\mathrm{argmin}}_q\,F_{\text{var}}[q] \;=\; \mathop{\mathrm{argmin}}_q\,\mathcal{F}[q].
-\end{equation}
+$$ {#eq:thermo_bridge_argmin_equiv}
 
 Under the stipulated construction and natural scaling, the minimizer is the posterior because the KL term vanishes there. This is a mathematical analogy obtained by defining the energy landscape from the generative density; it is not by itself a physical claim that biological inference is thermodynamic equilibration.
 
-**What fep-013 formalizes.** It defines $F(T)=U(T)-T S(T)$, proves the exact derivative $F'=U'-S-TS'$, and reduces it to $F'=-S$ under the explicit equilibrium first-law identity $U'=TS'$. Boundary, order, and finite-difference laws are retained. The authored `fep013_gaussianHelmholtz_derivative` theorem instantiates this calculus with fep-040's Gaussian thermal entropy and $U(T)=T/2$. The row still does not identify this Helmholtz object with fep-002's variational free energy or prove the density-level bridge in Equation \ref{eq:thermo_helmholtz_bridge_exact}.
+**What fep-013 formalizes.** It defines $F(T)=U(T)-T S(T)$, proves the exact derivative $F'=U'-S-TS'$, and reduces it to $F'=-S$ under the explicit equilibrium first-law identity $U'=TS'$. Boundary, order, and finite-difference laws are retained. The authored `fep013_gaussianHelmholtz_derivative` theorem instantiates this calculus with fep-040's Gaussian thermal entropy and $U(T)=T/2$. The row still does not identify this Helmholtz object with fep-002's variational free energy or prove the density-level bridge in [@eq:thermo_helmholtz_bridge_exact].
 
 ### Jarzynski Equality and Fluctuation Theorems {#sec:thermo_jarzynski}
 
 For a system driven by an external protocol that transitions the Hamiltonian from $H_0$ to $H_1$ in finite time, the non-equilibrium work $W$ is a random variable with distribution $P(W)$. The **Jarzynski equality** [@jarzynski1997nonequilibrium] provides an *identity* — not merely an inequality — linking the exponential average of $W$ to the *equilibrium* free energy difference:
 
-\begin{equation}\label{eq:thermo_jarzynski}
+$$
 \bigl\langle e^{-\beta W} \bigr\rangle \;=\; \int\!P(W)\,e^{-\beta W}\,dW \;=\; e^{-\beta\,\Delta \mathcal{F}}, \qquad \Delta \mathcal{F} = \mathcal{F}_1 - \mathcal{F}_0.
-\end{equation}
+$$ {#eq:thermo_jarzynski}
 
-Equation \ref{eq:thermo_jarzynski} can hold for protocols driven arbitrarily far from equilibrium, but not without a model: standard derivations assume an initial canonical ensemble and dynamics with the required microscopic reversibility or local-detailed-balance structure, along with a well-defined work functional. Applying Jensen's inequality to Equation \ref{eq:thermo_jarzynski} recovers the mean-work bound
+[@eq:thermo_jarzynski] can hold for protocols driven arbitrarily far from equilibrium, but not without a model: standard derivations assume an initial canonical ensemble and dynamics with the required microscopic reversibility or local-detailed-balance structure, along with a well-defined work functional. Applying Jensen's inequality to [@eq:thermo_jarzynski] recovers the mean-work bound
 
-\begin{equation}\label{eq:thermo_second_law_bound}
+$$
 \langle W \rangle \;\ge\; \Delta \mathcal{F},
-\end{equation}
+$$ {#eq:thermo_second_law_bound}
 
-i.e., the mean work performed is at least the equilibrium free energy difference. Equality requires zero dissipated work almost surely; quasistatic reversible driving is the standard limiting realization. Equation \ref{eq:thermo_jarzynski} is stronger than Equation \ref{eq:thermo_second_law_bound}: it fixes an exponential moment of $W$, not merely its mean.
+i.e., the mean work performed is at least the equilibrium free energy difference. Equality requires zero dissipated work almost surely; quasistatic reversible driving is the standard limiting realization. [@eq:thermo_jarzynski] is stronger than [@eq:thermo_second_law_bound]: it fixes an exponential moment of $W$, not merely its mean.
 
 A companion result, the **Crooks fluctuation theorem** [@crooks1999entropy], relates forward and time-reversed work distributions at the level of *individual trajectories*:
 
-\begin{equation}\label{eq:thermo_crooks}
+$$
 \frac{P_F(W)}{P_R(-W)} \;=\; \exp\!\bigl(\beta\,(W - \Delta \mathcal{F})\bigr),
-\end{equation}
+$$ {#eq:thermo_crooks}
 
-where $P_F(W)$ is the probability density of performing work $W$ under the forward protocol (Hamiltonian swept from $H_0$ to $H_1$) and $P_R(-W)$ is the probability density of performing work $-W$ under the time-reversed protocol (swept from $H_1$ to $H_0$). Equation \ref{eq:thermo_crooks} quantifies the *exponential asymmetry* between a dissipative trajectory and its time-reverse: work excursions above $\Delta \mathcal{F}$ are exponentially more likely in the forward direction, while excursions below $\Delta \mathcal{F}$ are exponentially more likely in reverse. The Jarzynski equality is a direct corollary of Crooks: rearranging Equation \ref{eq:thermo_crooks} to $P_R(-W) = P_F(W)\,e^{-\beta(W - \Delta\mathcal{F})}$ and integrating $\int P_R(-W)\,dW = 1$ yields Equation \ref{eq:thermo_jarzynski} immediately.
+where $P_F(W)$ is the probability density of performing work $W$ under the forward protocol (Hamiltonian swept from $H_0$ to $H_1$) and $P_R(-W)$ is the probability density of performing work $-W$ under the time-reversed protocol (swept from $H_1$ to $H_0$). [@eq:thermo_crooks] quantifies the *exponential asymmetry* between a dissipative trajectory and its time-reverse: work excursions above $\Delta \mathcal{F}$ are exponentially more likely in the forward direction, while excursions below $\Delta \mathcal{F}$ are exponentially more likely in reverse. The Jarzynski equality is a direct corollary of Crooks: rearranging [@eq:thermo_crooks] to $P_R(-W) = P_F(W)\,e^{-\beta(W - \Delta\mathcal{F})}$ and integrating $\int P_R(-W)\,dW = 1$ yields [@eq:thermo_jarzynski] immediately.
 
-Both fluctuation identities require trajectory measures and microscopic-reversibility assumptions. fep-010 states detailed balance at Mathlib's measure--Markov-kernel level and proves that reversibility implies invariance; the identity kernel supplies a non-vacuous witness. fep-037 treats a symmetric two-state relaxation and response model. The path-space expansion then constructs normalized finite forward and reversed path laws, proves involutive reversal and full-support ratios, defines entropy production as finite KL, and derives detailed and integral fluctuation identities. fep-097 proves a finite Jarzynski equality from an explicit inverse temperature, work functional, free-energy difference, and pointwise exponential normalization. These are exact finite path-law identities. They do not establish the continuous work-density Crooks theorem in Equation \ref{eq:thermo_crooks} without the corresponding pushforward and protocol structure.
+Both fluctuation identities require trajectory measures and microscopic-reversibility assumptions. fep-010 states detailed balance at Mathlib's measure--Markov-kernel level and proves that reversibility implies invariance; the identity kernel supplies a non-vacuous witness. fep-037 treats a symmetric two-state relaxation and response model. The path-space expansion then constructs normalized finite forward and reversed path laws, proves involutive reversal and full-support ratios, defines entropy production as finite KL, and derives detailed and integral fluctuation identities. fep-097 proves a finite Jarzynski equality from an explicit inverse temperature, work functional, free-energy difference, and pointwise exponential normalization. These are exact finite path-law identities. They do not establish the continuous work-density Crooks theorem in [@eq:thermo_crooks] without the corresponding pushforward and protocol structure.
 
 ### NESS Solenoidal Flow (fep-025): Target Fokker–Planck Structure {#sec:thermo_ness_fokker_planck}
 
 The Fokker–Planck equation describes the time evolution of the probability density $p(x, t)$ of a stochastic process $\dot{x} = f(x) + \sqrt{2D}\,\xi(t)$ with drift $f$ and diffusion $D$:
 
-\begin{equation}\label{eq:thermo_fokker_planck}
+$$
 \frac{\partial p(x, t)}{\partial t} \;=\; -\nabla \cdot J(x, t), \qquad J(x, t) \;=\; f(x)\,p(x, t) \;-\; D\,\nabla p(x, t).
-\end{equation}
+$$ {#eq:thermo_fokker_planck}
 
-The vector $J(x, t)$ is the **probability current**: the net flux of probability mass through a point. At a stationary distribution $p^*(x)$ with $\partial_t p^* = 0$, Equation \ref{eq:thermo_fokker_planck} reduces to the continuity constraint
+The vector $J(x, t)$ is the **probability current**: the net flux of probability mass through a point. At a stationary distribution $p^*(x)$ with $\partial_t p^* = 0$, [@eq:thermo_fokker_planck] reduces to the continuity constraint
 
-\begin{equation}\label{eq:thermo_stationarity}
+$$
 \nabla \cdot J^*(x) \;=\; 0 \qquad \text{(stationarity)}.
-\end{equation}
+$$ {#eq:thermo_stationarity}
 
 Under the regular constant-diffusion model written above, two important stationary cases are:
 
@@ -92,21 +92,21 @@ Under the regular constant-diffusion model written above, two important stationa
 
 NESS models are often used when describing driven, dissipative biological systems, but that application is a modeling choice rather than a consequence of stationarity alone. In one simplified constant-diffusion ansatz, a drift is written using a **Helmholtz–Ao-type decomposition** [@ao2004potential]:
 
-\begin{equation}\label{eq:thermo_ao_decomposition}
+$$
 f(x) \;=\; -\,\bigl(D \,+\, Q(x)\bigr)\,\nabla F(x), \qquad F(x) \;=\; -\log p^*(x), \qquad Q(x)^\top \;=\; -\,Q(x),
-\end{equation}
+$$ {#eq:thermo_ao_decomposition}
 
 where $F(x)$ is the negative log-stationary density up to normalization, $D$ is symmetric positive-semidefinite, and $Q(x)$ is antisymmetric. Within this ansatz, substituting $p^*\propto e^{-F}$ into the current cancels the two $D$ terms and leaves $J^*=-Q\,\nabla F\,p^*$. This algebra does not show that an arbitrary drift admits the ansatz, that the density exists, or that the remaining current is divergence-free; state-dependent diffusion conventions can also introduce additional terms.
 
 **What antisymmetry cancels.** Expanding the candidate current's divergence shows which terms vanish algebraically and which require an additional hypothesis:
 
-\begin{equation}\label{eq:thermo_solenoidal_divergence}
+$$
 \frac{1}{p^*}\,\nabla \cdot \bigl(Q\,\nabla F\,p^*\bigr) \;=\; \mathrm{tr}\!\bigl(Q \cdot \nabla^2 F\bigr) \;-\; \bigl(\nabla F\bigr)^\top\,Q\,\bigl(\nabla F\bigr) \;+\; \bigl(\nabla \cdot Q\bigr)^\top \nabla F.
-\end{equation}
+$$ {#eq:thermo_solenoidal_divergence}
 
 The trace term vanishes when $F$ is sufficiently smooth because $Q$ is antisymmetric and the Hessian is symmetric. The quadratic term also vanishes because an antisymmetric bilinear form is zero on a repeated vector. The remaining $(\nabla\cdot Q)^\top\nabla F$ term does not vanish from antisymmetry alone; it needs, for example, spatially constant $Q$ or a separate orthogonality condition. Thus even this restricted ansatz requires an explicit divergence check. It does not imply that removing $Q$ forces every stochastic system to detailed-balance equilibrium.
 
-**What fep-025 formalizes.** It defines a finite edge current $J_{ij}=\pi_iP_{ij}-\pi_jP_{ji}$ and its node divergence. Lean proves antisymmetry, zero self-current, global conservation, and the pointwise zero-divergence consequence of row normalization and stationarity. A directed three-state cycle then proves existence of a nonzero divergence-free stationary current, formally separating stationarity from detailed balance. This is a finite NESS witness. It does not formalize the trace cancellation, a Hessian, a state-dependent $Q$, or any PDE/SDE in Equation \ref{eq:thermo_solenoidal_divergence}.
+**What fep-025 formalizes.** It defines a finite edge current $J_{ij}=\pi_iP_{ij}-\pi_jP_{ji}$ and its node divergence. Lean proves antisymmetry, zero self-current, global conservation, and the pointwise zero-divergence consequence of row normalization and stationarity. A directed three-state cycle then proves existence of a nonzero divergence-free stationary current, formally separating stationarity from detailed balance. This is a finite NESS witness. It does not formalize the trace cancellation, a Hessian, a state-dependent $Q$, or any PDE/SDE in [@eq:thermo_solenoidal_divergence].
 
 ### Maximum Entropy (fep-030): Jaynes' Derivation {#sec:thermo_max_entropy_jaynes}
 
@@ -114,17 +114,17 @@ Jaynes' **maximum-entropy principle** [@jaynes1957information] provides a constr
 
 The constrained-optimization problem is
 
-\begin{equation}\label{eq:thermo_maxent_problem}
+$$
 p^* \;=\; \mathop{\mathrm{argmax}}_{p}\,H[p] \quad \text{subject to}\quad \sum_x p(x) = 1,\;\; \sum_x p(x)\,f_i(x) = c_i \; (i = 1, \dots, k).
-\end{equation}
+$$ {#eq:thermo_maxent_problem}
 
 For a finite feasible problem whose optimum lies in the positive interior and satisfies the relevant constraint qualification, introducing Lagrange multipliers $\lambda_0$ for normalization and $\lambda_i$ for each constraint yields the stationarity condition $-\log p^*(x) - 1 - \lambda_0 - \sum_i \lambda_i f_i(x) = 0$. The resulting candidate has **Boltzmann–Gibbs form**:
 
-\begin{equation}\label{eq:thermo_maxent_gibbs_form}
+$$
 p^*(x) \;=\; \frac{1}{Z(\lambda)}\,\exp\!\Bigl(-\!\sum_{i=1}^{k} \lambda_i\,f_i(x)\Bigr), \qquad Z(\lambda) \;=\; \sum_x \exp\!\Bigl(-\!\sum_{i=1}^{k} \lambda_i\,f_i(x)\Bigr).
-\end{equation}
+$$ {#eq:thermo_maxent_gibbs_form}
 
-When a matching multiplier exists, enforcing the constraints relates derivatives of the log partition function to the prescribed moments. This is the familiar maximum-entropy route to exponential families, subject to feasibility, support, boundary, and dual-attainment qualifications. fep-030 and fep-031 do not prove that general optimization-to-Gibbs bridge. They compose at one exact boundary: for a two-state Gibbs law at zero inverse temperature, hence the infinite-temperature limit, `FEPComposed.fep031_zeroBeta_binary_maxEntropy` rewrites the selected probability to $1/2$ and invokes fep-030's binary-entropy equality characterization. The separate fep-142--148 family constructs a full-support finite scalar exponential family and proves log-partition, Fisher--variance, and KL--Bregman identities, but it assumes the family rather than deriving it as the solution of Equation \ref{eq:thermo_maxent_problem}. Here $\beta=0$ must not be described as zero physical temperature.
+When a matching multiplier exists, enforcing the constraints relates derivatives of the log partition function to the prescribed moments. This is the familiar maximum-entropy route to exponential families, subject to feasibility, support, boundary, and dual-attainment qualifications. fep-030 and fep-031 do not prove that general optimization-to-Gibbs bridge. They compose at one exact boundary: for a two-state Gibbs law at zero inverse temperature, hence the infinite-temperature limit, `FEPComposed.fep031_zeroBeta_binary_maxEntropy` rewrites the selected probability to $1/2$ and invokes fep-030's binary-entropy equality characterization. The separate fep-142--148 family constructs a full-support finite scalar exponential family and proves log-partition, Fisher--variance, and KL--Bregman identities, but it assumes the family rather than deriving it as the solution of [@eq:thermo_maxent_problem]. Here $\beta=0$ must not be described as zero physical temperature.
 
 **Two canonical special cases.** (i) *Uniform distribution:* with no constraints beyond normalization, the maximizer is $p^*(x) = 1/n$ on a finite set of size $n$, achieving $H[p^*] = \log n$. This is the classical "principle of insufficient reason". (ii) *Canonical ensemble:* with the single constraint $\langle E \rangle = \bar{E}$, the maximizer is $p^*(x) \propto \exp(-\beta E(x))$ with $\beta = \lambda_1$ identified as inverse temperature.
 
@@ -134,11 +134,11 @@ When a matching multiplier exists, enforcing the constraints relates derivatives
 
 In a one-flux/one-force schematic, a local **entropy-production contribution** is often written as the pairing of a thermodynamic flux $J$ with a conjugate force $F$; sign, mobility, integration, and time-reversal conventions are model-dependent:
 
-\begin{equation}\label{eq:thermo_entropy_production}
+$$
 \sigma \;=\; J \cdot F \;=\; \mathbf{J} \cdot \nabla \log p \;\ge\; 0,
-\end{equation}
+$$ {#eq:thermo_entropy_production}
 
-The conditions for nonnegativity and equality depend on the constitutive relation and inner product; nonzero flux alone does not imply a positive scalar product with force. Equation \ref{eq:thermo_entropy_production} is motivating thermodynamics, not a consequence of scalar sign assumptions alone.
+The conditions for nonnegativity and equality depend on the constitutive relation and inner product; nonzero flux alone does not imply a positive scalar product with force. [@eq:thermo_entropy_production] is motivating thermodynamics, not a consequence of scalar sign assumptions alone.
 
 Topic **fep-049** formalizes two finite constitutive models. For diagonal linear response $J_i=L_iX_i$, entropy production is the quadratic form $\sum_i L_iX_i^2$; Lean proves nonnegativity for $L_i\ge0$ and zero iff all forces vanish for $L_i>0$. Independently, strictly positive forward/reverse edge fluxes have production $(f-r)\log(f/r)\ge0$, with equality exactly at detailed balance $f=r$. These are genuine finite second-law instances under explicit constitutive assumptions, not a microscopic derivation or a theorem for arbitrary cross-coupled Onsager matrices.
 
@@ -148,9 +148,9 @@ The bridge calculation above becomes exact only after a generative density is us
 
 **Landauer's principle** [@landauer1961irreversibility] asserts that erasing one bit of information from a physical memory has an irreducible thermodynamic cost of at least
 
-\begin{equation}\label{eq:thermo_landauer_bound}
+$$
 W_{\text{erase}} \;\ge\; k_B\,T\,\log 2 \;\approx\; 2.9 \times 10^{-21}\,\text{J at }T=300\,\text{K}.
-\end{equation}
+$$ {#eq:thermo_landauer_bound}
 
 In the standard idealized symmetric-memory model, an initially equiprobable bit has Shannon entropy $\log 2$ nats and a reset state has zero logical entropy. A cyclic isothermal implementation must compensate that entropy decrease in the environment; in the reversible limit this gives the $k_BT\log2$ minimum. More general Landauer results are formulated through nonequilibrium free-energy changes and depend on the physical memory, control protocol, reservoir, and error tolerance. The bound is therefore not obtained from information entropy plus the first law without those modeling assumptions.
 
@@ -202,15 +202,15 @@ The strongest direct facts form a chain rather than an isolated roster: fep-030 
 
 **Thermodynamic vs variational free energy — formally distinct Lean objects**: The thermodynamic object fep-013 consumes $U(T)$, $T$, and $S(T)$, whereas fep-002 defines variational free energy as surprisal plus native measure KL. Their types and assumptions are deliberately distinct. The Gaussian composition closes one thermodynamic instance, and the fep-002/fep-014 composition closes the KL chain rule, but no theorem identifies these two free energies. Such a theorem would need a concrete density, energy map, units, normalization, and integrability contract.
 
-**Representative formalization** — *Helmholtz differential identity (fep-013)*: The row proves the exact derivative law and its equilibrium reduction under explicit differentiability and first-law assumptions. The composition with fep-040 supplies a nontrivial entropy function rather than an arbitrary scalar witness. It does not derive the first law or the physical meaning of temperature. See §\ref{sec:catalogue-fep-013} in Appendix B and §\ref{sec:eqs-fep-013} in Appendix~\ref{sec:appendix_c_latex_equations}.
+**Representative formalization** — *Helmholtz differential identity (fep-013)*: The row proves the exact derivative law and its equilibrium reduction under explicit differentiability and first-law assumptions. The composition with fep-040 supplies a nontrivial entropy function rather than an arbitrary scalar witness. It does not derive the first law or the physical meaning of temperature. See [@sec:catalogue-fep-013] in Appendix B and [@sec:eqs-fep-013] in [@sec:appendix_c_latex_equations].
 
-**Representative formalization** — *Finite stationary probability current (fep-025, Eq. \ref{eq:eq_25})*: Some NESS constructions posit a Helmholtz/Ao decomposition [@ao2004potential] with a skew component:
+**Representative formalization** — *Finite stationary probability current (fep-025, [@eq:eq_25])*: Some NESS constructions posit a Helmholtz/Ao decomposition [@ao2004potential] with a skew component:
 
-\begin{equation}\label{eq:eq_25}
+$$
 \dot\rho = -\nabla \cdot \bigl(\rho\,\nabla \FE + Q\rho\bigr) = 0, \qquad Q = -Q^\top
-\end{equation}
+$$ {#eq:eq_25}
 
-The row proves the finite continuity analogue directly: a stationary normalized transition has zero current divergence, and a directed three-cycle has both zero divergence and nonzero current. Antisymmetry alone still does not discharge the state-dependent continuum term, and the row has no Hessian or PDE. See §\ref{sec:catalogue-fep-025} in Appendix B and §\ref{sec:eqs-fep-025} in Appendix~\ref{sec:appendix_c_latex_equations}.
+The row proves the finite continuity analogue directly: a stationary normalized transition has zero current divergence, and a directed three-cycle has both zero divergence and nonzero current. Antisymmetry alone still does not discharge the state-dependent continuum term, and the row has no Hessian or PDE. See [@sec:catalogue-fep-025] in Appendix B and [@sec:eqs-fep-025] in [@sec:appendix_c_latex_equations].
 
 **Representative formalization** — *Conditional Landauer derivation (fep-050)*: The row proves the reset is noninjective, computes unbiased-bit entropy loss, derives the heat bound from total-entropy nonnegativity, and derives the work bound from work-at-least-heat. The physical premises are visible theorem hypotheses rather than hidden in prose.
 

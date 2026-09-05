@@ -4,11 +4,11 @@
 
 ## Complete Topic Catalogue {#sec:complete_topic_catalogue}
 
-The **per-topic index** (id, human title, area, primary Mathlib path, and full `lean_sketch`) is not duplicated here: it appears in the **unified formalism appendix** (§\ref{sec:appendix_b_full_topic_lean_catalogue}), with stable per-topic anchors `#sec:catalogue-fep-NNN` (Lean sketch) and `#sec:eqs-fep-NNN` (typeset LaTeX equations) for each `fep-NNN`. That file is regenerated from `config/topics.yaml` on every Manuscript Artifacts pass, so titles and bodies cannot drift from the committed catalogue.
+The **per-topic index** (id, human title, area, primary Mathlib path, and full `lean_sketch`) is not duplicated here: it appears in the **unified formalism appendix** ([@sec:appendix_b_full_topic_lean_catalogue]), with stable per-topic anchors `#sec:catalogue-fep-NNN` (Lean sketch) and `#sec:eqs-fep-NNN` (typeset LaTeX equations) for each `fep-NNN`. That file is regenerated from `config/topics.yaml` on every Manuscript Artifacts pass, so titles and bodies cannot drift from the committed catalogue.
 
-Native compilation status for the full roster is **`{{compile_rate.total}}`** against Mathlib **`{{mathlib_tag}}`** / Lean **`{{lean_toolchain}}`**. `manuscript_vars.yaml` prefers an independently validated, live-source-bound native receipt and accepts a full-run verification manifest only through its separate claim-ready report contract. Diagnostics and verifier fields are summarized in §\ref{sec:quantitative_execution_metrics}.
+Native compilation status for the full roster is **`{{compile_rate.total}}`** against Mathlib **`{{mathlib_tag}}`** / Lean **`{{lean_toolchain}}`**. `manuscript_vars.yaml` prefers an independently validated, live-source-bound native receipt and accepts a full-run verification manifest only through its separate claim-ready report contract. Diagnostics and verifier fields are summarized in [@sec:quantitative_execution_metrics].
 
-**Summary**: All {{total_topics}} rows are `mathlib_status: real` in `topics.yaml`. Per-area rates are **`{{compile_rate.by_area.FEP}}`** (FEP core), **`{{compile_rate.by_area.ActiveInference}}`** (Active Inference), **`{{compile_rate.by_area.InfoGeometry}}`** (Information Geometry), **`{{compile_rate.by_area.BayesianMechanics}}`** (Bayesian Mechanics), and **`{{compile_rate.by_area.Thermodynamics}}`** (Thermodynamics); see §\ref{sec:aggregate_metrics}.
+**Summary**: All {{total_topics}} rows are `mathlib_status: real` in `topics.yaml`. Per-area rates are **`{{compile_rate.by_area.FEP}}`** (FEP core), **`{{compile_rate.by_area.ActiveInference}}`** (Active Inference), **`{{compile_rate.by_area.InfoGeometry}}`** (Information Geometry), **`{{compile_rate.by_area.BayesianMechanics}}`** (Bayesian Mechanics), and **`{{compile_rate.by_area.Thermodynamics}}`** (Thermodynamics); see [@sec:aggregate_metrics].
 
 ## Area Breakdown {#sec:area_breakdown_overview}
 
@@ -43,9 +43,9 @@ To avoid duplicating Lean that can drift from the SSOT, this appendix does **not
 
 | Topic | Appendix B (Lean) | Appendix C (display math) |
 |-------|-------------------|---------------------------|
-| fep-001 | §\ref{sec:catalogue-fep-001} | §\ref{sec:eqs-fep-001} |
-| fep-031 | §\ref{sec:catalogue-fep-031} | §\ref{sec:eqs-fep-031} |
-| fep-046 | §\ref{sec:catalogue-fep-046} | §\ref{sec:eqs-fep-046} |
+| fep-001 | [@sec:catalogue-fep-001] | [@sec:eqs-fep-001] |
+| fep-031 | [@sec:catalogue-fep-031] | [@sec:eqs-fep-031] |
+| fep-046 | [@sec:catalogue-fep-046] | [@sec:eqs-fep-046] |
 
 ## Mathlib4 Imports Used Across the Catalogue {#sec:mathlib4_imports_catalogue}
 

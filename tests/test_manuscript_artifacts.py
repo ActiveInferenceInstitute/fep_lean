@@ -295,7 +295,7 @@ def test_build_typeset_equations_markdown_structure() -> None:
     for t in c.topics:
         assert f"## {t.id} —" in md
         assert f"sec:eqs-{t.id}" in md
-        n_eq = len(re.findall(rf"\\label\{{eq:{re.escape(t.id)}-\d+\}}", md))
+        n_eq = len(re.findall(rf"\{{#eq:{re.escape(t.id)}-\d+\}}", md))
         n_th = len(re.findall(r"^\s*theorem\s+", t.lean_sketch, re.MULTILINE))
         assert n_eq > 0
         assert n_eq == n_th
@@ -310,10 +310,10 @@ def test_build_unified_formalism_appendix_markdown_structure() -> None:
     assert md.count("### Lean sketch") == len(c.topics)
     assert md.count("### Typeset statement signatures") == len(c.topics)
     equation_count = sum(len(topic.latex_equations) for topic in c.topics)
-    labels = re.findall(r"\\label\{(eq:fep-\d{3}-\d+)\}", md)
+    labels = re.findall(r"\{#(eq:fep-\d{3}-\d+)\}", md)
     assert len(labels) == equation_count
     assert len(set(labels)) == equation_count
-    assert "\\[\\label{eq:" not in md
+    assert "\\label{eq:" not in md
     assert (
         "# Appendix B: Full Lean Catalogue {#sec:appendix_b_full_topic_lean_catalogue}"
         in md

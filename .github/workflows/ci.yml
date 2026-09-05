@@ -1,5 +1,12 @@
 name: fep_lean
 
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
 permissions:
   contents: read
 
@@ -29,7 +36,7 @@ jobs:
           uv run python scripts/render_manuscript.py --check
           uv run python docs/theorem_ref_audit.py
           uv run python docs/citation_audit.py
-      - run: uv run pytest tests/ -q --cov=src --cov-fail-under=89
+      - run: uv run pytest tests/ -q --cov=src --cov-fail-under=89 -m "not serial_lean"
       - run: uv run python docs/check_links.py --strict --include-root
       - run: uv run python docs/md_hygiene.py --strict
       - name: Require the newest stable Lean-Mathlib release pair

@@ -30,6 +30,11 @@ _AUTHORING_EXCLUDES = frozenset(
     }
 )
 
+#: Prefixes owned by pandoc-crossref: ``[@eq:x]`` is a crossref reference,
+#: not a bibliography citation. Mirrors ``_CROSSREF_PREFIXES`` in
+#: ``docs/xref_audit.py``.
+_CROSSREF_PREFIXES = frozenset({"sec", "eq", "fig", "tbl", "lst"})
+
 
 @dataclass(frozen=True)
 class BibEntry:
@@ -67,7 +72,11 @@ def cited_keys(manuscript_dir: Path) -> set[str]:
             continue
         text = path.read_text(encoding="utf-8")
         for block in _CITATION_BLOCK_RE.findall(text):
-            keys.update(_CITATION_KEY_RE.findall(block))
+            keys.update(
+                key
+                for key in _CITATION_KEY_RE.findall(block)
+                if key.split(":", 1)[0] not in _CROSSREF_PREFIXES
+            )
     return keys
 
 

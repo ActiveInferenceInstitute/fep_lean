@@ -6,9 +6,9 @@ The core artifact is a generated catalogue of {{total_topics}} topic-scoped Lean
 
 A common variational identity writes free energy as surprisal plus a KL remainder:
 
-\begin{equation}\label{eq:eq_VFE_functional}
+$$
 F[q] = -\log p(o) + \KL\!\left[q\,\middle\|\,p(\cdot\mid o)\right].
-\end{equation}
+$$ {#eq:eq_VFE_functional}
 
 The catalogue now represents the nonnegative-extended-real core of this identity directly. `fep002_variationalFreeEnergy` defines surprisal plus `InformationTheory.klDiv`; `fep002_vfe_ge_surprisal` proves the upper bound; and `fep002_vfe_exact_at_posterior` uses Mathlib's self-divergence theorem under `SigmaFinite`. This is a meaningful strengthening over a theorem that merely assumed an unnamed nonnegative scalar remainder.
 
@@ -20,20 +20,20 @@ The FEP-area rows provide heterogeneous substrates: measure operations and measu
 
 The familiar Jensen route to an ELBO remains useful context:
 
-\begin{equation}\label{eq:eq_jensen_elbo}
+$$
 \log p(o)
 = \log \mathbb{E}_{q(s)}\!\left[\frac{p(o,s)}{q(s)}\right]
 \geq \mathbb{E}_{q(s)}\!\left[\log \frac{p(o,s)}{q(s)}\right]
 = -F[q].
-\end{equation}
+$$ {#eq:eq_jensen_elbo}
 
 No catalogue theorem currently proves this whole chain with its integrability and almost-everywhere conditions. fep-035 now imports Mathlib's strict-concavity result for `Real.log` and proves the exact two-point strict Jensen inequality for distinct positive inputs and positive weights summing to one. That theorem is a genuine finite convexity fact, but it is not the expectation-level Jensen step above. fep-002 supplies a native KL remainder identity at a narrower abstraction boundary.
 
 Likewise, the elementary quadratic update used as a local descent model is:
 
-\begin{equation}\label{eq:eq_gradient_contraction}
+$$
 x_1^2=(1-\eta)^2x_0^2\leq x_0^2 \qquad\text{when } |1-\eta|\leq 1.
-\end{equation}
+$$ {#eq:eq_gradient_contraction}
 
 fep-032 now proves more than the one-step inequality: for the centered scalar quadratic it derives the exact $n$-step displacement $(1-\eta)^n(x_0-x^\star)$, proves energy descent for $0\leq\eta\leq2$, and proves convergence to the center for $0<\eta<2$. `FEPComposed.fep032_update_is_fep043_gradientStep` identifies that update with a gradient step on fep-043's positive-curvature quadratic, whose unique minimizer, critical-point equivalence, and Hessian are independently checked. fep-048 supplies the complementary general Banach-style contract and a concrete halving witness. None of these results establishes convergence for an arbitrary variational objective.
 
@@ -48,6 +48,6 @@ nondegenerate sampling law keep those implications from being vacuous. These
 are finite sampling-risk theorems, not posterior contraction, minimax
 optimality, empirical calibration, or marginal-likelihood optimization; the
 exact declarations and hypotheses are tabulated in
-§\ref{sec:catalogue_155_risk_calibration}.
+[@sec:catalogue_155_risk_calibration].
 
 The FEP rows therefore establish exact local facts, not the Free Energy Principle as a theorem of self-organization. Their scientific value lies in exposing which bridges—generative model to posterior, posterior to KL objective, objective to dynamics, dynamics to steady state, and finite risk to asymptotic or empirical guarantees—still require formal statements.

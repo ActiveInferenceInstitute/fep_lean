@@ -2,7 +2,7 @@
 
 The project is organized around one methodological rule: a claim is no stronger than the evidence object that supports it. Catalogue generation, native Lean compilation, and a live Hermes/OpenGauss run are therefore separate modes with separate acceptance predicates. A deterministic catalogue build can establish source consistency; a native receipt can establish warning-free, `sorry`-free typechecking against a pinned toolchain; only a validated full-run receipt can support claims about model output, provider latency, or persisted sessions.
 
-Readers new to Lean should begin with §\ref{sec:lean_4_a_primer_for_active_inference_researchers}. The detailed components in §\ref{sec:mathlib4_and_measure_theoretic_probability}--§\ref{sec:pipeline_architecture_and_execution_profile} cover the library substrate, semantic maturity, optional LLM stage, native compiler bridge, and execution pipeline.
+Readers new to Lean should begin with [@sec:lean_4_a_primer_for_active_inference_researchers]. The detailed components in [@sec:mathlib4_and_measure_theoretic_probability]--[@sec:pipeline_architecture_and_execution_profile] cover the library substrate, semantic maturity, optional LLM stage, native compiler bridge, and execution pipeline.
 
 ## System Architecture Overview {#sec:system_architecture_overview}
 
@@ -50,7 +50,7 @@ uv run python docs/theorem_ref_audit.py
 
 Provider/model rosters are runtime configuration rather than scientific results. They are authoritative only in a validated report bundle. With no OpenRouter or Anthropic credential, full-mode preflight fails; an offline fixture result may exercise code paths in tests, but it is ineligible for publication claims.
 
-See §\ref{sec:the_hermes_ai_agent_and_llm_assisted_formalization} for the session protocol and the three distinct fallback mechanisms.
+See [@sec:the_hermes_ai_agent_and_llm_assisted_formalization] for the session protocol and the three distinct fallback mechanisms.
 
 ## The Native Lean Compilation Engine {#sec:the_native_lean_compilation_engine}
 
@@ -177,4 +177,4 @@ Formal compilation is serialized. In full mode, optional single-worker prefetch 
 
 ## Detailed Methodology Sub-Sections {#sec:detailed_methodology_sub_sections}
 
-The following sub-sections give the necessary depth without changing these contracts: the Lean primer (§\ref{sec:lean_4_a_primer_for_active_inference_researchers}), pinned Mathlib surface (§\ref{sec:mathlib4_and_measure_theoretic_probability}), proof/semantic maturity (§\ref{sec:the_sorry_mechanism_and_formalization_maturity}), optional Hermes stage (§\ref{sec:the_hermes_ai_agent_and_llm_assisted_formalization}), native receipt (§\ref{sec:native_lean_4_compilation_and_zero_direct_verification}), and full pipeline (§\ref{sec:pipeline_architecture_and_execution_profile}).
+The following sub-sections give the necessary depth without changing these contracts: the Lean primer ([@sec:lean_4_a_primer_for_active_inference_researchers]), pinned Mathlib surface ([@sec:mathlib4_and_measure_theoretic_probability]), proof/semantic maturity ([@sec:the_sorry_mechanism_and_formalization_maturity]), optional Hermes stage ([@sec:the_hermes_ai_agent_and_llm_assisted_formalization]), native receipt ([@sec:native_lean_4_compilation_and_zero_direct_verification]), and full pipeline ([@sec:pipeline_architecture_and_execution_profile]).

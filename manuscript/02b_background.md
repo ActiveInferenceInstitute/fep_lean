@@ -8,33 +8,33 @@ A strong reading of the Free Energy Principle (FEP) holds that a bounded dynamic
 
 The machine learning literature [@blei2017variational] introduces the same quantity under the name *evidence lower bound* (ELBO). For a latent variable $z$, observation $x$, generative model $p(x, z)$, and variational posterior $q(z)$,
 
-\begin{equation}\label{eq:bg_elbo}
+$$
 \text{ELBO}(q) = \mathbb{E}_{q(z)}[\log p(x, z) - \log q(z)] = \log p(x) - \KL[q(z) \,\|\, p(z \mid x)].
-\end{equation}
+$$ {#eq:bg_elbo}
 
-(Equation \ref{eq:bg_elbo}.) After identifying $z \leftrightarrow \psi$, $x \leftrightarrow s$, and matching the joint, posterior, support, and integrability assumptions, the associated variational free energy is the negative ELBO. This correspondence is central, but it is not automatic: Mathlib4 results about KL divergence and expectations become reusable only after their typed measures, codomains, and finiteness hypotheses have been connected to the chosen FEP model.
+In [@eq:bg_elbo], after identifying $z \leftrightarrow \psi$, $x \leftrightarrow s$, and matching the joint, posterior, support, and integrability assumptions, the associated variational free energy is the negative ELBO. This correspondence is central, but it is not automatic: Mathlib4 results about KL divergence and expectations become reusable only after their typed measures, codomains, and finiteness hypotheses have been connected to the chosen FEP model.
 
 ### Formal Definition: Variational Free Energy {#sec:formal_definition_variational_free_energy}
 
 The variational free energy $\FE$ for an agent with recognition density $q(\psi \mid m)$, generative model $p(s, \psi \mid m)$, and sensory observations $s$ is defined as:
 
-\begin{equation}\label{eq:eq_1}
+$$
 \FE[q, p] \;=\; \underbrace{\KL\!\bigl[q(\psi \mid m) \,\|\, p(\psi \mid s, m)\bigr]}_{\geq\, 0} \;-\; \underbrace{\log p(s \mid m)}_{\text{log-evidence}}
-\end{equation}
+$$ {#eq:eq_1}
 
 Because KL divergence is non-negative by Gibbs' inequality, this immediately yields the **variational bound**:
 
-\begin{equation}\label{eq:eq_2}
+$$
 \FE[q, p] \;\geq\; -\log p(s \mid m) \;=\; \text{surprise}
-\end{equation}
+$$ {#eq:eq_2}
 
 Equivalently, the free energy admits an **energy-entropy decomposition**:
 
-\begin{equation}\label{eq:eq_3}
+$$
 \FE[q, p] \;=\; \underbrace{\E_q\!\bigl[-\log p(s, \psi \mid m)\bigr]}_{\text{energy}} \;-\; \underbrace{\Ent\!\bigl[q(\psi \mid m)\bigr]}_{\text{entropy}}
-\end{equation}
+$$ {#eq:eq_3}
 
-These dual decompositions—(1) as KL plus log-evidence and (3) as energy minus entropy—are the starting point for all subsequent formalisms in this paper. In Mathlib4 parlance, Eq.~\ref{eq:eq_3} is a statement about `∫ (fun ψ => -Real.log (p (s,ψ))) ∂(q)` together with `MeasureTheory.entropy q`; the mere act of writing this expression forces declaration of a measurable space `α` and an integrability hypothesis, neither of which typically appears in journal papers.
+These dual decompositions—(1) as KL plus log-evidence and (3) as energy minus entropy—are the starting point for all subsequent formalisms in this paper. In Mathlib4 parlance, [@eq:eq_3] is a statement about `∫ (fun ψ => -Real.log (p (s,ψ))) ∂(q)` together with `MeasureTheory.entropy q`; the mere act of writing this expression forces declaration of a measurable space `α` and an integrability hypothesis, neither of which typically appears in journal papers.
 
 #### Three Equivalent Decompositions of Variational Free Energy {#sec:three_equivalent_decompositions}
 
@@ -42,33 +42,33 @@ Before proceeding to Active Inference, it is worth exhibiting three forms of $\F
 
 **(1) Surprise bound (posterior-tracking form).** Starting from Bayes' rule $p(s \mid o) = p(o, s)/p(o)$ and adding and subtracting $\log q(s)$ inside an expectation under $q$,
 
-\begin{equation}\label{eq:eq_F_surprise}
+$$
 F[q] \;=\; -\log p(o) \;+\; \KL\!\bigl[q(s)\,\|\,p(s \mid o)\bigr] \;\geq\; -\log p(o).
-\end{equation}
+$$ {#eq:eq_F_surprise}
 
 This is the "free energy bounds surprise" identity: the first term is the (negative log) model evidence—the Shannon surprise $-\log p(o)$ that the agent cannot change by rearranging beliefs—and the second is a non-negative KL gap that vanishes iff $q = p(\cdot \mid o)$.
 
 **(2) Energy–entropy form.** Multiplying out the logarithm gives
-\begin{equation}\label{eq:eq_F_energyentropy}
+$$
 F[q] \;=\; \E_{q(s)}\!\bigl[-\log p(o, s)\bigr] \;+\; \E_{q(s)}\!\bigl[\log q(s)\bigr] \;=\; U_q \;-\; H[q],
-\end{equation}
+$$ {#eq:eq_F_energyentropy}
 where $U_q := \E_{q}[-\log p(o, s)]$ is the (cross-)energy under the joint generative model and $H[q] := -\E_q[\log q(s)]$ is the Shannon entropy of the recognition density. This is the form most directly connected to statistical-mechanical free energy (Helmholtz $F = U - T S$, with $T = 1$ in natural units).
 
 **(3) ELBO form.** Because $F[q] = \E_q[\log q(s) - \log p(o, s)]$, one has
-\begin{equation}\label{eq:eq_F_elbo}
+$$
 F[q] \;=\; -\text{ELBO}(q), \qquad \text{ELBO}(q) \;=\; \E_{q(s)}\!\bigl[\log p(o, s) - \log q(s)\bigr].
-\end{equation}
+$$ {#eq:eq_F_elbo}
 This identity is what licenses the direct reuse of the machine-learning ELBO apparatus: variational Bayes, amortized inference, and the reparameterization trick all minimize $-\text{ELBO}$, which is exactly $F$.
 
-**Why $F$ is useful to minimize.** Eq.~\ref{eq:eq_F_surprise} exhibits $F$ as surprise plus a nonnegative KL gap. With the generative model fixed and the recognition family rich enough to contain the posterior, minimizing over $q$ attains the exact posterior. Model-parameter learning is more delicate because the posterior and KL term generally change with those parameters; evidence maximization follows directly only after optimizing the variational family exactly, or under a separately justified coordinate-ascent argument. A single gradient step therefore cannot be described unconditionally as both exact perception and evidence accumulation. The maintained finite kernel proves the posterior-attainment statement and its support-qualified uniqueness, while parameter-learning and marginal-likelihood optimization remain distinct obligations.
+**Why $F$ is useful to minimize.** [@eq:eq_F_surprise] exhibits $F$ as surprise plus a nonnegative KL gap. With the generative model fixed and the recognition family rich enough to contain the posterior, minimizing over $q$ attains the exact posterior. Model-parameter learning is more delicate because the posterior and KL term generally change with those parameters; evidence maximization follows directly only after optimizing the variational family exactly, or under a separately justified coordinate-ascent argument. A single gradient step therefore cannot be described unconditionally as both exact perception and evidence accumulation. The maintained finite kernel proves the posterior-attainment statement and its support-qualified uniqueness, while parameter-learning and marginal-likelihood optimization remain distinct obligations.
 
 ### Predictive Coding as Precision-Weighted Prediction Error {#sec:predictive_coding_as_precision_weighted_prediction_error}
 
 The FEP additionally predicts a specific microscopic form for belief updates. Assuming a generative model whose likelihood is a nonlinear Gaussian $p(x \mid s) = \mathcal{N}(x;\,g(s),\,\Sigma_\varepsilon)$ with precision $\Pi_\varepsilon = \Sigma_\varepsilon^{-1}$, a point-mass or Laplace recognition density concentrated at $\mu$, and differentiable $g$, the gradient of $F$ with respect to the mean takes the canonical precision-weighted prediction-error form
-\begin{equation}\label{eq:eq_PC_update}
+$$
 \dot{\mu} \;=\; -\frac{\partial F}{\partial \mu} \;=\; \bigl(\partial_\mu g(\mu)\bigr)^{\!\top} \Pi_\varepsilon\, \varepsilon \;-\; \Pi_s\,(\mu - \mu_{\text{prior}}),
 \qquad \varepsilon := x - g(\mu),
-\end{equation}
+$$ {#eq:eq_PC_update}
 where $\varepsilon$ is the sensory prediction error, $\Pi_s$ is the prior precision on $\mu$, and $\mu_{\text{prior}}$ is the prior expectation. Here $\Pi_\varepsilon \cdot \varepsilon$ is the precision-weighted prediction error: each component of the error is rescaled by how confident the model is about that channel, so that more reliable sensory dimensions drive belief updates more aggressively. The first term on the right drives $\mu$ to reduce sensory prediction error; the second term anchors $\mu$ to its prior.
 
 This equation ties three separate strands of the catalogue together. (i) It is a **gradient flow** on $F$ and therefore shares the contraction structure formalized for quadratic descents in **fep-032** (`descent_contracts`, `grad_sq_nonneg`, `fixed_point`). (ii) Under the Laplace approximation introduced next, the energy $U_q$ reduces to a sum of quadratics in $\varepsilon$ weighted by the precisions $\Pi$; this is exactly the quadratic-minimum structure formalized in **fep-016** (`sq_nonneg`, `minimum at mode`, `precision-weighted quadratic`). (iii) Message passing across hierarchical layers of a predictive-coding network [@friston2018deep] propagates the same form recursively, which is the structural content of **fep-045** (`ConjugateFamily`, `fold`, `single_update`) and the monotone-composition lemmas in **fep-048**. A reader who wants to know where in the Lean 4 catalogue the "prediction error" half of the FEP lives should therefore look at the intersection of these four rows.
@@ -76,63 +76,63 @@ This equation ties three separate strands of the catalogue together. (i) It is a
 ### The Laplace Approximation and the Quadratic Form of $F$ {#sec:laplace_approximation}
 
 The FEP in its most widely used form does not carry a fully nonparametric $q$; it typically employs the **Laplace assumption**—that $q$ is Gaussian, fully parameterized by its mean $\mu$ and covariance $\Sigma$:
-\begin{equation}\label{eq:eq_laplace_q}
+$$
 q(s) \;=\; \mathcal{N}\!\bigl(s;\,\mu,\,\Sigma\bigr).
-\end{equation}
+$$ {#eq:eq_laplace_q}
 When $F$ is the negative log posterior and $H_F(\mu) := \partial^2 F / \partial \mu \partial \mu^{\!\top}$ is positive definite at the mode, the local Laplace covariance is
 
-\begin{equation}\label{eq:eq_laplace_cov}
+$$
 \Sigma^{*} \;=\; H_F(\mu^{*})^{-1}
 \;=\; \bigl[-\nabla^2 \log p(\mu,o)\rvert_{\mu^{*}}\bigr]^{-1}.
-\end{equation}
+$$ {#eq:eq_laplace_cov}
 
-Thus $\Sigma^{*}$ is the inverse observed information at the MAP estimate. Substituting this local Gaussian approximation back into Eq.~\ref{eq:eq_F_energyentropy} gives an entropy log-determinant and a second-order energy expansion. In common Gaussian observation models this yields a **precision-weighted quadratic** in the prediction errors,
-\begin{equation}\label{eq:eq_laplace_quadratic}
+Thus $\Sigma^{*}$ is the inverse observed information at the MAP estimate. Substituting this local Gaussian approximation back into [@eq:eq_F_energyentropy] gives an entropy log-determinant and a second-order energy expansion. In common Gaussian observation models this yields a **precision-weighted quadratic** in the prediction errors,
+$$
 F_{\text{Laplace}}(\mu) \;\approx\; \tfrac{1}{2}\, \varepsilon^{\!\top} \Pi_\varepsilon\, \varepsilon \;+\; \tfrac{1}{2}\,(\mu - \mu_{\text{prior}})^{\!\top}\Pi_s\,(\mu - \mu_{\text{prior}}) \;-\; \tfrac{1}{2}\log\det\bigl(\Pi_\varepsilon\,\Pi_s\bigr) \;+\; \text{const},
-\end{equation}
-plus terms that vanish at $\mu^{*}$. Precision-weighted quadratic objectives are common in Laplace and predictive-coding implementations, but **fep-016** formalizes only their scalar algebraic substrate: square nonnegativity, the value zero at $x=\mu$, nonnegativity after multiplication by a nonnegative precision, symmetry, and expansion of $(x-\mu)^2$. It does not prove uniqueness when the precision may be zero, derive the quadratic from a likelihood or Hessian, or assemble the matrix expression in Equation~\ref{eq:eq_laplace_quadratic}. The catalogue keeps this scaffolding separate from claims about the full $F$ functional.
+$$ {#eq:eq_laplace_quadratic}
+plus terms that vanish at $\mu^{*}$. Precision-weighted quadratic objectives are common in Laplace and predictive-coding implementations, but **fep-016** formalizes only their scalar algebraic substrate: square nonnegativity, the value zero at $x=\mu$, nonnegativity after multiplication by a nonnegative precision, symmetry, and expansion of $(x-\mu)^2$. It does not prove uniqueness when the precision may be zero, derive the quadratic from a likelihood or Hessian, or assemble the matrix expression in [@eq:eq_laplace_quadratic]. The catalogue keeps this scaffolding separate from claims about the full $F$ functional.
 
 ### The Active Inference Perception–Action Loop {#sec:ai_perception_action_loop}
 
 Active Inference extends the FEP by positing that agents minimize not only present free energy but *expected* free energy under each available policy $\pi$:
 
-\begin{equation}\label{eq:eq_4}
+$$
 \EFE(\pi)
 = \underbrace{\mathbb{E}_{q(o \mid \pi)}[-\log p_C(o)]}_{\text{pragmatic cost}}
 - \underbrace{\mathbb{E}_{q(o,s \mid \pi)}\!\left[\log q(s \mid o,\pi)-\log q(s \mid \pi)\right]}_{\text{epistemic value}}
-\end{equation}
+$$ {#eq:eq_4}
 
 where $o$ are predicted observations, $s$ are hidden states, and $p_C$ is a normalized preferred-outcome law. The second term is the mutual information $I_q(s;o\mid\pi)$ and therefore rewards information gain by lowering $G$; the first is preference cross-entropy and rewards policies that predict preferred outcomes. This sign convention is one among several used in the literature [@millidge2021whence]. The maintained finite kernel fixes it explicitly and derives the equivalent risk--ambiguity form under full-support hypotheses. Policies are then selected by a softmax:
 
-\begin{equation}\label{eq:bg_softmax_policy}
+$$
 P(\pi) \propto \exp(-\gamma \cdot \EFE(\pi)),
-\end{equation}
+$$ {#eq:bg_softmax_policy}
 
-(Equation \ref{eq:bg_softmax_policy}.) with precision parameter $\gamma > 0$. Formalizing this loop in Lean 4 requires a `Fin n → Action` policy type, a measurable space of observations, and a summation over the (finite) policy set—all of which are available in `Algebra.BigOperators.Group.Finset` and `Data.Fin`.
+[@eq:bg_softmax_policy] uses precision parameter $\gamma > 0$. Formalizing this loop in Lean 4 requires a `Fin n → Action` policy type, a measurable space of observations, and a summation over the (finite) policy set—all of which are available in `Algebra.BigOperators.Group.Finset` and `Data.Fin`.
 
 ### The Theoretical Landscape {#sec:the_theoretical_landscape}
 
 The FEP ecosystem is heavily stratified mathematically, progressing from foundational variational calculus to cutting-edge stochastic physics. Each stratum is anchored by a distinguished mathematical object, and each object demands a different slice of Mathlib4:
 
-1. **Foundational Variational Bounds** (Eqs.~\ref{eq:eq_1}--\ref{eq:eq_3}): Built upon Kullback--Leibler (KL) divergence and the Evidence Lower Bound (ELBO) originating in machine learning. Variational free energy $\FE$ serves as a tractable upper bound on surprise under the associated variational construction [@friston2007variational; @friston2008variational], and generalized free energy extends the objective to accommodate model uncertainty [@parr2019generalised]. A Boltzmann--Gibbs density $p^{*}(\Gamma)\propto\exp[-F(\Gamma)]$ becomes a bridge to statistical mechanics only after an energy map, units, normalization, and temperature convention are fixed; an equilibrium law and a Bayesian posterior are not identical merely because both can be written in exponential form.
+1. **Foundational Variational Bounds** ([@eq:eq_1]--[@eq:eq_3]): Built upon Kullback--Leibler (KL) divergence and the Evidence Lower Bound (ELBO) originating in machine learning. Variational free energy $\FE$ serves as a tractable upper bound on surprise under the associated variational construction [@friston2007variational; @friston2008variational], and generalized free energy extends the objective to accommodate model uncertainty [@parr2019generalised]. A Boltzmann--Gibbs density $p^{*}(\Gamma)\propto\exp[-F(\Gamma)]$ becomes a bridge to statistical mechanics only after an energy map, units, normalization, and temperature convention are fixed; an equilibrium law and a Bayesian posterior are not identical merely because both can be written in exponential form.
 
-2. **Active Inference** (EFE and policy objectives; Eq.~\ref{eq:eq_4}): Introduces temporal policies in which organisms take physical action to minimize Expected Free Energy [@friston2015epistemic], decomposed into epistemic and pragmatic terms [@sajid2021active]. The relationship between VFE and EFE, and the hypotheses needed to move among published EFE decompositions, are nontrivial [@millidge2021whence]. Champion et al. [@champion2026reframing] compare four formulations and give conditions for a unifying likelihood mapping. Topic fep-021 fixes an extended-nonnegative-real convention, $G=C\mathbin{\dot-}\mathrm{IG}$, while the maintained finite carrier derives real-valued pragmatic-minus-epistemic and risk-plus-ambiguity identities and stage-updated open-loop EFE. The controlled expansion adds finite soft-control recursions and one exact two-stage observation-dependent feedback witness; the later policy-tree family defines observation-contingent trees at arbitrary finite depth, finite Bellman optima, open-loop embedding and dominance, and a treewise EFE decomposition [@friston2020sophisticated]. The collective expansion adds explicitly independent product-agent and fixed-consensus laws. None establishes equivalence to every published EFE formulation, infinite-horizon or continuous-belief planning, or emergent collective agency. Central informal object: a policy selector $\pi^{*} = \arg\min_{\pi}\,\E[G(\pi)]$.
+2. **Active Inference** (EFE and policy objectives; [@eq:eq_4]): Introduces temporal policies in which organisms take physical action to minimize Expected Free Energy [@friston2015epistemic], decomposed into epistemic and pragmatic terms [@sajid2021active]. The relationship between VFE and EFE, and the hypotheses needed to move among published EFE decompositions, are nontrivial [@millidge2021whence]. Champion et al. [@champion2026reframing] compare four formulations and give conditions for a unifying likelihood mapping. Topic fep-021 fixes an extended-nonnegative-real convention, $G=C\mathbin{\dot-}\mathrm{IG}$, while the maintained finite carrier derives real-valued pragmatic-minus-epistemic and risk-plus-ambiguity identities and stage-updated open-loop EFE. The controlled expansion adds finite soft-control recursions and one exact two-stage observation-dependent feedback witness; the later policy-tree family defines observation-contingent trees at arbitrary finite depth, finite Bellman optima, open-loop embedding and dominance, and a treewise EFE decomposition [@friston2020sophisticated]. The collective expansion adds explicitly independent product-agent and fixed-consensus laws. None establishes equivalence to every published EFE formulation, infinite-horizon or continuous-belief planning, or emergent collective agency. Central informal object: a policy selector $\pi^{*} = \arg\min_{\pi}\,\E[G(\pi)]$.
 
-3. **Information Geometry** (§\ref{sec:information_geometry_results}, §\ref{sec:mathlib4_and_measure_theoretic_probability}): Models belief updates as traversal of statistical manifolds governed by the Fisher Information Metric and natural gradients [@amari1983foundation; @amari2016information]. The space of probability distributions becomes a Riemannian manifold whose geometry encodes local statistical distinguishability. The Fisher Information Metric is defined as
+3. **Information Geometry** ([@sec:information_geometry_results], [@sec:mathlib4_and_measure_theoretic_probability]): Models belief updates as traversal of statistical manifolds governed by the Fisher Information Metric and natural gradients [@amari1983foundation; @amari2016information]. The space of probability distributions becomes a Riemannian manifold whose geometry encodes local statistical distinguishability. The Fisher Information Metric is defined as
 
-\begin{equation}\label{eq:bg_fisher_metric}
+$$
 g_{ij}(\theta) = \mathbb{E}_{p(x \mid \theta)}\!\left[\frac{\partial \log p(x \mid \theta)}{\partial \theta^i} \cdot \frac{\partial \log p(x \mid \theta)}{\partial \theta^j}\right],
-\end{equation}
+$$ {#eq:bg_fisher_metric}
 
-(Equation \ref{eq:bg_fisher_metric}.) Natural gradient descent replaces $\nabla F$ by $g^{-1}\nabla F$. Under the regularity, nondegeneracy, and transformation assumptions that make the statistical manifold and inverse metric well-defined, this vector field is coordinate-covariant and represents metric steepest descent. The catalogue constructs the complete one-parameter Bernoulli instance and a finite categorical score carrier with explicit full-rank and null directions. It proves simplex-tangent Fisher positivity, pullback, scalar Cramér--Rao, invertible-chart natural-gradient equivariance, mirror and affine Bregman identities, and replicator equivalence. The later full-support scalar exponential family adds log-partition gradient/Hessian, centered score, Fisher--variance equality, KL--Bregman duality, and interval-local mean-coordinate injection. It does not yet define arbitrary smooth atlases, affine connections, curvature, or general geodesic existence.
+Given [@eq:bg_fisher_metric], natural gradient descent replaces $\nabla F$ by $g^{-1}\nabla F$. Under the regularity, nondegeneracy, and transformation assumptions that make the statistical manifold and inverse metric well-defined, this vector field is coordinate-covariant and represents metric steepest descent. The catalogue constructs the complete one-parameter Bernoulli instance and a finite categorical score carrier with explicit full-rank and null directions. It proves simplex-tangent Fisher positivity, pullback, scalar Cramér--Rao, invertible-chart natural-gradient equivariance, mirror and affine Bregman identities, and replicator equivalence. The later full-support scalar exponential family adds log-partition gradient/Hessian, centered score, Fisher--variance equality, KL--Bregman duality, and interval-local mean-coordinate injection. It does not yet define arbitrary smooth atlases, affine connections, curvature, or general geodesic existence.
 
-4. **Bayesian Mechanics** (§\ref{sec:bayesian_mechanics_results}): Develops inference-related dynamics using Fokker–Planck equations, non-equilibrium steady states (NESS), and decompositions with skew components [@parr2018markov; @friston2021stochastic]. Sakthivadivel [@sakthivadivel2023bayesian] frames this as "a physics of and by beliefs," while Friston et al. [@friston2024path] develop a path-integral treatment of particular kinds. The catalogue formalizes measure and finite Bayesian inversion, filtering and smoothing, hierarchy and model averaging, finite blanket and intervention laws, and finite stationary currents. It does not derive the general stochastic-analytic Fokker--Planck construction or causal identification from observational data.
+4. **Bayesian Mechanics** ([@sec:bayesian_mechanics_results]): Develops inference-related dynamics using Fokker–Planck equations, non-equilibrium steady states (NESS), and decompositions with skew components [@parr2018markov; @friston2021stochastic]. Sakthivadivel [@sakthivadivel2023bayesian] frames this as "a physics of and by beliefs," while Friston et al. [@friston2024path] develop a path-integral treatment of particular kinds. The catalogue formalizes measure and finite Bayesian inversion, filtering and smoothing, hierarchy and model averaging, finite blanket and intervention laws, and finite stationary currents. It does not derive the general stochastic-analytic Fokker--Planck construction or causal identification from observational data.
 
 5. **Thermodynamic Foundations**: Relates FEP language to thermodynamic potentials, finite path-law fluctuation and Jarzynski identities [@jarzynski1997nonequilibrium], Landauer's principle [@landauer1961irreversibility], and nonequilibrium thermodynamics [@prigogine1977nature; @pavliotis2014stochastic]. The standard Helmholtz relation $\mathcal F=-k_{\mathrm B}T\log Z$ and the variational identity $F_{\mathrm{var}}=\mathrm{KL}(q\Vert p(\cdot\mid o))-\log p(o)$ live in different modeling layers. Identifying them requires an explicit Boltzmann generative model, units, normalization, and temperature scaling; the present catalogue proves scoped finite identities but does not prove that physical identification.
 
 ### The Formalization Gap {#sec:the_formalization_gap}
 
-This project addresses a narrower, directly inspectable **verification gap**: familiar FEP labels often sit several definitions and hypotheses away from the Lean propositions that can currently be stated against the pinned library. It does not claim priority over every earlier formal-methods treatment. Table 1 reports the present catalogue's scope, rather than attempting an unbounded census of prior work or numerical software.
+This project addresses a narrower, directly inspectable **verification gap**: familiar FEP labels often sit several definitions and hypotheses away from the Lean propositions that can currently be stated against the pinned library. It does not claim priority over every earlier formal-methods treatment. The table below reports the present catalogue's scope, rather than attempting an unbounded census of prior work or numerical software.
 
 | Topic-facing concept | Current formal object | Semantic disposition |
 |----------------------|-----------------------|----------------------|
@@ -161,7 +161,7 @@ theorem kl_nonneg {α : Type*} [MeasurableSpace α] (μ ν : Measure α)
   exact zero_le _
 ```
 
-Here `by` enters tactic mode and `zero_le` discharges non-negativity because Mathlib's native divergence takes values in the nonnegative extended reals. The type, rather than an informal convention, rules out a negative result. This style is introduced in depth in §\ref{sec:lean_4_a_primer_for_active_inference_researchers}.
+Here `by` enters tactic mode and `zero_le` discharges non-negativity because Mathlib's native divergence takes values in the nonnegative extended reals. The type, rather than an informal convention, rules out a negative result. This style is introduced in depth in [@sec:lean_4_a_primer_for_active_inference_researchers].
 
 ### Why Lean 4 for Physical Theories? {#sec:why_lean_4_for_physical_theories}
 
@@ -229,15 +229,15 @@ This distinction explains why the pipeline reports statement design, proof compl
 The mathematical status of the FEP has been actively debated in the literature, along three principal lines of critique:
 
 1. **Blanket conditions.** The partition of states into internal, external, sensory, and active components is not always well-defined for arbitrary dynamical systems ([@biehl2021critique]). Specifically, Biehl et al. demonstrate that *"various definitions of the 'Markov blanket' proposed in different works are not equivalent"* and that crucial vector-field rewritings are not generally correct absent previously unstated assumptions. The canonical Markov-blanket claim is that the state space admits a factorization $X = \Psi \times B \times H$ (external, blanket, internal) such that the blanket $b = (s, a)$ renders external and internal states conditionally independent,
-\begin{equation}\label{eq:eq_markov_blanket}
+$$
 p(\psi, \eta \mid b) \;=\; p(\psi \mid b)\,p(\eta \mid b)\qquad\text{(conditional independence given the blanket)}.
-\end{equation}
-Eq.~\ref{eq:eq_markov_blanket} is a *statistical* condition about a specific family of joint densities, and whether a given dynamical system satisfies it depends on the system's drift, diffusion, and steady-state structure—properties that are not determined by the choice of state-space partition alone. The blanket partition sits at the intersection of two very different objects: an algebraic/set-theoretic decomposition of the state space, and a probabilistic conditional-independence statement about its dynamics. Conflating the two is precisely the locus of Biehl et al.'s critique. Accordingly, **fep-005** formalizes only the algebraic side: a four-part disjoint cover with unique membership. The maintained `FEP.MarkovBlanket` foundation adds a separate normalized finite joint of the form $P(b)P(i\mid b)P(e\mid b)$, proves positive-mass conditional factorization and zero internal--external mutual information, and constructs a nontrivial transition whose allowed dependencies are encoded in its types. These results settle a concrete finite instance; they neither derive the blanket from fep-005's arbitrary labels nor prove that generic stochastic dynamics admit or preserve such a structure.
+$$ {#eq:eq_markov_blanket}
+[@eq:eq_markov_blanket] is a *statistical* condition about a specific family of joint densities, and whether a given dynamical system satisfies it depends on the system's drift, diffusion, and steady-state structure—properties that are not determined by the choice of state-space partition alone. The blanket partition sits at the intersection of two very different objects: an algebraic/set-theoretic decomposition of the state space, and a probabilistic conditional-independence statement about its dynamics. Conflating the two is precisely the locus of Biehl et al.'s critique. Accordingly, **fep-005** formalizes only the algebraic side: a four-part disjoint cover with unique membership. The maintained `FEP.MarkovBlanket` foundation adds a separate normalized finite joint of the form $P(b)P(i\mid b)P(e\mid b)$, proves positive-mass conditional factorization and zero internal--external mutual information, and constructs a nontrivial transition whose allowed dependencies are encoded in its types. These results settle a concrete finite instance; they neither derive the blanket from fep-005's arbitrary labels nor prove that generic stochastic dynamics admit or preserve such a structure.
 
 2. **Particular partitions.** The broader applicability of the "particular physics" framework has been questioned, with arguments that certain assumptions about steady-state densities are unduly restrictive ([@aguilera2022particular]). Concretely, the "particular-physics" construction assumes that a stochastic system with dynamics $\mathrm{d}x = f(x)\mathrm{d}t + \sigma\,\mathrm{d}W_t$ admits a non-equilibrium steady-state (NESS) density $p^{*}(x)$ such that the probability current decomposes as
-\begin{equation}\label{eq:eq_helmholtz_current}
+$$
 J(x) \;=\; -\bigl(D + Q(x)\bigr)\,\nabla F(x),\qquad F(x) := -\log p^{*}(x),
-\end{equation}
+$$ {#eq:eq_helmholtz_current}
 with $D$ symmetric positive-semidefinite (the dissipative component), $Q(x)$ **antisymmetric**, i.e. $Q(x)^{\!\top} = -Q(x)$ (the solenoidal component), and the steady-state divergence condition $\nabla \cdot J(x) = 0$. Establishing these conditions simultaneously requires both algebraic hypotheses and analytic/stochastic results about the density and current. **fep-025** now proves a finite continuity-equation instance instead: forward-minus-reverse edge current is antisymmetric and globally conserved, a normalized transition with a stationary mass vector has zero node divergence, and a directed three-cycle has nonzero current despite stationarity. This separates finite stationarity from detailed balance, but it does not construct $Q(x)$, a stationary density on a continuous space, or the SDE/PDE decomposition above.
 
 3. **Math and territorialism** (a deliberate nod to the classic "map and territory" distinction and to the "territorialism" of notational regionalisms across fields). It has been argued that FEP derivations sometimes conflate distinct mathematical objects—using the same notation for different quantities in different contexts ([@andrews2021math]). Lean's type system makes many such conflations visible: for example, a `Measure ℝ` cannot be passed where an $\mathbb{R}$-valued function is required without an explicit bridge. It cannot prevent a modeler from choosing an inadequate definition or assigning the same underlying type to semantically different quantities.

@@ -158,5 +158,5 @@ upgrade a scoped finite theorem into a physical law, and it is never counted as
 proof evidence.
 
 The five families that extend this program from 120 to 155 topics are treated
-in §\ref{sec:formalism_catalogue_155}; their local evidence does not
+in [@sec:formalism_catalogue_155]; their local evidence does not
 retroactively change the receipts for this first expansion.
