@@ -1004,7 +1004,10 @@ def build_typeset_equations_markdown(
             ]
         )
         for index, equation in enumerate(topic.latex_equations, 1):
-            lines.extend([f"$$\\label{{eq:{topic.id}-{index}}}", equation, "$$", ""])
+            # pandoc-crossref only numbers the ``$$ ... $$ {#eq:x}`` form. A
+            # ``\label`` inside ``$$`` renders as an unnumbered display and is
+            # invisible to the filter, so every reference to it would dangle.
+            lines.extend(["$$", equation, f"$$ {{#eq:{topic.id}-{index}}}", ""])
     return "\n".join(lines).rstrip() + "\n"
 
 
