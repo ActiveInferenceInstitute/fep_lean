@@ -103,8 +103,24 @@ uv run python docs/check_links.py --strict --include-root
 uv run python docs/md_hygiene.py --strict
 uv run python docs/pin_audit.py
 uv run python docs/xref_audit.py
+uv run python specs/gnn-bridge-q5-artifact-proof/generate_probe.py --check
 ```
+
+Live bridge and native-receipt checks additionally require the explicitly
+named GNN pair: `fep-lean bridge status --gnn-root PATH`, both emitters'
+`--check`, and `verify_native.py --check --gnn-root PATH --receipt
+specs/gnn-bridge-q5-artifact-proof/native_receipt.json`. They are not
+unconditionally runnable and never repair content drift.
 
 Do not claim Lean verification from catalogue mode or from generated manuscript
 values. Native compilation and full Hermes/OpenGauss execution are distinct
 evidence planes; state exactly which validated receipt supports a claim.
+
+## GNN bridge operations
+
+`uv run fep-lean bridge --help` exposes explicit source pinning, emission,
+read-only status, and numerical comparison receipts. Pass `--gnn-root`; normal
+standalone tests require no sibling checkout. Source pins bind owner bytes,
+not a perpetually refreshed HEAD. Default checks never regenerate reports.
+The package tests include `tests/test_gnn_bridge_operations.py`.
+Numerical agreement is not native proof or proof of current execution.

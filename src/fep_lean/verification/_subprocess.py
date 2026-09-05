@@ -77,6 +77,7 @@ def run_process_group(
         env=dict(env) if env is not None else None,
     )
     timed_out = threading.Event()
+    deadline_expired = threading.Event()
 
     def _watchdog() -> None:
         # Backstop for callers that die between deadline and the except block
@@ -84,8 +85,9 @@ def run_process_group(
         # survive as orphans holding the lock region. ``timed_out.set()``
         # after a normal exit cancels the kill before the PGID can be
         # recycled.
-        if not timed_out.wait(timeout):
+        if timed_out.wait(timeout):
             return
+        deadline_expired.set()
         with contextlib.suppress(ProcessLookupError, PermissionError):
             os.killpg(os.getpgid(process.pid), signal.SIGKILL)
 
@@ -100,7 +102,13 @@ def run_process_group(
         with contextlib.suppress(Exception):
             process.communicate(timeout=_REAP_TIMEOUT_S)
         raise
-    timed_out.set()
+    finally:
+        timed_out.set()
+        watchdog.join()
+    if deadline_expired.is_set() and timeout is not None:
+        raise subprocess.TimeoutExpired(
+            list(command), timeout, output=stdout, stderr=stderr
+        )
     completed: subprocess.CompletedProcess[str] | subprocess.CompletedProcess[None] = (
         subprocess.CompletedProcess(list(command), process.returncode, stdout, stderr)
     )

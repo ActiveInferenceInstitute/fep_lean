@@ -2294,7 +2294,7 @@ def release_bundle_prerequisite_errors(
 def build_numerical_witness_receipt(project_root: Path) -> bytes:
     """Serialize the live typed numerical checks as explanatory evidence."""
     root = Path(project_root).resolve()
-    witnesses = evaluate_numerical_witnesses(project_root=root)
+    witnesses = evaluate_numerical_witnesses(project_root=root, scope="catalogue")
     records: list[dict[str, Any]] = []
     for witness in witnesses:
         records.append(

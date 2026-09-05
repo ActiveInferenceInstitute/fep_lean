@@ -16,7 +16,7 @@ from pathlib import Path
 from fep_lean.catalogue.registry import body_source_relative_paths
 from fep_lean.formal.manifest import FORMAL_MODULES, formal_resource_relative_paths
 
-OWNER_MANIFEST_VERSION = 12
+OWNER_MANIFEST_VERSION = 14
 
 # Globs are discovery rules only. They must never define the digest roster:
 # deleting a source file would otherwise silently delete it from the claimed
@@ -60,6 +60,11 @@ SOURCE_OWNER_ROSTER: tuple[str, ...] = (
     "src/fep_lean/catalogue/schema.py",
     "src/fep_lean/catalogue/semantics.py",
     "src/fep_lean/catalogue/topics.py",
+    "src/fep_lean/bridge/__init__.py",
+    "src/fep_lean/bridge/certificates.py",
+    "src/fep_lean/bridge/cli.py",
+    "src/fep_lean/bridge/custody.py",
+    "src/fep_lean/bridge/operations.py",
     "src/fep_lean/cli.py",
     "src/fep_lean/data/__init__.py",
     "src/fep_lean/formal/__init__.py",
@@ -89,10 +94,16 @@ SOURCE_OWNER_ROSTER: tuple[str, ...] = (
     "src/fep_lean/pipeline/core.py",
     "src/fep_lean/pipeline/orchestrator.py",
     "src/fep_lean/verification/__init__.py",
+    "src/fep_lean/verification/_horizon_numerical_witnesses.py",
     "src/fep_lean/verification/_toolchain.py",
     "src/fep_lean/verification/_subprocess.py",
     "src/fep_lean/verification/environment.py",
     "src/fep_lean/verification/formalism_audit.py",
+    "src/fep_lean/verification/gnn_artifact_proof.py",
+    "src/fep_lean/verification/gnn_artifact_receipt.py",
+    "src/fep_lean/verification/gnn_continuous_artifact_proof.py",
+    "src/fep_lean/verification/gnn_julia_artifact_proof.py",
+    "src/fep_lean/verification/horizon_acceptance.py",
     "src/fep_lean/verification/lean_verifier.py",
     "src/fep_lean/verification/numerical_witnesses.py",
     "src/fep_lean/verification/preflight.py",

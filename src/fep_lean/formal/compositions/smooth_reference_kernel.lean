@@ -21,7 +21,13 @@ The scalar theorem does not identify static-parameter learning with latent-
 state filtering: it proves that both use the same named Gaussian observation
 rows and keeps their posterior carriers distinct.  It makes no EFE/reward,
 SDE/Itô, Fokker--Planck, Girsanov, physical-dissipation, causal-blanket,
-empirical, or universal-FEP claim.
+empirical, or universal-FEP claim.  It does not extend to singular covariance,
+arbitrary recognition families, global statistical geometry, nonparametric
+learning rates, continuous-path densities or entropy production, or convergence
+of unbounded observables.  Natural-gradient descent is a time-zero directional
+derivative with fixed posterior variance, not a global flow or ODE result.
+Native posterior agreement is evidence-almost-everywhere, not a claim about the
+native posterior at the singleton datum zero.  Fin4 remains a separate carrier.
 -/
 
 open Filter MeasureTheory ProbabilityTheory InformationTheory
@@ -757,7 +763,8 @@ theorem smoothReferenceKernel_terminal
 /-- Separate Fin4 terminal export.  It retains the exact preregistered carrier,
 the maintained sensory--active conditional product law, the native conditional
 independence theorem despite nonzero marginal covariance, and the fixed
-precision perturbation that refutes unconditional endpoint independence. -/
+Fin2 precision perturbation that refutes unconditional endpoint independence
+in that separate two-coordinate diagnostic model. -/
 theorem fin4ReferenceKernel_terminal :
     Fintype.card Axis = 4 ∧
       K.PosDef ∧

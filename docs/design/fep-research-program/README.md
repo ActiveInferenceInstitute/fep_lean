@@ -3,8 +3,10 @@
 Status: **active implementation program; Horizon 1 exited, the
 [active H2 spec](../../../specs/horizon-2-smooth-stochastic/README.md) has
 accepted H2.0--H2.3b, H2.4a/b, H2.5a/b/c, H2.5b-R0, H2.5d-R0,
-H2.5d, H2.6a/b/c, H2.6a-R0, and H2.7-R0; H2.7 is the sole legal
-implementation slice, while Horizon 3 remains closed**.
+H2.5d, H2.6a/b/c, H2.6a-R0, H2.7-R0, and H2.7; only read-only H3.G0
+eligibility is open, with H3.0--H3.7 closed**. The
+[terminal acceptance record](../../../specs/horizon-2-smooth-stochastic/readiness/terminal-acceptance.json)
+binds the actual native evidence, diagnostics, and three independent reviews.
 The accepted H1
 record preserves the first uninhabited carrier merge and separately proves the
 repaired finite one-step terminal theorem. H2 implementation state and reviewed
@@ -179,7 +181,7 @@ fixes the following choices so an implementing agent does not reopen them:
       reward--EFE or policy-recursion relabeling.
 - [x] H2.6c prove monotone finite-grid path-law and support-aware native-KL
       results without continuous-path or physical-entropy claims.
-- [ ] H2.7 assemble the scalar terminal theorem and separately verify the
+- [x] H2.7 assemble the scalar terminal theorem and separately verify the
       accepted H2.5c export and accepted H2.5d conditioning result.
 - [ ] H3.G0 inspect already-landed H1/H2 source and evidence read-only, record
       exactly one continuous or finite branch, and prove or patch nothing.

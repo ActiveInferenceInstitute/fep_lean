@@ -68,7 +68,11 @@ def test_built_wheel_imports_in_isolated_namespace(tmp_path: Path) -> None:
     )
 
     environment = tmp_path / "venv"
-    venv.EnvBuilder(with_pip=False, system_site_packages=True).create(environment)
+    # Preserve the managed interpreter's library resolution on POSIX (notably
+    # uv's macOS Python builds whose dylib lives beside the original binary).
+    venv.EnvBuilder(
+        with_pip=False, system_site_packages=True, symlinks=os.name != "nt"
+    ).create(environment)
     python = environment / "bin" / "python"
     subprocess.run(
         [
@@ -107,6 +111,9 @@ def test_built_wheel_imports_in_isolated_namespace(tmp_path: Path) -> None:
             "-c",
             (
                 "import importlib.resources, importlib.util, pathlib, fep_lean; "
+                "from fep_lean.bridge.custody import classify_document; "
+                "from fep_lean.bridge.certificates import compare; "
+                "assert callable(classify_document) and callable(compare); "
                 "from fep_lean.catalogue import BODIES, FEPTopicCatalogue; "
                 f"assert pathlib.Path(fep_lean.__file__).is_relative_to(pathlib.Path({str(environment)!r})); "
                 "assert len(FEPTopicCatalogue.default().topics) == len(BODIES); "

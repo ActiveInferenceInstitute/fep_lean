@@ -192,6 +192,7 @@ class OpenGaussClient:
         )
         self._artifacts_dir = self._home / "fep_artifacts"
         self._logs_dir = self._home / "fep_logs"
+        self._home.mkdir(parents=True, exist_ok=True)
         self._artifacts_dir.mkdir(exist_ok=True)
         self._logs_dir.mkdir(exist_ok=True)
         self._db_path = self._home / "fep_lean_state.db"

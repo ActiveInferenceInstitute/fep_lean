@@ -123,6 +123,7 @@ class NumericalWitness:
     boundary_observed: bool
     plot: WitnessPlot
     formal_alignment: FormalAlignment
+    scope: Literal["catalogue", "horizon2"] = "catalogue"
     evidence_kind: str = NON_PROOF_EVIDENCE
 
     def __post_init__(self) -> None:
@@ -242,6 +243,8 @@ class NumericalWitness:
             raise ValueError(f"{self.id}: boundary behavior must be nonempty")
         if type(self.boundary_observed) is not bool:
             raise ValueError(f"{self.id}: boundary_observed must be boolean")
+        if self.scope not in {"catalogue", "horizon2"}:
+            raise ValueError(f"{self.id}: unknown witness scope")
         if self.evidence_kind != NON_PROOF_EVIDENCE:
             raise ValueError(f"{self.id}: numerical evidence boundary was weakened")
         if self.formal_alignment not in {"theorem_instance", "structural_analogue"}:
@@ -1355,8 +1358,17 @@ def _two_state_master_equation() -> NumericalWitness:
 
 def evaluate_numerical_witnesses(
     project_root: Path | None = None,
+    *,
+    scope: Literal["catalogue", "horizon2"] | None = None,
 ) -> tuple[NumericalWitness, ...]:
-    """Evaluate witnesses against one explicit checkout or installed package."""
+    """Evaluate the shared registry, optionally selecting a declared scope."""
+    if scope not in {None, "catalogue", "horizon2"}:
+        raise ValueError("unknown numerical witness scope")
+    from ._horizon_numerical_witnesses import (
+        fin4_blanket_witness,
+        scalar_terminal_witness,
+    )
+
     witnesses = (
         _measure_bayes_reconstruction(),
         _gibbs_duality_gap(),
@@ -1373,6 +1385,8 @@ def evaluate_numerical_witnesses(
         _native_blanket_transfer(),
         _exponential_family_duality(),
         _two_state_master_equation(),
+        scalar_terminal_witness(),
+        fin4_blanket_witness(),
     )
     identifiers = tuple(witness.id for witness in witnesses)
     families = tuple(witness.family for witness in witnesses)
@@ -1385,7 +1399,7 @@ def evaluate_numerical_witnesses(
         for entry in BODY_MODULE_MANIFEST
         if any(int(topic_id.removeprefix("fep-")) > 50 for topic_id in entry.bodies)
     )
-    actual_families = frozenset(families)
+    actual_families = frozenset(w.family for w in witnesses if w.scope == "catalogue")
     if actual_families != expected_families:
         raise ValueError(
             "numerical witness family closure mismatch: "
@@ -1404,7 +1418,7 @@ def evaluate_numerical_witnesses(
             f"{witness_id} -> {declaration}" for witness_id, declaration in unresolved
         )
         raise ValueError(f"unresolved numerical witness declarations: {details}")
-    return witnesses
+    return tuple(w for w in witnesses if scope is None or w.scope == scope)
 
 
 def numerical_witness_by_id(

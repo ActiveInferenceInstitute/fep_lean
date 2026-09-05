@@ -1,7 +1,19 @@
 # H2.7: smooth reference-kernel terminal merge
 
-Status: **closed pending H2.7-R0; all earlier solid predecessors are accepted,
-but the continuous VFE/natural-gradient seam is not yet proved**.
+Status: **terminal implementation present; acceptance is source-bound**.
+H2.7-R0 is accepted. The maintained owner defines the scalar and Fin4 terminal
+theorems. H2.7 acceptance requires a valid
+`specs/horizon-2-smooth-stochastic/readiness/terminal-acceptance.json`, including
+the native results, diagnostics and three independent reviews below.
+An absent or stale receipt leaves H3 closed;
+a valid receipt opens only read-only H3.G0 continuous eligibility.
+
+From the repository root:
+
+```bash
+uv run python specs/horizon-2-smooth-stochastic/readiness/terminal_acceptance.py \
+  validate --project-root .
+```
 
 ## Outcome
 

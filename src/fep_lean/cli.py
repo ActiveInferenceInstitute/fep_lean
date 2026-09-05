@@ -284,6 +284,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--verbose", action="store_true")
     sub = parser.add_subparsers(dest="command", required=True)
+    from fep_lean.bridge.cli import add_arguments
+
+    add_arguments(sub.add_parser("bridge", help="source-bound GNN bridge operations"))
     sub.add_parser("setup", help="explicitly acquire/build the pinned Lean workspace")
     sub.add_parser("preflight", help="run read-only full-mode capability checks")
     verify = sub.add_parser("verify", help="compile catalogue sketches with Lean only")
@@ -360,6 +363,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         if args.command == "setup":
             return _setup(root)
+        if args.command == "bridge":
+            from fep_lean.bridge.cli import run as run_bridge
+
+            return run_bridge(root, args)
         if args.command == "preflight":
             result = run_validation_checks(root, mode="full")
             print(json.dumps(result, indent=2))

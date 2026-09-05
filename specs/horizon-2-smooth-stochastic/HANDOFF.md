@@ -1,8 +1,8 @@
 # Horizon 2 implementation handoff
 
 Status: **H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0, H2.5d-R0,
-H2.6a/b/c, H2.6a-R0, and H2.7-R0 accepted; H2.7 is the sole legal
-implementation slice; H3 is closed**.
+H2.6a/b/c, H2.6a-R0, H2.7-R0, and H2.7 accepted; only read-only H3.G0
+eligibility is open, with H3.0--H3.7 closed**.
 
 Read [`README.md`](README.md),
 [`slices/03a-posterior-martingale.md`](slices/03a-posterior-martingale.md),
@@ -13,15 +13,27 @@ Read [`README.md`](README.md),
 owns mathematical intent; this spec owns execution state and reviewed
 divergences.
 
-## Immediate work
+## Current acceptance and next boundary
 
-Implement only
-[`H2.7 smooth reference-kernel terminal merge`](slices/07-terminal-certificate.md).
-Consume the accepted H2.7-R0 density-relative exact-posterior VFE/KL and local
-natural-gradient theorem on the same selected scalar carrier used by the
-semigroup, filter, control, and finite-grid path. Verify the accepted Fin4
-carrier separately. Optional H2.2b stays closed until it removes more structure
-than it adds, and H3 remains closed until H2.7 receives its own review quorum.
+The [terminal receipt](readiness/terminal-acceptance.json) validates 328 mandatory
+cases, the enabled Fin4 supplement, 180 source hashes, independent numerical
+diagnostics, and three fresh reviews. Its retained evidence lives under
+`readiness/evidence/20260904-wave2/`. Revalidate before downstream use; source
+changes invalidate acceptance.
+
+The [H3.G0 validator](../h3-reference-study/README.md) requires actual recorded
+pre-outcome study metadata. No dataset, license, units, sampling, intervention
+selection, or study approval was invented. Optional H2.2b stays closed.
+
+The terminal audit retains explicit non-transfers: no singular covariance,
+arbitrary recognition family, global statistical geometry or natural-gradient
+ODE, nonparametric rates, unbounded-observable convergence, continuous-path
+density, entropy production, physical dissipation, causal blanket, empirical
+adequacy, or universal FEP result. Recognition variance is fixed to posterior
+variance; descent is at time zero. Native posterior agreement is only
+evidence-almost-everywhere, including when a closed version is evaluated at
+datum zero. The Fin4 terminal is separate; its counterexample diagnostic uses
+a separate fixed Fin2 model.
 
 ## H2.3a evidence
 

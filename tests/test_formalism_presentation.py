@@ -34,7 +34,7 @@ def test_scientific_acronyms_survive_human_readable_labels() -> None:
 
 def test_presentation_join_conserves_canonical_sources_and_is_immutable() -> None:
     coverage = build_formalism_coverage(PROJECT_ROOT)
-    evaluated = evaluate_numerical_witnesses()
+    evaluated = evaluate_numerical_witnesses(scope="catalogue")
     presentation = build_formalism_presentation(PROJECT_ROOT)
 
     assert tuple(topic.id for topic in presentation.topics) == tuple(

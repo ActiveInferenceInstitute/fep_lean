@@ -1,0 +1,130 @@
+{
+  "expected_payload": {
+    "asymmetric": {
+      "A_data": {
+        "shape": [
+          2,
+          2
+        ],
+        "values": [
+          "1/4",
+          "1/2",
+          "3/4",
+          "1/2"
+        ]
+      },
+      "B_data": {
+        "shape": [
+          2,
+          2,
+          2
+        ],
+        "values": [
+          "1/4",
+          "1/2",
+          "3/4",
+          "1/8",
+          "3/4",
+          "1/2",
+          "1/4",
+          "7/8"
+        ]
+      },
+      "C_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/4",
+          "3/4"
+        ]
+      },
+      "D_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2"
+        ]
+      },
+      "E_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "3/8",
+          "5/8"
+        ]
+      }
+    },
+    "symmetric": {
+      "A_data": {
+        "shape": [
+          2,
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2"
+        ]
+      },
+      "B_data": {
+        "shape": [
+          2,
+          2,
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2"
+        ]
+      },
+      "C_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2"
+        ]
+      },
+      "D_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2"
+        ]
+      },
+      "E_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/4",
+          "3/4"
+        ]
+      }
+    }
+  },
+  "extractor_sha256": "5baba98eaf2bf9be9a7de0eb7afb8cc38891bc20e02baddf3b78972dc15c06a1",
+  "fixtures": {
+    "pymdp_asymmetric_runner.py": "7b41393fd16db4083b26443c3498789257e5917874e06fb3f5ddb087e05b2212",
+    "pymdp_symmetric_runner.py": "4b03623bdbf23affddd0cf8db109aae18cfb2f09fe4d7c1dbb134b489181af10"
+  },
+  "generated": {
+    "generated/probe_asymmetric.lean": "cee39cc8120ad2fcb270e0ee06df99b1c74419aaa4d11964522468c5941f2b4e",
+    "generated/probe_symmetric.lean": "a0addf81d5f8ce48df18f42165a10e3791569ff7b23164149f887257f28c67b3"
+  },
+  "slice": "gnn-bridge-q5-artifact-proof"
+}

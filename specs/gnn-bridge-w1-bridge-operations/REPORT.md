@@ -61,3 +61,22 @@ the projection gate are subprocessed.
 - The STALE-CUSTODY classification path was exercised live (heads moved
   since P1); the CONTENT-DRIFT path is implemented and unit-reasoned but
   was not triggered by a real content divergence in this run.
+
+## Custody-digest self-reference (steady-state semantics, recorded 2026-09-04 post-exit)
+
+The P1 document's `source_commit` line is self-referential with respect
+to git: a committed document can never record its own commit's digest
+(the digest does not exist until after the commit lands). Every
+custody-refresh commit is therefore born one emission behind, and a
+`bridge_status.py` run at a fresh HEAD classifies the committed copy as
+`STALE-CUSTODY (digest-only)` — by construction, not by decay.
+
+Terminal state adopted (option (a) of the orchestrator decision):
+`--refresh-digests` at the final HEAD (`b9d315c`) leaves the working
+tree as the custody state — `bridge_status.py` exits 0 with 4/4 PASS —
+and the one-line digest diff is deliberately left uncommitted. Any
+future HEAD move reproduces the same cycle: run `--refresh-digests`,
+do not chain refresh→commit iterations (they cannot converge and
+pollute history; three such custody commits landed at
+`8ebae73`/`f81500e`/`b9d315c` before this was recognized — harmless but
+terminal).

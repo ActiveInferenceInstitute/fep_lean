@@ -6,6 +6,7 @@ All tests use real SQLite (tmp_path) — no direct execution.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -14,8 +15,21 @@ from fep_lean.gauss.client import OpenGaussClient
 
 
 @pytest.fixture()
-def client(tmp_path: Path) -> OpenGaussClient:
-    return OpenGaussClient(gauss_home=tmp_path / "gauss_home")
+def client(tmp_path: Path) -> Iterator[OpenGaussClient]:
+    with OpenGaussClient(gauss_home=tmp_path / "gauss_home") as store:
+        yield store
+
+
+def test_new_nested_home_can_be_reopened_without_losing_sessions(
+    tmp_path: Path,
+) -> None:
+    home = tmp_path / "new" / "nested" / "gauss"
+    with OpenGaussClient(gauss_home=home) as store:
+        session_id = store.create_session("fep-001", "FEP")
+    with OpenGaussClient(gauss_home=home) as store:
+        assert store.export_session(session_id)["topic_id"] == "fep-001"
+    assert (home / "fep_artifacts").is_dir()
+    assert (home / "fep_logs").is_dir()
 
 
 def test_create_session_returns_string(client: OpenGaussClient) -> None:

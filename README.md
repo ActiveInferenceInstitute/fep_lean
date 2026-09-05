@@ -115,9 +115,10 @@ every stationary center, proves blanket-a.e. pair and scalar conditional laws
 plus endpoint `CondIndepFun`, and derives a fixed bivariate precision
 perturbation with actual covariance `-1 / 15` and native non-independence.
 H2.7-R0 has accepted the continuous density-relative exact-posterior VFE and
-derived local natural-gradient seam. H2.7 is now the sole legal implementation
-slice. H3 remains closed until the connected H2.7 terminal merge and its
-separate review gate pass.
+derived local natural-gradient seam. The [H2.7 terminal record](specs/horizon-2-smooth-stochastic/readiness/terminal-acceptance.json)
+now validates 328 mandatory cases, the enabled Fin4 supplement, independent
+diagnostics, and three source-bound reviews. This opens only read-only H3.G0
+eligibility; no study metadata has been selected and H3.0--H3.7 remain closed.
 
 That formal exit is not current publication evidence. The retained exact-roster
 native, declaration/axiom, Python, and Chrome receipts validate the frozen
@@ -245,7 +246,7 @@ browser acceptance capture, receipt validation) are documented in
 | --- | --- |
 | `src/fep_lean/catalogue` | typed semantic model, family-owned canonical bodies, generation, and coverage projections |
 | `src/fep_lean/formal` | packaged foundations, leaf compositions, import aggregate, and workspace projection |
-| `src/fep_lean/verification` | read-only capability checks, Lean compiler bridge, and declaration/axiom audit |
+| `src/fep_lean/verification` | read-only capability checks, Lean compiler bridge, declaration/axiom audit, and GNN artifact-proof extraction and manifest verification |
 | `src/fep_lean/llm` | configured Hermes HTTP client |
 | `src/fep_lean/gauss` | SQLite sessions and per-topic orchestration |
 | `src/fep_lean/output` | evidence receipts, fail-closed rendering, figures, reports, the offline formalism atlas, and the typed numerical dashboard |

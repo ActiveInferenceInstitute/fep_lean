@@ -50,10 +50,12 @@ def run_lean_probe(
     # lean grandchildren survive as PPID=1 orphans, hold gigabytes, and wedge
     # every later compile on the machine.
     timed_out = threading.Event()
+    deadline_expired = threading.Event()
 
     def _watchdog() -> None:
-        if not timed_out.wait(timeout_s):
+        if timed_out.wait(timeout_s):
             return
+        deadline_expired.set()
         with contextlib.suppress(ProcessLookupError):
             os.killpg(os.getpgid(process.pid), signal.SIGKILL)
 
@@ -68,5 +70,11 @@ def run_lean_probe(
         with contextlib.suppress(Exception):
             process.communicate(timeout=30)
         raise
-    timed_out.set()
+    finally:
+        timed_out.set()
+        watchdog.join()
+    if deadline_expired.is_set():
+        raise subprocess.TimeoutExpired(
+            command, timeout_s, output=stdout, stderr=stderr
+        )
     return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)

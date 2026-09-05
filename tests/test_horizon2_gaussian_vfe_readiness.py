@@ -13,6 +13,13 @@ from pathlib import Path
 import pytest
 
 from fep_lean.formal.manifest import FORMAL_MODULES
+from tests._support.h2_r0_custody import (
+    MANIFEST_PATH,
+    PRIOR_PATH,
+    SUCCESSOR_PATH,
+    VALIDATOR_PATH,
+    validate_h2_r0_custody,
+)
 from tests._support.lean_runner import run_lean_probe
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -491,6 +498,7 @@ def test_h2_7_r0_typed_consumer_rejects_reversed_kl() -> None:
 
 
 def test_h2_7_r0_repair_is_source_bound_append_only_go() -> None:
+    successor = validate_h2_r0_custody(PROJECT_ROOT)
     assert REPAIR.is_file()
     repair = json.loads(REPAIR.read_text(encoding="utf-8"))
 
@@ -558,8 +566,9 @@ def test_h2_7_r0_repair_is_source_bound_append_only_go() -> None:
         "approved_fail_closed_source_bound_contract"
     )
     assert repair["review"]["reviewed_spike_sha256"] == _sha256(SPIKE)
-    assert repair["review"]["reviewed_pre_receipt_test_sha256"] == _sha256(
-        Path(__file__)
+    assert (
+        repair["review"]["reviewed_pre_receipt_test_sha256"]
+        == repair["source_sha256"]["tests/test_horizon2_gaussian_vfe_readiness.py"]
     )
     assert repair["downstream"] == {
         "opened": ["H2.7 maintained implementation"],
@@ -578,6 +587,90 @@ def test_h2_7_r0_repair_is_source_bound_append_only_go() -> None:
         "unqualified Fisher-equals-covariance claim",
         "continuous H3 eligibility before accepted H2.7",
     ]
-    assert repair["source_sha256"] == {
-        relative: _sha256(PROJECT_ROOT / relative) for relative in SOURCE_BOUND_PATHS
+    assert successor["source_sha256"] == {
+        relative: _sha256(PROJECT_ROOT / relative)
+        for relative in (*SOURCE_BOUND_PATHS, VALIDATOR_PATH)
     }
+
+
+@pytest.mark.parametrize(
+    "tamper",
+    (
+        "prior",
+        "unlisted_owner",
+        "duplicate_owner",
+        "missing_owner",
+        "changed_owner_role",
+        "stale_source",
+        "expanded_downstream",
+        "expanded_allowance",
+        "native_claim_without_probes",
+    ),
+)
+def test_h2_7_r0_custody_rejects_tampering(tmp_path: Path, tamper: str) -> None:
+    for relative in (*SOURCE_BOUND_PATHS, VALIDATOR_PATH, PRIOR_PATH, SUCCESSOR_PATH):
+        destination = tmp_path / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(PROJECT_ROOT / relative, destination)
+    successor_path = tmp_path / SUCCESSOR_PATH
+    successor = json.loads(successor_path.read_text(encoding="utf-8"))
+    manifest_path = tmp_path / MANIFEST_PATH
+    manifest = manifest_path.read_text(encoding="utf-8")
+    owner = (
+        "    FormalModule(\n"
+        '        resource="gnn_document.lean",\n'
+        '        lean_module="FepSketches.gnn_document",\n'
+        "        role=FormalModuleRole.FOUNDATION,\n"
+        '        declaration_namespace="FEP.GnnDocument",\n'
+        "    ),\n"
+    )
+    assert manifest.count(owner) == 1
+    if tamper == "prior":
+        path = tmp_path / PRIOR_PATH
+        path.write_bytes(path.read_bytes() + b"\n")
+    elif tamper == "unlisted_owner":
+        manifest = manifest.replace(
+            owner,
+            owner
+            + owner.replace("gnn_document", "unreviewed").replace(
+                "GnnDocument", "Unreviewed"
+            ),
+            1,
+        )
+    elif tamper == "duplicate_owner":
+        manifest = manifest.replace(owner, owner + owner, 1)
+    elif tamper == "missing_owner":
+        manifest = manifest.replace(owner, "", 1)
+    elif tamper == "changed_owner_role":
+        manifest = manifest.replace(
+            'lean_module="FepSketches.gaussian_information_geometry",\n'
+            "        role=FormalModuleRole.FOUNDATION,",
+            'lean_module="FepSketches.gaussian_information_geometry",\n'
+            "        role=FormalModuleRole.COMPOSITION,",
+            1,
+        )
+    elif tamper == "stale_source":
+        path = tmp_path / SPIKE.relative_to(PROJECT_ROOT)
+        path.write_bytes(path.read_bytes() + b"\n")
+    elif tamper == "expanded_downstream":
+        successor["downstream"]["opened"].append("H3 implementation")
+    elif tamper == "expanded_allowance":
+        successor["allowed_prior_source_changes"].append(
+            str(SPIKE.relative_to(PROJECT_ROOT))
+        )
+    else:
+        successor["native_evidence"] = {
+            "status": "verified",
+            "historical_evidence_reused": False,
+            "probes": [],
+        }
+    if "owner" in tamper:
+        assert manifest != manifest_path.read_text(encoding="utf-8")
+        manifest_path.write_text(manifest, encoding="utf-8")
+        # Even rebinding the live manifest hash must not authorize owner drift.
+        digest = _sha256(manifest_path)
+        successor["source_sha256"][MANIFEST_PATH] = digest
+        successor["manifest_transition"]["current_sha256"] = digest
+    successor_path.write_text(json.dumps(successor), encoding="utf-8")
+    with pytest.raises(ValueError):
+        validate_h2_r0_custody(tmp_path)

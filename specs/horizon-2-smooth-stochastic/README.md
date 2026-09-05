@@ -1,8 +1,8 @@
 # Horizon 2 smooth and stochastic lifting
 
 Status: **active; H2.0--H2.3b, H2.4a/b, H2.5a/b/c/d, H2.5b-R0,
-H2.5d-R0, H2.6a/b/c, H2.6a-R0, and H2.7-R0 accepted; H2.7 is the sole legal
-implementation slice and H3 remains closed**. Last updated: 2026-08-24.
+H2.5d-R0, H2.6a/b/c, H2.6a-R0, H2.7-R0, and H2.7 accepted; only read-only
+H3.G0 eligibility is open, with H3.0--H3.7 closed**. Last updated: 2026-09-04.
 
 This spec activates the prospective
 [Horizon 2 design](../../docs/design/fep-research-program/horizon-2-smooth-stochastic.md)
@@ -10,14 +10,14 @@ under the shared [research contract](../../docs/design/fep-research-program/rese
 The accepted [Horizon 1 record](../done/horizon-1-finite-synthesis/README.md)
 is the immutable predecessor boundary.
 
-## Next Agent Prompt
+## Current acceptance
 
-Implement only the
-[`H2.7 smooth reference-kernel terminal merge`](slices/07-terminal-certificate.md)
-against the accepted H2.7-R0 density-relative VFE and local natural-gradient
-bridge. Keep one connected scalar carrier and a separate accepted Fin4 export;
-do not substitute event mass, EFE, physical energy, or an unshared predecessor
-conjunction. Optional H2.2b and all H3 work remain closed.
+The [terminal receipt](readiness/terminal-acceptance.json) binds 328 mandatory
+cases, the enabled Fin4 supplement, independently recomputed diagnostics, and
+three distinct source-bound reviews. Revalidate it before downstream use.
+The scalar carrier and Fin4 export retain separate mathematical scopes.
+Optional H2.2b remains closed; H3.G0 requires actual pre-outcome study metadata
+under the [eligibility contract](../h3-reference-study/README.md).
 
 Current checklist:
 
@@ -59,7 +59,7 @@ Current checklist:
 - [x] [H2.7-R0](slices/07-r0-gaussian-vfe-natural-gradient.md): continuous
   density-relative VFE, exact-posterior gap, mean-coordinate natural gradient,
   and strict local descent proof gate.
-- [ ] [H2.7](slices/07-terminal-certificate.md): terminal scalar theorem,
+- [x] [H2.7](slices/07-terminal-certificate.md): terminal scalar theorem,
   separate four-coordinate export, and independent review quorum.
 
 Before ending an H2 pass, update this section and [`HANDOFF.md`](HANDOFF.md)

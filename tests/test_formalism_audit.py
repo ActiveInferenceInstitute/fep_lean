@@ -103,8 +103,8 @@ def test_native_audit_rejects_duplicate_and_unknown_axiom_records(
     stdout += f"'{declaration}' depends on axioms: [propext]\n"
     monkeypatch.setattr(formalism_audit, "find_executable", lambda *_: "/bin/lake")
     monkeypatch.setattr(
-        formalism_audit.subprocess,
-        "run",
+        formalism_audit,
+        "run_process_group",
         lambda *args, **kwargs: subprocess.CompletedProcess(
             args=args[0], returncode=0, stdout=stdout, stderr=""
         ),
@@ -166,8 +166,8 @@ def test_native_audit_evaluation_is_fail_closed(
         stdout = "unknown constant\n"
     monkeypatch.setattr(formalism_audit, "find_executable", lambda *_: "/bin/lake")
     monkeypatch.setattr(
-        formalism_audit.subprocess,
-        "run",
+        formalism_audit,
+        "run_process_group",
         lambda *args, **kwargs: subprocess.CompletedProcess(
             args=args[0], returncode=returncode, stdout=stdout, stderr=""
         ),
@@ -256,8 +256,8 @@ def test_audit_rejects_stale_whole_catalogue_projection(
         formalism_audit, "_declaration_records", lambda *args, **kwargs: ()
     )
     monkeypatch.setattr(
-        formalism_audit.subprocess,
-        "run",
+        formalism_audit,
+        "run_process_group",
         lambda *args, **kwargs: pytest.fail("Lean must not run against stale bytes"),
     )
 
@@ -272,8 +272,8 @@ def test_declaration_evidence_records_preserve_semantic_source_roles(
 ) -> None:
     monkeypatch.setattr(formalism_audit, "find_executable", lambda *_: "/bin/lake")
     monkeypatch.setattr(
-        formalism_audit.subprocess,
-        "run",
+        formalism_audit,
+        "run_process_group",
         lambda *args, **kwargs: subprocess.CompletedProcess(
             args=args[0], returncode=0, stdout=_complete_axiom_stdout(), stderr=""
         ),
@@ -319,8 +319,8 @@ def test_audit_receipt_validator_recomputes_digest_and_declaration_closure(
 ) -> None:
     monkeypatch.setattr(formalism_audit, "find_executable", lambda *_: "/bin/lake")
     monkeypatch.setattr(
-        formalism_audit.subprocess,
-        "run",
+        formalism_audit,
+        "run_process_group",
         lambda *args, **kwargs: subprocess.CompletedProcess(
             args=args[0], returncode=0, stdout=_complete_axiom_stdout(), stderr=""
         ),
@@ -359,8 +359,8 @@ def test_audit_receipt_validator_rejects_fail_open_evidence_fields(
 ) -> None:
     monkeypatch.setattr(formalism_audit, "find_executable", lambda *_: "/bin/lake")
     monkeypatch.setattr(
-        formalism_audit.subprocess,
-        "run",
+        formalism_audit,
+        "run_process_group",
         lambda *args, **kwargs: subprocess.CompletedProcess(
             args=args[0], returncode=0, stdout=_complete_axiom_stdout(), stderr=""
         ),
@@ -400,8 +400,8 @@ def test_audit_receipt_rejects_unapproved_axiom_even_when_surfaces_agree(
 ) -> None:
     monkeypatch.setattr(formalism_audit, "find_executable", lambda *_: "/bin/lake")
     monkeypatch.setattr(
-        formalism_audit.subprocess,
-        "run",
+        formalism_audit,
+        "run_process_group",
         lambda *args, **kwargs: subprocess.CompletedProcess(
             args=args[0], returncode=0, stdout=_complete_axiom_stdout(), stderr=""
         ),
@@ -430,8 +430,8 @@ def test_audit_receipt_validation_rejects_live_projection_drift(
 ) -> None:
     monkeypatch.setattr(formalism_audit, "find_executable", lambda *_: "/bin/lake")
     monkeypatch.setattr(
-        formalism_audit.subprocess,
-        "run",
+        formalism_audit,
+        "run_process_group",
         lambda *args, **kwargs: subprocess.CompletedProcess(
             args=args[0], returncode=0, stdout=_complete_axiom_stdout(), stderr=""
         ),

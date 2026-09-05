@@ -366,7 +366,7 @@ def _summaries(
 def build_formalism_presentation(project_root: Path) -> FormalismPresentation:
     """Build the sole immutable join consumed by atlas and dashboard views."""
     coverage = build_formalism_coverage(Path(project_root))
-    witnesses = evaluate_numerical_witnesses(Path(project_root))
+    witnesses = evaluate_numerical_witnesses(Path(project_root), scope="catalogue")
 
     topics = tuple(
         _topic(row, index)

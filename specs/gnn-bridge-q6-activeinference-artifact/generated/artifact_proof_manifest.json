@@ -1,0 +1,170 @@
+{
+  "backend_contract": {
+    "backend": "activeinference_jl_embedded_input",
+    "consumed_c_identical_to_embedded_input": false,
+    "extractor": "src/fep_lean/verification/gnn_julia_artifact_proof.py",
+    "fixtures": {
+      "asymmetric": "specs/gnn-bridge-q6-activeinference-artifact/fixtures/activeinference_asymmetric_runner.jl",
+      "symmetric": "specs/gnn-bridge-q6-activeinference-artifact/fixtures/activeinference_symmetric_runner.jl"
+    },
+    "generator": "specs/gnn-bridge-q6-activeinference-artifact/generate_probe.py",
+    "probes": {
+      "asymmetric": "specs/gnn-bridge-q6-activeinference-artifact/generated/probe_asymmetric.lean",
+      "symmetric": "specs/gnn-bridge-q6-activeinference-artifact/generated/probe_symmetric.lean"
+    },
+    "runtime_execution_verified": false,
+    "scope": "Q6 concrete embedded Boolean input tables; no consumed-C equality, Julia runtime, ActiveInference agent, EFE, physical, or H3 claim",
+    "shared_table_owner": "src/fep_lean/verification/gnn_artifact_proof.py",
+    "skeleton": "specs/gnn-bridge-q6-activeinference-artifact/skeleton/canonical_bool_runner.jl.in",
+    "skeleton_sha256": "e46d27f13cba5be938dd0b2e4f5717a076a6304c31d8c188851c4c7c2cb8fb52",
+    "slice": "specs/gnn-bridge-q6-activeinference-artifact",
+    "targets": [
+      "FepSketches.gnn_denotation",
+      "FepSketches.gnn_render_statements"
+    ],
+    "theorems": {
+      "asymmetric": [
+        "FEPProbe.Q6JuliaEmbeddedInputAsym.asymEmbeddedInput_eq_expected",
+        "FEPProbe.Q6JuliaEmbeddedInputAsym.asymExpected_differs_from_Q2"
+      ],
+      "symmetric": [
+        "FEPProbe.Q6JuliaEmbeddedInput.symEmbeddedInput_eq_Q2",
+        "FEPProbe.Q6JuliaEmbeddedInput.symEmbeddedInput_Q4_conditional",
+        "FEPProbe.Q6JuliaEmbeddedInput.symEmbeddedInput_Q2_carrierMasses"
+      ]
+    }
+  },
+  "extracted_input_summary": {
+    "asymmetric": {
+      "A_data": {
+        "shape": [
+          2,
+          2
+        ],
+        "values": [
+          "1/4",
+          "1/2",
+          "3/4",
+          "1/2"
+        ]
+      },
+      "B_data": {
+        "shape": [
+          2,
+          2,
+          2
+        ],
+        "values": [
+          "1/4",
+          "1/2",
+          "3/4",
+          "1/8",
+          "3/4",
+          "1/2",
+          "1/4",
+          "7/8"
+        ]
+      },
+      "C_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/4",
+          "3/4"
+        ]
+      },
+      "D_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "5/8",
+          "3/8"
+        ]
+      },
+      "E_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "3/8",
+          "5/8"
+        ]
+      }
+    },
+    "symmetric": {
+      "A_data": {
+        "shape": [
+          2,
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2"
+        ]
+      },
+      "B_data": {
+        "shape": [
+          2,
+          2,
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2"
+        ]
+      },
+      "C_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2"
+        ]
+      },
+      "D_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/2",
+          "1/2"
+        ]
+      },
+      "E_data": {
+        "shape": [
+          2
+        ],
+        "values": [
+          "1/4",
+          "3/4"
+        ]
+      }
+    }
+  },
+  "generated_sha256": {
+    "generated/probe_asymmetric.lean": "39c5eee1b33f5f1f3c7380c39e8817c4e533cb22643f3bfbcc340055e9784c89",
+    "generated/probe_symmetric.lean": "9efcbebc1fab85563909898810d0dc770273f4656e4bc032b1660828deff2edf"
+  },
+  "native_verification": "not_established_by_generation",
+  "renderer_custody": "requires_separate_current_receipt",
+  "schema_version": 1,
+  "source_sha256": {
+    "specs/gnn-bridge-q6-activeinference-artifact/fixtures/activeinference_asymmetric_runner.jl": "f369dfd970150e9607666b9449f5134a09417098435e02baaf632a935e624ae2",
+    "specs/gnn-bridge-q6-activeinference-artifact/fixtures/activeinference_symmetric_runner.jl": "f2839a599301f0a26d6d382a7dc81ea666324c0af47c4e4648ccd37b995dbabf",
+    "specs/gnn-bridge-q6-activeinference-artifact/generate_probe.py": "94a78e448b98987f3eacdf9953c80cc97c6ae40b0eacbbe3022027554d382d66",
+    "specs/gnn-bridge-q6-activeinference-artifact/skeleton/canonical_bool_runner.jl.in": "e46d27f13cba5be938dd0b2e4f5717a076a6304c31d8c188851c4c7c2cb8fb52",
+    "src/fep_lean/verification/gnn_artifact_proof.py": "5baba98eaf2bf9be9a7de0eb7afb8cc38891bc20e02baddf3b78972dc15c06a1",
+    "src/fep_lean/verification/gnn_julia_artifact_proof.py": "15f14fed01f0bd53cae6b4a6f17617b3084e59bec1ea4687a11b0df289788133"
+  }
+}
